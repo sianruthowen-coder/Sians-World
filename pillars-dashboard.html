@@ -1,0 +1,1147 @@
+<meta charset="utf-8">
+<title>Sian's World</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sian's World">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Pantone Draft 3 — Cabernet 504 C, Moss 391 U, Mauve 687 U, Fog 5434 U,
+     Moonbeam 2706 U, Champagne (Warm Gray 1 U) — one hue per pillar, mapped via [data-hue] */
+  :root{
+    --bg:#FFFFFF;
+    --surface:#FFFDF8;
+    --surface-2:#EAE1D2;
+    --border:rgba(42,36,25,0.14);
+    --ink:#2A2419;
+    --ink-soft:#6E6252;
+    --danger:#A24632;
+    --danger-soft:#F1DED6;
+    --shadow: 0 1px 2px rgba(42,36,25,0.07), 0 10px 26px -14px rgba(42,36,25,0.24);
+    --phue:#827C36; --phue-strong:#6D6837; --phue-soft:#F3F2ED; --phue-on:#F4F4F0;
+  }
+  [data-hue="wealth"]{   --phue:#827C36; --phue-strong:#6D6837; --phue-soft:#F3F2ED; --phue-on:#F4F4F0; }
+  [data-hue="health"]{   --phue:#CFDAFF; --phue-strong:#102E93; --phue-soft:#E8ECF7; --phue-on:#101937; }
+  [data-hue="mind"]{     --phue:#A4B4BE; --phue-strong:#47545C; --phue-soft:#EEF0F1; --phue-on:#202427; }
+  [data-hue="family"]{   --phue:#CA9BAA; --phue-strong:#663E4A; --phue-soft:#F2EDEF; --phue-on:#2A1E22; }
+  [data-hue="love"]{     --phue:#410016; --phue-strong:#93103D; --phue-soft:#F7E8ED; --phue-on:#F7EEF1; }
+  [data-hue="thoughts"]{ --phue:#EDE3DD; --phue-strong:#664D3E; --phue-soft:#F2EFED; --phue-on:#2A221E; }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#211C15; --surface:#2B241B; --surface-2:#362D21;
+      --border:rgba(245,238,224,0.14); --ink:#F4EEE1; --ink-soft:#B9AC96;
+      --danger:#D98567; --danger-soft:#402A22;
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 26px -14px rgba(0,0,0,0.55);
+      --phue:#C9C59C; --phue-strong:#E2E1CF; --phue-soft:#3F3D27; --phue-on:#2C2B1C;
+    }
+    :root:not([data-theme="light"]) [data-hue="wealth"]{   --phue:#C9C59C; --phue-strong:#E2E1CF; --phue-soft:#3F3D27; --phue-on:#2C2B1C; }
+    :root:not([data-theme="light"]) [data-hue="health"]{   --phue:#7D95E8; --phue-strong:#C2CCF0; --phue-soft:#17244F; --phue-on:#101937; }
+    :root:not([data-theme="light"]) [data-hue="mind"]{     --phue:#AAB5BB; --phue-strong:#D5DADD; --phue-soft:#2E3438; --phue-on:#202427; }
+    :root:not([data-theme="light"]) [data-hue="family"]{   --phue:#C3A2AD; --phue-strong:#E0D2D6; --phue-soft:#3C2A30; --phue-on:#2A1E22; }
+    :root:not([data-theme="light"]) [data-hue="love"]{     --phue:#E87DA1; --phue-strong:#F0C2D1; --phue-soft:#4F172A; --phue-on:#37101D; }
+    :root:not([data-theme="light"]) [data-hue="thoughts"]{ --phue:#C3AEA2; --phue-strong:#E0D7D2; --phue-soft:#3C312A; --phue-on:#2A221E; }
+  }
+  :root[data-theme="dark"]{
+    --bg:#211C15; --surface:#2B241B; --surface-2:#362D21;
+    --border:rgba(245,238,224,0.14); --ink:#F4EEE1; --ink-soft:#B9AC96;
+    --danger:#D98567; --danger-soft:#402A22;
+    --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 26px -14px rgba(0,0,0,0.55);
+    --phue:#C9C59C; --phue-strong:#E2E1CF; --phue-soft:#3F3D27; --phue-on:#2C2B1C;
+  }
+  :root[data-theme="dark"] [data-hue="wealth"]{   --phue:#C9C59C; --phue-strong:#E2E1CF; --phue-soft:#3F3D27; --phue-on:#2C2B1C; }
+  :root[data-theme="dark"] [data-hue="health"]{   --phue:#7D95E8; --phue-strong:#C2CCF0; --phue-soft:#17244F; --phue-on:#101937; }
+  :root[data-theme="dark"] [data-hue="mind"]{     --phue:#AAB5BB; --phue-strong:#D5DADD; --phue-soft:#2E3438; --phue-on:#202427; }
+  :root[data-theme="dark"] [data-hue="family"]{   --phue:#C3A2AD; --phue-strong:#E0D2D6; --phue-soft:#3C2A30; --phue-on:#2A1E22; }
+  :root[data-theme="dark"] [data-hue="love"]{     --phue:#E87DA1; --phue-strong:#F0C2D1; --phue-soft:#4F172A; --phue-on:#37101D; }
+  :root[data-theme="dark"] [data-hue="thoughts"]{ --phue:#C3AEA2; --phue-strong:#E0D7D2; --phue-soft:#3C312A; --phue-on:#2A221E; }
+
+  *{ box-sizing:border-box; }
+  [hidden]{ display:none!important; }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    font-size:15px; line-height:1.45;
+    padding-inline:40px; padding-block:28px 40px;
+  }
+  .app{ max-width:460px; margin:0 auto; }
+  h1,h2{ text-wrap:balance; }
+  *:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce){ *,*::before,*::after{ animation:none!important; transition:none!important; } }
+
+  @keyframes screenInFwd{ from{ opacity:0; transform:translateX(28px); } to{ opacity:1; transform:translateX(0); } }
+  @keyframes screenInBack{ from{ opacity:0; transform:translateX(-20px); } to{ opacity:1; transform:translateX(0); } }
+  #home.entering{ animation:screenInBack .26s cubic-bezier(.22,.85,.32,1) both; }
+  .pillar.entering{ animation:screenInFwd .3s cubic-bezier(.22,.85,.32,1) both; }
+
+  .hero .eyebrow{ font-size:12px; font-weight:700; text-transform:lowercase; letter-spacing:.06em; color:var(--ink-soft); margin:0; }
+  .hero h1{ font-family:'Inter',system-ui,sans-serif; font-weight:800; font-size:19px; letter-spacing:0; text-transform:lowercase; margin:6px 0 5px; color:var(--ink); white-space:nowrap; }
+  .astro{ font-size:13px; color:var(--ink-soft); margin:0 0 28px; font-weight:700; }
+  .note{ font-size:12.5px; color:var(--ink-soft); line-height:1.55; margin:0; max-width:46ch; }
+  .herofoot{ display:flex; align-items:center; gap:12px; margin-top:13px; }
+  .herofoot .ring{ width:34px; height:34px; }
+  .editbtn{ font-size:12.5px; font-weight:700; color:var(--ink); background:var(--surface-2); border:1.4px solid var(--border); border-radius:999px; padding:9px 15px; cursor:pointer; font-family:'Inter'; }
+  .editbtn[aria-pressed="true"]{ background:var(--danger-soft); color:var(--danger); border-color:transparent; }
+  .editbtn-pillar[aria-pressed="true"]{ background:var(--danger-soft); color:var(--danger); border-color:transparent; }
+
+  .backbtn{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--ink); background:var(--surface-2); border:1.4px solid var(--border); border-radius:999px; padding:8px 14px; margin-bottom:16px; cursor:pointer; font-family:'Inter'; }
+  .backbtn:hover, .backbtn:focus-visible{ border-color:var(--phue); color:var(--phue-strong); }
+
+  .tilegrid{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; margin-top:24px; }
+  .tile{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; text-align:center;
+    background:var(--phue); color:var(--phue-on); border:none; border-radius:20px;
+    padding:18px; box-shadow:var(--shadow); cursor:pointer; font-family:'Inter'; aspect-ratio:1/1;
+  }
+  .tile:hover{ filter:brightness(0.97); }
+  .tile:focus-visible{ outline:2px solid var(--phue-on); outline-offset:2px; }
+  .tile--wide{ grid-column:1 / -1; flex-direction:row; align-items:center; justify-content:space-between; min-height:0; }
+  .tile-head{ display:flex; flex-direction:column; align-items:center; gap:10px; min-width:0; }
+  .tile-head svg{ width:22px; height:22px; flex:0 0 auto; }
+  .tile-name{ font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.02em; line-height:1.3; text-align:center; min-width:0; overflow-wrap:break-word; }
+  .tile .ring{ width:34px; height:34px; }
+  .tile .ring circle.track{ stroke:color-mix(in srgb, var(--phue-on) 25%, transparent); }
+  .tile .ring circle.progress{ stroke:var(--phue-on); }
+  .tile .ring .ring-label{ font-size:10px; color:var(--phue-on); }
+  .tile .weeklytag{ background:color-mix(in srgb, var(--phue-on) 18%, transparent); color:var(--phue-on); padding:6px 10px; }
+
+  .pillars{ display:flex; flex-direction:column; gap:16px; }
+
+  .pillar{
+    background:var(--surface); border:1px solid var(--border); border-top:3px solid var(--phue); border-radius:20px;
+    padding:20px; box-shadow:var(--shadow);
+    color:var(--phue-strong);
+  }
+
+  .pillar-head{ display:flex; align-items:center; gap:12px; }
+  .pillar-icon{ width:40px; height:40px; border-radius:12px; background:var(--phue); color:var(--phue-on); display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .pillar-icon svg{ width:21px; height:21px; }
+  .pillar-title{ flex:1; min-width:0; }
+  .pillar-title h2{ font-family:'Inter',system-ui,sans-serif; font-weight:800; font-size:17px; letter-spacing:.01em; text-transform:uppercase; margin:0; }
+  .pillar-title .sub{ font-size:10.5px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--phue); margin-top:2px; }
+
+  .ring{ position:relative; width:42px; height:42px; flex:0 0 auto; }
+  .ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring circle{ fill:none; stroke-width:4; }
+  .ring circle.track{ stroke:var(--border); }
+  .ring circle.progress{ stroke:var(--phue); stroke-linecap:round; transition:stroke-dashoffset .35s ease; }
+  .ring .ring-label{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .weeklytag{ font-size:10.5px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--phue-strong); background:var(--phue-soft); padding:7px 10px; border-radius:999px; flex:0 0 auto; }
+
+  .mantra{ margin-top:14px; font-size:13.5px; font-style:italic; line-height:1.5; padding:12px 14px; background:var(--phue-soft); border-left:3px solid var(--phue); border-radius:8px; }
+
+  .weight-input{ width:88px; border:1.4px solid var(--border); border-radius:10px; background:var(--surface); color:var(--ink); font-family:'Inter'; font-size:16px; padding:8px 10px; font-variant-numeric:tabular-nums; }
+  .weight-input:focus-visible{ outline:none; border-color:var(--phue); }
+  .weightunit{ font-size:13px; color:var(--phue-strong); font-weight:700; }
+
+  .goals{ margin-top:16px; display:flex; flex-direction:column; gap:6px; }
+  .goals p{ margin:0; font-size:13.5px; line-height:1.5; }
+  .goals .label{ font-size:10px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--phue); margin-right:6px; }
+
+  .section-label{ font-size:11px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--phue); margin:18px 0 2px; }
+
+  .editable{ border-radius:5px; }
+  .editing .editable{ background:var(--surface-2); padding:1px 4px; margin:-1px -4px; cursor:text; }
+  .editing .editable:focus{ outline:2px solid var(--phue); outline-offset:1px; background:var(--surface); }
+
+  .checklist{ list-style:none; margin:2px 0 0; padding:0; }
+  .check-row{ display:flex; align-items:center; gap:6px; padding-block:9px; border-bottom:1px solid var(--border); }
+  .check-row:last-child{ border-bottom:none; }
+  .check-row label{ flex:1; min-width:0; display:flex; align-items:center; gap:10px; cursor:pointer; position:relative; }
+  .check-row input{ position:absolute; opacity:0; width:20px; height:20px; margin:0; left:0; top:0; }
+  .box{ width:20px; height:20px; border-radius:6px; border:1.6px solid var(--border); background:var(--surface); flex:0 0 auto; position:relative; transition:background .15s,border-color .15s; }
+  .box::after{ content:""; position:absolute; left:6px; top:2px; width:5px; height:10px; border-right:2px solid var(--surface); border-bottom:2px solid var(--surface); transform:rotate(40deg); opacity:0; }
+  .check-row input:checked + .box{ background:var(--phue); border-color:var(--phue); }
+  .check-row input:checked + .box::after{ opacity:1; }
+  .check-row input:focus-visible + .box{ outline:2px solid var(--phue); outline-offset:2px; }
+  .txt{ font-size:14px; flex:1; transition:color .15s; }
+  .check-row input:checked ~ .txt{ color:var(--ink-soft); text-decoration:line-through; text-decoration-color:var(--border); }
+  .removeitem{ display:none; flex:0 0 auto; width:24px; height:24px; border-radius:50%; border:none; background:transparent; color:var(--ink-soft); font-size:17px; line-height:1; cursor:pointer; align-items:center; justify-content:center; }
+  .editing .removeitem{ display:flex; }
+  .removeitem:hover{ color:var(--danger); background:var(--danger-soft); }
+  .additem{ display:none; margin-top:8px; font-size:12.5px; font-weight:700; color:var(--ink-soft); background:transparent; border:1.4px dashed var(--border); border-radius:10px; padding:8px 12px; width:100%; cursor:pointer; font-family:'Inter'; }
+  .editing .additem{ display:block; }
+  .additem:hover{ border-color:var(--phue); color:var(--phue-strong); }
+
+  .statblock{ margin-top:2px; }
+  .statrow{ display:flex; justify-content:space-between; align-items:baseline; font-size:13px; }
+  .statrow .num{ font-weight:700; font-variant-numeric:tabular-nums; }
+  .statbar{ height:8px; border-radius:999px; background:var(--surface-2); overflow:hidden; margin-top:7px; }
+  .statbar > span{ display:block; height:100%; background:var(--phue); border-radius:999px; transition:width .3s ease; }
+  .statbtn{ margin-top:9px; font-size:12.5px; font-weight:700; color:var(--phue-strong); background:var(--phue-soft); border:none; border-radius:999px; padding:7px 13px; cursor:pointer; font-family:'Inter'; }
+  .statbtn:active{ transform:translateY(1px); }
+
+  .checkin{ margin-top:16px; background:var(--phue-soft); border-radius:14px; padding:14px; }
+  .checkin + .checkin{ margin-top:10px; }
+  .checkin-q{ margin:0; font-size:13.5px; line-height:1.5; font-weight:600; }
+
+  .voicecheckin{ margin-top:16px; background:var(--phue-soft); border-radius:14px; padding:14px; border:1.4px dashed var(--phue); }
+  .voicecheckin + .checkin, .checkin + .voicecheckin{ margin-top:10px; }
+  .voicecheckin .vhead, .voicerow .vhead{ display:flex; align-items:center; gap:7px; }
+  .voicecheckin .vhead svg, .voicerow .vhead svg{ width:16px; height:16px; color:var(--phue-strong); flex:0 0 auto; }
+  .voicecheckin .vlabel, .voicerow .vlabel{ font-size:11px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--phue-strong); }
+  .voicecheckin .checkin-q{ margin-top:9px; }
+  textarea.voicearea{ min-height:84px; }
+
+  .chipselect{ display:flex; flex-wrap:wrap; gap:8px; margin-top:11px; }
+  .chip{ font-family:'Inter'; font-size:12.5px; font-weight:700; padding:8px 12px; border-radius:999px; border:1.4px solid var(--border); background:var(--surface); color:var(--ink-soft); cursor:pointer; }
+  .chip.active{ background:var(--surface); border-color:var(--phue); color:var(--phue-strong); }
+
+  .dotscale{ display:flex; gap:8px; margin-top:11px; }
+  .dot{ width:26px; height:26px; border-radius:50%; border:1.6px solid var(--border); background:var(--surface); cursor:pointer; padding:0; }
+  .dot.filled{ background:var(--phue); border-color:var(--phue); }
+
+  .numscale{ display:flex; flex-wrap:wrap; gap:6px; margin-top:11px; }
+  .numdot{ width:27px; height:27px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; font-variant-numeric:tabular-nums; }
+  .scalecaps{ display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; color:var(--phue); margin-top:6px; text-transform:lowercase; }
+
+  .voicerow{ margin-top:12px; background:var(--surface); border:1.4px dashed var(--phue); border-radius:12px; padding:12px; }
+
+  .thoughtitem{ padding:12px 26px 12px 0; border-bottom:1px solid var(--border); position:relative; }
+  .thoughtitem:last-child{ border-bottom:none; }
+  .thoughtmeta{ font-size:10.5px; font-weight:700; color:var(--phue-strong); text-transform:lowercase; letter-spacing:.03em; margin-bottom:4px; }
+  .thoughttext{ font-size:13.5px; line-height:1.5; color:var(--ink); white-space:pre-wrap; }
+  .thought-remove{ position:absolute; top:10px; right:0; width:22px; height:22px; border-radius:50%; border:none; background:transparent; color:var(--ink-soft); font-size:16px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .thought-remove:hover{ color:var(--danger); background:var(--danger-soft); }
+
+  textarea.journal{ width:100%; margin-top:11px; resize:vertical; min-height:60px; border-radius:10px; border:1.4px solid var(--border); background:var(--surface); color:var(--ink); font-family:'Inter'; font-size:16px; padding:10px; }
+  textarea.journal::placeholder{ color:var(--ink-soft); font-size:12.5px; }
+
+  .gratitude{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+  .gratitude-row{ display:flex; align-items:center; gap:10px; }
+  .gnum{ width:22px; height:22px; border-radius:50%; background:var(--phue-soft); color:var(--phue-strong); font-size:11.5px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:0 0 auto; font-variant-numeric:tabular-nums; }
+  .gratitude-input{ flex:1; min-width:0; border:none; border-bottom:1.4px solid var(--border); background:transparent; color:var(--ink); font-family:'Inter'; font-size:16px; padding:6px 2px; }
+  .gratitude-input::placeholder{ color:var(--ink-soft); }
+  .gratitude-input:focus-visible{ outline:none; border-bottom-color:var(--phue); border-bottom-width:2px; }
+
+  .birthday{ display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:12px; background:var(--phue-soft); margin-top:11px; }
+  .birthday .name{ font-weight:700; font-size:13.5px; }
+  .birthday .days{ font-size:12px; color:var(--phue-strong); font-weight:700; font-variant-numeric:tabular-nums; }
+  .addbirthday{ margin-top:8px; display:block; text-align:center; padding:10px; border-radius:12px; border:1.4px dashed var(--border); color:var(--ink-soft); font-size:12.5px; background:transparent; width:100%; cursor:pointer; font-family:'Inter'; }
+
+  .foot{ margin-top:24px; text-align:center; }
+  .foot p{ font-size:12px; color:var(--ink-soft); margin:0; max-width:40ch; margin-inline:auto; }
+</style>
+
+<div class="app">
+  <header class="hero">
+    <p class="eyebrow" id="dateLine">&nbsp;</p>
+    <h1 id="greeting">&nbsp;</h1>
+    <p class="astro">☉ Aries Sun · ☽ Scorpio Moon</p>
+    <div class="herofoot">
+      <span class="ring" data-ring="overall"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/17</span></span>
+      <button type="button" id="editToggle" class="editbtn" aria-pressed="false">Edit dashboard</button>
+    </div>
+  </header>
+
+  <section id="home">
+    <div class="tilegrid">
+      <button type="button" class="tile" data-hue="mind" data-target="mind">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24"><path d="M14.5 3.2a9 9 0 1 0 0 17.6 7.3 7.3 0 0 1 0-17.6Z" fill="currentColor"></path></svg>
+          <span class="tile-name">Mind &amp; Spirit</span>
+        </span>
+        <span class="ring" data-ring="mind"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/7</span></span>
+      </button>
+
+      <button type="button" class="tile" data-hue="family" data-target="family">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="12" y1="8" x2="7" y2="16.5"></line><line x1="12" y1="8" x2="17" y2="16.5"></line><circle cx="12" cy="6" r="2" fill="currentColor" stroke="none"></circle><circle cx="6" cy="18" r="2" fill="currentColor" stroke="none"></circle><circle cx="18" cy="18" r="2" fill="currentColor" stroke="none"></circle></svg>
+          <span class="tile-name">Friends &amp; Family</span>
+        </span>
+        <span class="ring" data-ring="family"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/1</span></span>
+      </button>
+
+      <button type="button" class="tile" data-hue="wealth" data-target="wealth">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M12 7 L14.2 12 L12 17 L9.8 12 Z" fill="currentColor" stroke="none"></path></svg>
+          <span class="tile-name">Wealth &amp; Work</span>
+        </span>
+        <span class="ring" data-ring="wealth"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/3</span></span>
+      </button>
+
+      <button type="button" class="tile" data-hue="health" data-target="health">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,13 6,13 8,6 12,20 15,4 18,13 23,13"></polyline></svg>
+          <span class="tile-name">Health &amp; Wellness</span>
+        </span>
+        <span class="ring" data-ring="health"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/4</span></span>
+      </button>
+
+      <button type="button" class="tile" data-hue="love" data-target="love">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="12" r="6.2"></circle><circle cx="15" cy="12" r="6.2"></circle></svg>
+          <span class="tile-name">Love &amp; Relationships</span>
+        </span>
+        <span class="ring" data-ring="love"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/2</span></span>
+      </button>
+
+      <button type="button" class="tile" data-hue="thoughts" data-target="thoughts">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+          <span class="tile-name">Share your thoughts</span>
+        </span>
+        <span class="weeklytag" id="thoughtsCountTag">0 saved</span>
+      </button>
+    </div>
+
+  </section>
+
+  <main class="pillars">
+
+    <section class="pillar" id="mind" data-hue="mind" hidden>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;"><button type="button" class="backbtn" style="margin-bottom:0;">&larr; all pillars</button><button type="button" class="backbtn editbtn-pillar" style="margin-bottom:0;" aria-pressed="false">Edit</button></div>
+      <div class="pillar-head">
+        <span class="pillar-icon"><svg viewBox="0 0 24 24"><path d="M14.5 3.2a9 9 0 1 0 0 17.6 7.3 7.3 0 0 1 0-17.6Z" fill="currentColor"></path></svg></span>
+        <div class="pillar-title">
+          <h2>Mind &amp; Spirit</h2>
+          <p class="sub">daily habits · weekly check-in</p>
+        </div>
+        <div class="ring" data-ring="mind">
+          <svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg>
+          <span class="ring-label">0/7</span>
+        </div>
+      </div>
+
+      <div class="goals">
+        <p><span class="label">Long-term</span><span class="editable" data-gkey="mind-long" contenteditable="false">A calm mind is a peaceful life</span></p>
+        <p><span class="label">Focus now</span><span class="editable" data-gkey="mind-short" contenteditable="false">High quality sleep. Winding down in the evenings. Social connection daily. Gratitude.</span></p>
+      </div>
+
+      <p class="section-label">Today</p>
+      <ul class="checklist" data-pillar="mind" data-scope="daily">
+        <li class="check-row"><label><input type="checkbox" data-id="social"><span class="box"></span><span class="txt editable" contenteditable="false">A meaningful social connection</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="visualization"><span class="box"></span><span class="txt editable" contenteditable="false">Five minute visualization</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="affirmations"><span class="box"></span><span class="txt editable" contenteditable="false">Affirmations</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="phone"><span class="box"></span><span class="txt editable" contenteditable="false">No screen time after 9:30pm</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+      </ul>
+      <button type="button" class="additem" data-pillar="mind" data-scope="daily">+ Add item</button>
+
+      <p class="section-label">Gratitude — three things today</p>
+      <div class="gratitude">
+        <div class="gratitude-row"><span class="gnum">1</span><input type="text" class="gratitude-input" data-pillar="mind" data-scope="daily" data-id="grateful1" placeholder="Something small counts too..."></div>
+        <div class="gratitude-row"><span class="gnum">2</span><input type="text" class="gratitude-input" data-pillar="mind" data-scope="daily" data-id="grateful2" placeholder="..."></div>
+        <div class="gratitude-row"><span class="gnum">3</span><input type="text" class="gratitude-input" data-pillar="mind" data-scope="daily" data-id="grateful3" placeholder="..."></div>
+      </div>
+
+      <div class="checkin">
+        <p class="checkin-q">Rate your mood today?</p>
+        <div class="numscale" data-pillar="mind" data-id="mood" data-scope="daily">
+          <button type="button" class="chip numdot" data-value="0">0</button>
+          <button type="button" class="chip numdot" data-value="1">1</button>
+          <button type="button" class="chip numdot" data-value="2">2</button>
+          <button type="button" class="chip numdot" data-value="3">3</button>
+          <button type="button" class="chip numdot" data-value="4">4</button>
+          <button type="button" class="chip numdot" data-value="5">5</button>
+          <button type="button" class="chip numdot" data-value="6">6</button>
+          <button type="button" class="chip numdot" data-value="7">7</button>
+          <button type="button" class="chip numdot" data-value="8">8</button>
+          <button type="button" class="chip numdot" data-value="9">9</button>
+          <button type="button" class="chip numdot" data-value="10">10</button>
+        </div>
+        <div class="scalecaps"><span>not at all</span><span>completely</span></div>
+      </div>
+
+      <div class="checkin">
+        <p class="checkin-q">How connected did you feel to yourself today?</p>
+        <div class="numscale" data-pillar="mind" data-id="connected" data-scope="daily">
+          <button type="button" class="chip numdot" data-value="0">0</button>
+          <button type="button" class="chip numdot" data-value="1">1</button>
+          <button type="button" class="chip numdot" data-value="2">2</button>
+          <button type="button" class="chip numdot" data-value="3">3</button>
+          <button type="button" class="chip numdot" data-value="4">4</button>
+          <button type="button" class="chip numdot" data-value="5">5</button>
+          <button type="button" class="chip numdot" data-value="6">6</button>
+          <button type="button" class="chip numdot" data-value="7">7</button>
+          <button type="button" class="chip numdot" data-value="8">8</button>
+          <button type="button" class="chip numdot" data-value="9">9</button>
+          <button type="button" class="chip numdot" data-value="10">10</button>
+        </div>
+        <div class="scalecaps"><span>not at all</span><span>completely</span></div>
+
+        <div class="voicerow">
+          <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">voice note</span></div>
+          <textarea class="journal voicearea" data-pillar="mind" data-id="prompt" data-scope="daily" placeholder="Speak or type it out — what made today feel that way?"></textarea>
+        </div>
+      </div>
+
+      <p class="section-label">This week</p>
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">This week in a few lines — what mattered?</p>
+        <textarea class="journal voicearea" data-pillar="mind" data-id="weeklyjournal" data-scope="weekly" placeholder="Speak or type it out — a slower reflection than the daily one..."></textarea>
+      </div>
+
+      <p class="section-label" style="margin-top:14px;">Weekly checklist</p>
+      <ul class="checklist" data-pillar="mind" data-scope="weekly">
+        <li class="check-row"><label><input type="checkbox" data-id="meditation"><span class="box"></span><span class="txt editable" contenteditable="false">Meditated / Visualization</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="nature"><span class="box"></span><span class="txt editable" contenteditable="false">Spend time in nature</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="read"><span class="box"></span><span class="txt editable" contenteditable="false">Read or listened to something meaningful</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="creative"><span class="box"></span><span class="txt editable" contenteditable="false">Made time for something creative, just for me</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="kindness"><span class="box"></span><span class="txt editable" contenteditable="false">Random act of kindness</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="compliment"><span class="box"></span><span class="txt editable" contenteditable="false">Compliment a stranger</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+      </ul>
+      <button type="button" class="additem" data-pillar="mind" data-scope="weekly">+ Add item</button>
+
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">What did you learn — a podcast, book, or quote?</p>
+        <textarea class="journal voicearea" data-pillar="mind" data-id="learnednote" data-scope="weekly" placeholder="Jot it down or talk it through..."></textarea>
+      </div>
+
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">What did you make, and how did it feel?</p>
+        <textarea class="journal voicearea" data-pillar="mind" data-id="creativenote" data-scope="weekly" placeholder="A note or two is plenty..."></textarea>
+      </div>
+    </section>
+
+    <section class="pillar" id="health" data-hue="health" hidden>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;"><button type="button" class="backbtn" style="margin-bottom:0;">&larr; all pillars</button><button type="button" class="backbtn editbtn-pillar" style="margin-bottom:0;" aria-pressed="false">Edit</button></div>
+      <div class="pillar-head">
+        <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,13 6,13 8,6 12,20 15,4 18,13 23,13"></polyline></svg></span>
+        <div class="pillar-title">
+          <h2>Health &amp; Wellness</h2>
+          <p class="sub">daily habits · weekly check-in</p>
+        </div>
+        <div class="ring" data-ring="health">
+          <svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg>
+          <span class="ring-label">0/4</span>
+        </div>
+      </div>
+
+      <p class="mantra">Your body is your forever home, treated with kindness.</p>
+
+      <div class="goals">
+        <p><span class="label">Long-term</span><span class="editable" data-gkey="health-long" contenteditable="false">Hold the recomposition — muscle up, fat stable, without depleting energy</span></p>
+        <p><span class="label">Focus now</span><span class="editable" data-gkey="health-short" contenteditable="false">4–5 strength sessions this week, every week. Complete a half marathon in 1:50 or less.</span></p>
+      </div>
+
+      <p class="section-label">Today</p>
+      <ul class="checklist" data-pillar="health" data-scope="daily">
+        <li class="check-row"><label><input type="checkbox" data-id="steps"><span class="box"></span><span class="txt editable" contenteditable="false">8,000+ steps</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="sleep"><span class="box"></span><span class="txt editable" contenteditable="false">7+ hours of sleep</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="session"><span class="box"></span><span class="txt editable" contenteditable="false">Strength training session complete</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="protein"><span class="box"></span><span class="txt editable" contenteditable="false">Hit ~100g protein</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+      </ul>
+      <button type="button" class="additem" data-pillar="health" data-scope="daily">+ Add item</button>
+
+      <p class="section-label">This week</p>
+      <ul class="checklist" data-pillar="health" data-scope="weekly">
+        <li class="check-row"><label><input type="checkbox" data-id="run"><span class="box"></span><span class="txt editable" contenteditable="false">Went for a run</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="strength"><span class="box"></span><span class="txt editable" contenteditable="false">4–5 strength training sessions</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="selfcare"><span class="box"></span><span class="txt editable" contenteditable="false">Self-care / self-love activity</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+      </ul>
+      <button type="button" class="additem" data-pillar="health" data-scope="weekly">+ Add item</button>
+
+      <div class="checkin">
+        <p class="checkin-q">Weight this week</p>
+        <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+          <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" class="weight-input" data-pillar="health" data-scope="weekly" data-id="weight" placeholder="56.0">
+          <span class="weightunit">kg</span>
+        </div>
+      </div>
+
+      <div class="checkin">
+        <p class="checkin-q">Period tracking</p>
+        <div class="statrow" style="margin-top:10px;"><span id="periodValue">Not logged today</span></div>
+        <button type="button" class="statbtn" id="logPeriod">Log today</button>
+      </div>
+
+      <p class="section-label">Supplements</p>
+      <ul class="checklist" data-pillar="health" data-scope="supplement">
+        <li class="check-row"><label><input type="checkbox" data-id="omega3-6"><span class="box"></span><span class="txt editable" contenteditable="false">Omega 3 &amp; 6</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="guthealth"><span class="box"></span><span class="txt editable" contenteditable="false">Gut health</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="vitamindk2"><span class="box"></span><span class="txt editable" contenteditable="false">Vitamin D &amp; K2</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="minerva"><span class="box"></span><span class="txt editable" contenteditable="false">Minerva (birth control)</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+      </ul>
+      <button type="button" class="additem" data-pillar="health" data-scope="supplement">+ Add item</button>
+
+      <div class="checkin">
+        <p class="checkin-q">Any other medication taken this week?</p>
+        <textarea class="journal" data-pillar="health" data-id="othermeds" data-scope="weekly" placeholder="e.g. antihistamine, painkillers..."></textarea>
+      </div>
+
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">Any health concerns or symptoms this week? Talk it through so you've got a record.</p>
+        <textarea class="journal voicearea" data-pillar="health" data-id="concerns" data-scope="weekly" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
+      </div>
+    </section>
+
+    <section class="pillar" id="wealth" data-hue="wealth" hidden>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;"><button type="button" class="backbtn" style="margin-bottom:0;">&larr; all pillars</button><button type="button" class="backbtn editbtn-pillar" style="margin-bottom:0;" aria-pressed="false">Edit</button></div>
+      <div class="pillar-head">
+        <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M12 7 L14.2 12 L12 17 L9.8 12 Z" fill="currentColor" stroke="none"></path></svg></span>
+        <div class="pillar-title">
+          <h2>Wealth &amp; Work</h2>
+          <p class="sub">daily · weekly · monthly</p>
+        </div>
+        <div class="ring" data-ring="wealth">
+          <svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg>
+          <span class="ring-label">0/3</span>
+        </div>
+      </div>
+
+      <div class="goals">
+        <p><span class="label">Long-term</span><span class="editable" data-gkey="wealth-long" contenteditable="false">10,000 followers on @sian__creates by 31 Dec 2026. Long term: step back from proposals, build a personal-brand business buying, renovating, and flipping apartments — content and brand deals along the way.</span></p>
+        <p><span class="label">Focus now</span><span class="editable" data-gkey="wealth-short" contenteditable="false">Post consistently — find and repeat whatever drove the Aug 31–Sep 1 spike</span></p>
+      </div>
+
+      <p class="section-label">Today</p>
+      <ul class="checklist" data-pillar="wealth" data-scope="daily">
+        <li class="check-row"><label><input type="checkbox" data-id="admin"><span class="box"></span><span class="txt editable" contenteditable="false">Up to date with Perfect Proposal admin</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="contentcreation"><span class="box"></span><span class="txt editable" contenteditable="false">Content creation posting/scheduling</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+      </ul>
+      <button type="button" class="additem" data-pillar="wealth" data-scope="daily">+ Add item</button>
+
+      <div class="checkin">
+        <p class="checkin-q">How productive did you feel in your work today?</p>
+        <div class="numscale" data-pillar="wealth" data-id="productivity" data-scope="daily">
+          <button type="button" class="chip numdot" data-value="0">0</button>
+          <button type="button" class="chip numdot" data-value="1">1</button>
+          <button type="button" class="chip numdot" data-value="2">2</button>
+          <button type="button" class="chip numdot" data-value="3">3</button>
+          <button type="button" class="chip numdot" data-value="4">4</button>
+          <button type="button" class="chip numdot" data-value="5">5</button>
+          <button type="button" class="chip numdot" data-value="6">6</button>
+          <button type="button" class="chip numdot" data-value="7">7</button>
+          <button type="button" class="chip numdot" data-value="8">8</button>
+          <button type="button" class="chip numdot" data-value="9">9</button>
+          <button type="button" class="chip numdot" data-value="10">10</button>
+        </div>
+        <div class="scalecaps"><span>not at all</span><span>completely</span></div>
+      </div>
+
+      <p class="section-label">This week</p>
+      <ul class="checklist" data-pillar="wealth" data-scope="weekly">
+        <li class="check-row"><label><input type="checkbox" data-id="sianposts"><span class="box"></span><span class="txt editable" contenteditable="false">3 posts on @sian__creates</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="boukayposts"><span class="box"></span><span class="txt editable" contenteditable="false">1 post on Boukay</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+      </ul>
+      <button type="button" class="additem" data-pillar="wealth" data-scope="weekly">+ Add item</button>
+
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">How are you doing financially this week? Saving, spending, investing, any hurdles — give a brief summary.</p>
+        <textarea class="journal voicearea" data-pillar="wealth" data-id="money" data-scope="weekly" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
+      </div>
+
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">Any new business ideas or ways to make money this week? Inspired by any businesses or entrepreneurs? What future work or ventures are pulling at you?</p>
+        <textarea class="journal voicearea" data-pillar="wealth" data-id="ideas" data-scope="weekly" placeholder="Speak or type it out — nothing's too half-formed to note down..."></textarea>
+      </div>
+
+      <div class="checkin">
+        <p class="checkin-q">Did this week's work stretch you, or just fill the calendar?</p>
+        <div class="chipselect" data-pillar="wealth" data-id="stretch" data-scope="weekly">
+          <button type="button" class="chip" data-value="stretched">Genuinely challenged</button>
+          <button type="button" class="chip" data-value="good-drain">Mostly good, a little draining</button>
+          <button type="button" class="chip" data-value="fine">Fine, not more</button>
+          <button type="button" class="chip" data-value="cliche">Clichéd, draining</button>
+          <button type="button" class="chip" data-value="burnt">Completely burnt out</button>
+        </div>
+        <div class="voicerow">
+          <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">voice note</span></div>
+          <textarea class="journal voicearea" data-pillar="wealth" data-id="stretchnote" data-scope="weekly" placeholder="Or talk it through if a tick doesn't capture it..."></textarea>
+        </div>
+      </div>
+
+      <p class="section-label">This month</p>
+      <ul class="checklist" data-pillar="wealth" data-scope="monthly">
+        <li class="check-row"><label><input type="checkbox" data-id="ra"><span class="box"></span><span class="txt editable" contenteditable="false">Contributed to my RA</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="portfolio"><span class="box"></span><span class="txt editable" contenteditable="false">Contributed to my investment portfolio</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="budget"><span class="box"></span><span class="txt editable" contenteditable="false">Stayed within my monthly budget</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+      </ul>
+      <button type="button" class="additem" data-pillar="wealth" data-scope="monthly">+ Add item</button>
+    </section>
+
+    <section class="pillar" id="family" data-hue="family" hidden>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;"><button type="button" class="backbtn" style="margin-bottom:0;">&larr; all pillars</button><button type="button" class="backbtn editbtn-pillar" style="margin-bottom:0;" aria-pressed="false">Edit</button></div>
+      <div class="pillar-head">
+        <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="12" y1="8" x2="7" y2="16.5"></line><line x1="12" y1="8" x2="17" y2="16.5"></line><circle cx="12" cy="6" r="2" fill="currentColor" stroke="none"></circle><circle cx="6" cy="18" r="2" fill="currentColor" stroke="none"></circle><circle cx="18" cy="18" r="2" fill="currentColor" stroke="none"></circle></svg></span>
+        <div class="pillar-title">
+          <h2>Friends &amp; Family</h2>
+          <p class="sub">daily check-in · weekly reminders · birthdays</p>
+        </div>
+        <div class="ring" data-ring="family">
+          <svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg>
+          <span class="ring-label">0/1</span>
+        </div>
+      </div>
+
+      <p class="mantra">There is nothing more important than having meaningful relationships in your life.</p>
+
+      <div class="goals">
+        <p><span class="label">Long-term</span><span class="editable" data-gkey="family-long" contenteditable="false">Relationships take priority above all else</span></p>
+        <p><span class="label">Focus now</span><span class="editable" data-gkey="family-short" contenteditable="false">Make my mom feel loved. Invest in siblings. Deepen friendships.</span></p>
+      </div>
+
+      <p class="section-label">Today</p>
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">Anything going on in a friendship or family relationship today? Talk it through here.</p>
+        <textarea class="journal voicearea" data-pillar="family" data-id="voicenote" data-scope="daily" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
+      </div>
+
+      <p class="section-label" style="margin-top:14px;">This week</p>
+      <ul class="checklist" data-pillar="family" data-scope="weekly">
+        <li class="check-row"><label><input type="checkbox" data-id="mum"><span class="box"></span><span class="txt editable" contenteditable="false">Checked in with Mum</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="matt"><span class="box"></span><span class="txt editable" contenteditable="false">Checked in with Matt</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="jamie"><span class="box"></span><span class="txt editable" contenteditable="false">Checked in with Jamie</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="lee"><span class="box"></span><span class="txt editable" contenteditable="false">Spend quality time with Lee</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="friend2"><span class="box"></span><span class="txt editable" contenteditable="false">Spend quality time with a close friend</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+      </ul>
+      <button type="button" class="additem" data-pillar="family" data-scope="weekly">+ Add item</button>
+
+      <p class="section-label">Upcoming birthdays — next month</p>
+      <div id="birthdayList"></div>
+      <button type="button" class="addbirthday" id="addBirthdayBtn">+ Add another birthday</button>
+    </section>
+
+    <section class="pillar" id="love" data-hue="love" hidden>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;"><button type="button" class="backbtn" style="margin-bottom:0;">&larr; all pillars</button><button type="button" class="backbtn editbtn-pillar" style="margin-bottom:0;" aria-pressed="false">Edit</button></div>
+      <div class="pillar-head">
+        <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="12" r="6.2"></circle><circle cx="15" cy="12" r="6.2"></circle></svg></span>
+        <div class="pillar-title">
+          <h2>Love &amp; Relationships</h2>
+          <p class="sub">daily check-in · weekly reflection</p>
+        </div>
+        <div class="ring" data-ring="love">
+          <svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg>
+          <span class="ring-label">0/2</span>
+        </div>
+      </div>
+
+      <div class="goals">
+        <p><span class="label">Long-term</span><span class="editable" data-gkey="love-long" contenteditable="false">Find my forever person, get married, and start a family</span></p>
+        <p><span class="label">Focus now</span><span class="editable" data-gkey="love-short" contenteditable="false">Bring an honest, open read on Mike to Dawie — Tue 15 Sep</span></p>
+      </div>
+
+      <p class="section-label">Today</p>
+      <ul class="checklist" data-pillar="love" data-scope="daily"></ul>
+      <button type="button" class="additem" data-pillar="love" data-scope="daily">+ Add item</button>
+
+      <div class="checkin">
+        <p class="checkin-q">How attracted are you feeling to Mike today?</p>
+        <div class="numscale" data-pillar="love" data-id="attraction-daily" data-scope="daily">
+          <button type="button" class="chip numdot" data-value="0">0</button>
+          <button type="button" class="chip numdot" data-value="1">1</button>
+          <button type="button" class="chip numdot" data-value="2">2</button>
+          <button type="button" class="chip numdot" data-value="3">3</button>
+          <button type="button" class="chip numdot" data-value="4">4</button>
+          <button type="button" class="chip numdot" data-value="5">5</button>
+          <button type="button" class="chip numdot" data-value="6">6</button>
+          <button type="button" class="chip numdot" data-value="7">7</button>
+          <button type="button" class="chip numdot" data-value="8">8</button>
+          <button type="button" class="chip numdot" data-value="9">9</button>
+          <button type="button" class="chip numdot" data-value="10">10</button>
+        </div>
+        <div class="scalecaps"><span>not at all</span><span>completely</span></div>
+      </div>
+
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">How did Mike make you feel today?</p>
+        <textarea class="journal voicearea" data-pillar="love" data-id="dailyfeeling" data-scope="daily" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
+      </div>
+
+      <p class="section-label" style="margin-top:14px;">This week</p>
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">Tell me how you're currently feeling in your relationship. Reflect on your heart.</p>
+        <textarea class="journal voicearea" data-pillar="love" data-id="voicenote" data-scope="weekly" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
+      </div>
+
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">How did you feel — physically, sexually, emotionally — attracted to your partner this week?</p>
+        <textarea class="journal voicearea" data-pillar="love" data-id="attraction" data-scope="weekly" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
+      </div>
+
+      <div class="voicecheckin">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
+        <p class="checkin-q">What did you do this week to make your partner feel special or loved — and what did they do for you?</p>
+        <textarea class="journal voicearea" data-pillar="love" data-id="lovingacts" data-scope="weekly" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
+      </div>
+    </section>
+
+    <section class="pillar" id="thoughts" data-hue="thoughts" hidden>
+      <button type="button" class="backbtn">&larr; all pillars</button>
+      <div class="pillar-head">
+        <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></span>
+        <div class="pillar-title">
+          <h2>Share your thoughts</h2>
+          <p class="sub">not a pillar — just a space</p>
+        </div>
+      </div>
+
+      <p class="mantra">No prompt, no pillar. Say whatever's on your mind and sort it out later — in your weekly sync, this can get split out into the pillar it actually belongs to.</p>
+
+      <div class="voicerow" style="margin-top:16px;">
+        <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">voice note</span></div>
+        <textarea id="thoughtInput" class="journal voicearea" placeholder="Share your thoughts..."></textarea>
+        <button type="button" class="statbtn" id="addThought" style="margin-top:10px;">+ Save this thought</button>
+      </div>
+
+      <p class="section-label">Saved thoughts</p>
+      <div id="thoughtsList"></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  var STORE_KEY='pillars_v1';
+  function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }catch(e){ return {}; } }
+
+  // Local storage on this phone stays the source of truth — nothing above changes.
+  // dbRef, once resolved, is a one-way mirror: every save() also (debounced) pushes
+  // the whole state blob to a single db document, so Claude can read it back later
+  // via the db capability. If db is unavailable (not opened as a claude.ai artifact,
+  // no grant, offline) dbRef stays null and this is a silent no-op.
+  var dbRef=null, dbSyncTimer=null;
+  function scheduleDbSync(){
+    if(!dbRef) return;
+    if(dbSyncTimer) clearTimeout(dbSyncTimer);
+    dbSyncTimer=setTimeout(function(){ dbRef.set(state).catch(function(){}); }, 800);
+  }
+  if(window.claude && window.claude.use){
+    window.claude.use('db').then(function(db){
+      if(!db) return;
+      dbRef = db.doc('dashboard/state');
+      scheduleDbSync();
+    }).catch(function(){});
+  }
+
+  function save(s){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(s)); }catch(e){} scheduleDbSync(); }
+  var state = load();
+
+  function pad(n){ return n<10 ? '0'+n : ''+n; }
+  function dateKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function isoWeekKey(d){
+    var t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+    var day=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-day+3);
+    var firstThu=new Date(Date.UTC(t.getUTCFullYear(),0,4));
+    var week=1+Math.round(((t-firstThu)/86400000-3+((firstThu.getUTCDay()+6)%7))/7);
+    return t.getUTCFullYear()+'-W'+pad(week);
+  }
+  var now=new Date();
+  var dKey='d:'+dateKey(now);
+  var wKey='w:'+isoWeekKey(now);
+  var mKey='m:'+now.getFullYear()+'-'+pad(now.getMonth()+1);
+  var editing=false;
+
+  var hour=now.getHours();
+  var GREETINGS={
+    morning: ['Good morning, cutie','Morning, angel','Rise and shine, love','Hello, beautiful','Good morning, sweet girl','Morning, darling'],
+    afternoon: ['Good afternoon, cutie','Hi there, angel','Hello, love','Good afternoon, beautiful','Hey there, sweet girl','Good afternoon, darling'],
+    evening: ['Good evening, cutie','Evening, angel','Hello, love','Good evening, beautiful','Hey, sweet girl','Good evening, darling'],
+    night: ['Hey, night owl','Hello, love','Still up, cutie?','Hi there, angel','Sweet dreams soon, beautiful']
+  };
+  var GENERAL_CHECKINS = ['Time to check in','How are you feeling today?','What\'s on your mind, angel?','Tell me how you feel, gorgeous?','Check in with yourself, love','What do you need today, cutie?'];
+  var period = hour<5 ? 'night' : hour<12 ? 'morning' : hour<17 ? 'afternoon' : hour<21 ? 'evening' : 'night';
+  var pool = GREETINGS[period].concat(GENERAL_CHECKINS);
+  var greet = pool[Math.floor(Math.random()*pool.length)];
+  document.getElementById('greeting').textContent=greet;
+  document.getElementById('dateLine').textContent= now.toLocaleDateString('en-ZA',{ weekday:'long', day:'numeric', month:'long' });
+
+  var ringExtras={};
+  function registerRingExtra(pillar, fn){ (ringExtras[pillar]=ringExtras[pillar]||[]).push(fn); }
+
+  var DAILY_PILLARS=['mind','health','wealth','family','love'];
+
+  function pillarProgress(pillar){
+    var inputs=document.querySelectorAll('ul.checklist[data-pillar="'+pillar+'"][data-scope="daily"] input[type="checkbox"]');
+    var total=inputs.length, done=0;
+    inputs.forEach(function(i){ if(i.checked) done++; });
+    (ringExtras[pillar]||[]).forEach(function(fn){
+      var r=fn(); total+=r.total; done+=r.done;
+    });
+    return { total:total, done:done };
+  }
+
+  function paintRing(ring, total, done){
+    var circle=ring.querySelector('circle.progress');
+    var len=circle.getTotalLength();
+    circle.style.strokeDasharray=len;
+    circle.style.strokeDashoffset= total ? len*(1-done/total) : len;
+    ring.querySelector('.ring-label').textContent= done+'/'+total;
+  }
+
+  function updateRing(pillar){
+    var rings=document.querySelectorAll('.ring[data-ring="'+pillar+'"]');
+    if(rings.length){
+      var p=pillarProgress(pillar);
+      rings.forEach(function(ring){ paintRing(ring, p.total, p.done); });
+    }
+    if(DAILY_PILLARS.indexOf(pillar)!==-1) updateOverallRing();
+  }
+
+  function updateOverallRing(){
+    var ring=document.querySelector('.ring[data-ring="overall"]');
+    if(!ring) return;
+    var total=0, done=0;
+    DAILY_PILLARS.forEach(function(pillar){
+      var p=pillarProgress(pillar);
+      total+=p.total; done+=p.done;
+    });
+    paintRing(ring, total, done);
+  }
+
+  // 'supplement' scope (and any scope other than weekly/monthly) stores per-day like 'daily',
+  // but updateRing only matches data-scope="daily" — so supplement checkboxes don't inflate the ring.
+  function scopeKey(scope){
+    if(scope==='weekly') return wKey;
+    if(scope==='monthly') return mKey;
+    return dKey;
+  }
+
+  function bindCheckRow(li, pillar, scope){
+    var input=li.querySelector('input[type="checkbox"]');
+    var id=input.dataset.id;
+    input.dataset.pillar=pillar; input.dataset.scope=scope;
+    var key=scopeKey(scope)+':'+pillar+':'+id;
+    input.checked = !!state[key];
+    input.addEventListener('change', function(){ state[key]=input.checked; save(state); updateRing(pillar); });
+
+    var txt=li.querySelector('.txt');
+    txt.setAttribute('contenteditable', editing ? 'true' : 'false');
+    var lkey='label:'+pillar+':'+scope+':'+id;
+    if(state[lkey]!=null) txt.textContent=state[lkey];
+    txt.addEventListener('blur', function(){ state[lkey]=txt.textContent.trim(); save(state); });
+
+    var rm=li.querySelector('.removeitem');
+    rm.addEventListener('click', function(){
+      if(li.dataset.custom==='true'){
+        var ckey='custom:'+pillar+':'+scope;
+        var arr=state[ckey]||[];
+        state[ckey]=arr.filter(function(c){ return c.id!==id; });
+      } else {
+        var hkey='hidden:'+pillar+':'+scope;
+        var hid=state[hkey]||[];
+        if(hid.indexOf(id)===-1) hid.push(id);
+        state[hkey]=hid;
+      }
+      save(state);
+      li.remove();
+      updateRing(pillar);
+    });
+  }
+
+  function makeCheckRow(id, label, custom){
+    var li=document.createElement('li');
+    li.className='check-row';
+    if(custom) li.dataset.custom='true';
+    var lab=document.createElement('label');
+    var input=document.createElement('input');
+    input.type='checkbox'; input.dataset.id=id;
+    var box=document.createElement('span'); box.className='box';
+    var txt=document.createElement('span'); txt.className='txt editable'; txt.setAttribute('contenteditable','false'); txt.textContent=label;
+    lab.appendChild(input); lab.appendChild(box); lab.appendChild(txt);
+    var rm=document.createElement('button');
+    rm.type='button'; rm.className='removeitem'; rm.setAttribute('aria-label','Remove item'); rm.innerHTML='&times;';
+    li.appendChild(lab); li.appendChild(rm);
+    return li;
+  }
+
+  document.querySelectorAll('ul.checklist').forEach(function(ul){
+    var pillar=ul.dataset.pillar, scope=ul.dataset.scope;
+    var hidden=state['hidden:'+pillar+':'+scope] || [];
+    hidden.forEach(function(id){
+      var input=ul.querySelector('input[data-id="'+id+'"]');
+      if(input) input.closest('.check-row').remove();
+    });
+    ul.querySelectorAll('.check-row').forEach(function(li){ bindCheckRow(li, pillar, scope); });
+    var customs=state['custom:'+pillar+':'+scope] || [];
+    customs.forEach(function(c){
+      var li=makeCheckRow(c.id, c.label, true);
+      ul.appendChild(li);
+      bindCheckRow(li, pillar, scope);
+    });
+    updateRing(pillar);
+  });
+
+  document.querySelectorAll('.additem[data-pillar]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var pillar=btn.dataset.pillar, scope=btn.dataset.scope;
+      var ul=btn.previousElementSibling;
+      var id='c'+Date.now();
+      var li=makeCheckRow(id, 'New item', true);
+      ul.appendChild(li);
+      bindCheckRow(li, pillar, scope);
+      var ckey='custom:'+pillar+':'+scope;
+      var arr=state[ckey]||[]; arr.push({id:id, label:'New item'}); state[ckey]=arr; save(state);
+      updateRing(pillar);
+      var txt=li.querySelector('.txt');
+      var range=document.createRange(); range.selectNodeContents(txt);
+      var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      txt.focus();
+    });
+  });
+
+  document.querySelectorAll('.editable[data-gkey]').forEach(function(span){
+    var key='goal:'+span.dataset.gkey;
+    if(state[key]!=null) span.textContent=state[key];
+    span.addEventListener('blur', function(){ state[key]=span.textContent.trim(); save(state); });
+  });
+
+  var editButtons=Array.prototype.slice.call(document.querySelectorAll('#editToggle, .editbtn-pillar'));
+  function setEditing(on){
+    editing=on;
+    document.body.classList.toggle('editing', on);
+    document.querySelectorAll('.editable').forEach(function(el){ el.setAttribute('contenteditable', on?'true':'false'); });
+    editButtons.forEach(function(btn){
+      btn.textContent = on ? 'Done editing' : 'Edit';
+      btn.setAttribute('aria-pressed', on?'true':'false');
+    });
+  }
+  editButtons.forEach(function(btn){ btn.addEventListener('click', function(){ setEditing(!editing); }); });
+
+  document.querySelectorAll('.chipselect, .numscale').forEach(function(group){
+    var pillar=group.dataset.pillar, id=group.dataset.id, scope=group.dataset.scope||'weekly';
+    var key=scopeKey(scope)+':'+pillar+':'+id;
+    var saved=state[key];
+    var chips=group.querySelectorAll('.chip');
+    chips.forEach(function(btn){
+      if(btn.dataset.value===saved) btn.classList.add('active');
+      btn.addEventListener('click', function(){
+        chips.forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        state[key]=btn.dataset.value; save(state);
+        updateRing(pillar);
+      });
+    });
+    if(group.classList.contains('numscale') && scope==='daily'){
+      registerRingExtra(pillar, function(){ return { total:1, done: state[key]!=null ? 1 : 0 }; });
+    }
+  });
+
+  document.querySelectorAll('.dotscale').forEach(function(group){
+    var pillar=group.dataset.pillar, id=group.dataset.id, scope=group.dataset.scope||'daily';
+    var key=scopeKey(scope)+':'+pillar+':'+id;
+    var saved=state[key]||0;
+    var dots=Array.prototype.slice.call(group.querySelectorAll('.dot'));
+    function render(v){ dots.forEach(function(d,i){ var f=i<v; d.classList.toggle('filled', f); d.setAttribute('aria-pressed', f?'true':'false'); }); }
+    render(saved);
+    dots.forEach(function(dot,i){
+      dot.addEventListener('click', function(){
+        var v=i+1; if(state[key]===v){ v=0; }
+        render(v); state[key]=v; save(state);
+      });
+    });
+  });
+
+  // #thoughtInput is excluded: it has its own save-and-clear flow into the thoughts
+  // log below, not the per-pillar draft key this binder uses (data-pillar is unset there).
+  document.querySelectorAll('textarea.journal:not(#thoughtInput)').forEach(function(ta){
+    var pillar=ta.dataset.pillar, id=ta.dataset.id, scope=ta.dataset.scope||'daily';
+    var key=scopeKey(scope)+':'+pillar+':'+id;
+    ta.value = state[key]||'';
+    ta.addEventListener('input', function(){ state[key]=ta.value; save(state); updateRing(pillar); });
+  });
+
+  document.querySelectorAll('.gratitude-input, .weight-input').forEach(function(inp){
+    var pillar=inp.dataset.pillar, id=inp.dataset.id, scope=inp.dataset.scope||'daily';
+    var key=scopeKey(scope)+':'+pillar+':'+id;
+    inp.value = state[key]||'';
+    inp.addEventListener('input', function(){ state[key]=inp.value; save(state); updateRing(pillar); });
+  });
+
+  function gratitudeDone(pillar){
+    var inputs=document.querySelectorAll('.gratitude-input[data-pillar="'+pillar+'"]');
+    if(!inputs.length) return false;
+    return Array.prototype.every.call(inputs, function(el){ return el.value.trim().length>0; });
+  }
+  registerRingExtra('mind', function(){ return { total:1, done: gratitudeDone('mind') ? 1 : 0 }; });
+
+  function journalFilled(pillar, id, scope){
+    var ta=document.querySelector('textarea.journal[data-pillar="'+pillar+'"][data-id="'+id+'"][data-scope="'+scope+'"]');
+    return !!(ta && ta.value.trim().length>0);
+  }
+  registerRingExtra('family', function(){ return { total:1, done: journalFilled('family','voicenote','daily') ? 1 : 0 }; });
+  registerRingExtra('love', function(){ return { total:1, done: journalFilled('love','dailyfeeling','daily') ? 1 : 0 }; });
+
+  function bindCounter(valueElId, btnElId, storageKey, seedDefault, max, renderFn){
+    var el=document.getElementById(valueElId);
+    var val = state[storageKey]!=null ? state[storageKey] : seedDefault;
+    function render(){ el.textContent = renderFn(val); }
+    render();
+    document.getElementById(btnElId).addEventListener('click', function(){
+      val=Math.min(max, val+1); state[storageKey]=val; save(state); render();
+    });
+  }
+
+  var periodKey='periodlog:health';
+  var periodDates = state[periodKey] || [];
+  var todayStr = dateKey(now);
+  function renderPeriod(){
+    var loggedToday = periodDates.indexOf(todayStr) !== -1;
+    document.getElementById('periodValue').textContent = loggedToday ? 'Logged today' : 'Not logged today';
+    document.getElementById('logPeriod').textContent = loggedToday ? 'Logged — tap to undo' : 'Log today';
+  }
+  renderPeriod();
+  document.getElementById('logPeriod').addEventListener('click', function(){
+    var idx=periodDates.indexOf(todayStr);
+    if(idx===-1) periodDates.push(todayStr); else periodDates.splice(idx,1);
+    state[periodKey]=periodDates; save(state);
+    renderPeriod();
+  });
+
+  var BIRTHDAYS=[
+    // Family
+    {name:'Mum', month:1, day:23},
+    {name:'Matt', month:11, day:16},
+    {name:'Jamie', month:5, day:28},
+    {name:'Sinead', month:12, day:22},
+    {name:'Bryn', month:3, day:11},
+    {name:'Liam', month:7, day:19},
+    {name:'Robyn Daniel', month:4, day:9},
+    {name:'Marc Daniel', month:8, day:25},
+    {name:'Murrae Stephans', month:6, day:30},
+    {name:'Andrea Rosenmann', month:8, day:11},
+    // Friends
+    {name:'Lee', month:2, day:11},
+    {name:'Tee Mako', month:3, day:23},
+    {name:'Jess Littlewood', month:10, day:13},
+    {name:'Audrey Nicol', month:10, day:7},
+    {name:'Kiera Bracher', month:2, day:22},
+    {name:'Alice Vincent', month:10, day:7},
+    {name:'Gabi Michel', month:10, day:31},
+    {name:'Reegan Dos Santos', month:9, day:24},
+    {name:'Clara Gigling', month:5, day:5},
+    {name:'Kath Tredenick', month:10, day:30},
+    {name:'Claire Millwood', month:9, day:12},
+    {name:'Mikaela Elam', month:2, day:21},
+    {name:'Nadia Reinmuth', month:2, day:22},
+    {name:'Chris Rogers', month:3, day:2},
+    {name:'Tristan Joseph', month:9, day:10},
+    {name:'Lourens Smit', month:10, day:15}
+    // Dad's birthday (4 Aug) is deliberately left out of this reach-out reminder —
+    // happy to add it back in if you'd rather see it here.
+  ];
+  var BIRTHDAY_WINDOW_DAYS=31;
+  var MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function daysUntil(month, day, from){
+    var today=new Date(from.getFullYear(), from.getMonth(), from.getDate());
+    var next=new Date(today.getFullYear(), month-1, day);
+    if(next<today) next=new Date(today.getFullYear()+1, month-1, day);
+    return Math.round((next-today)/86400000);
+  }
+  function renderBirthdays(){
+    var container=document.getElementById('birthdayList');
+    if(!container) return;
+    var upcoming=BIRTHDAYS.map(function(b){
+      return { name:b.name, month:b.month, day:b.day, days:daysUntil(b.month,b.day,now) };
+    }).filter(function(b){ return b.days<=BIRTHDAY_WINDOW_DAYS; })
+      .sort(function(a,b){ return a.days-b.days; });
+    container.innerHTML='';
+    if(!upcoming.length){
+      var p=document.createElement('p');
+      p.style.cssText='font-size:13px;color:var(--ink-soft);margin-top:11px;';
+      p.textContent='Nothing in the next '+BIRTHDAY_WINDOW_DAYS+' days.';
+      container.appendChild(p);
+      return;
+    }
+    upcoming.forEach(function(b){
+      var row=document.createElement('div'); row.className='birthday';
+      var name=document.createElement('span'); name.className='name';
+      name.textContent=b.name+' — '+b.day+' '+MONTH_NAMES[b.month-1];
+      var days=document.createElement('span'); days.className='days';
+      days.textContent = b.days===0 ? 'today' : (b.days+' days');
+      row.appendChild(name); row.appendChild(days);
+      container.appendChild(row);
+    });
+  }
+  renderBirthdays();
+
+  var addBd=document.getElementById('addBirthdayBtn');
+  addBd.addEventListener('click', function(){
+    addBd.textContent='Birthdays will sync from friends-and-family.md once this is wired up';
+    addBd.disabled=true;
+    addBd.style.cursor='default';
+  });
+
+  var homeSection=document.getElementById('home');
+  var heroEl=document.querySelector('header.hero');
+  var pillarEls=Array.prototype.slice.call(document.querySelectorAll('.pillar'));
+  function playEnter(el, animClass){
+    el.classList.remove(animClass);
+    void el.offsetWidth;
+    el.classList.add(animClass);
+  }
+  function showHome(){
+    homeSection.hidden=false;
+    heroEl.hidden=false;
+    pillarEls.forEach(function(s){ s.hidden=true; });
+    window.scrollTo(0,0);
+    playEnter(homeSection, 'entering');
+  }
+  function showPillar(key){
+    homeSection.hidden=true;
+    heroEl.hidden=true;
+    var target=null;
+    pillarEls.forEach(function(s){
+      var match=(s.dataset.hue===key);
+      s.hidden=!match;
+      if(match) target=s;
+    });
+    window.scrollTo(0,0);
+    if(target) playEnter(target, 'entering');
+  }
+  document.querySelectorAll('.tile').forEach(function(tile){
+    tile.addEventListener('click', function(){ showPillar(tile.dataset.target); });
+  });
+  document.querySelectorAll('.backbtn').forEach(function(btn){
+    btn.addEventListener('click', showHome);
+  });
+
+  var THOUGHTS_KEY='thoughts_log';
+  var thoughts = state[THOUGHTS_KEY] || [];
+  function renderThoughts(){
+    var list=document.getElementById('thoughtsList');
+    var countTag=document.getElementById('thoughtsCountTag');
+    if(countTag) countTag.textContent = thoughts.length+' saved';
+    if(!list) return;
+    list.innerHTML='';
+    if(!thoughts.length){
+      var p=document.createElement('p');
+      p.style.cssText='font-size:13px;color:var(--ink-soft);margin-top:4px;';
+      p.textContent='Nothing saved yet.';
+      list.appendChild(p);
+      return;
+    }
+    thoughts.slice().reverse().forEach(function(entry, revIdx){
+      var idx=thoughts.length-1-revIdx;
+      var row=document.createElement('div'); row.className='thoughtitem';
+      var meta=document.createElement('div'); meta.className='thoughtmeta';
+      var d=new Date(entry.ts);
+      meta.textContent=d.toLocaleDateString('en-ZA',{ weekday:'short', day:'numeric', month:'short' })+' · '+d.toLocaleTimeString('en-ZA',{ hour:'numeric', minute:'2-digit' });
+      var txt=document.createElement('div'); txt.className='thoughttext'; txt.textContent=entry.text;
+      var rm=document.createElement('button'); rm.type='button'; rm.className='thought-remove'; rm.setAttribute('aria-label','Delete thought'); rm.innerHTML='&times;';
+      rm.addEventListener('click', function(){
+        thoughts.splice(idx,1); state[THOUGHTS_KEY]=thoughts; save(state); renderThoughts();
+      });
+      row.appendChild(meta); row.appendChild(txt); row.appendChild(rm);
+      list.appendChild(row);
+    });
+  }
+  renderThoughts();
+  var addThoughtBtn=document.getElementById('addThought');
+  if(addThoughtBtn){
+    addThoughtBtn.addEventListener('click', function(){
+      var ta=document.getElementById('thoughtInput');
+      var val=ta.value.trim();
+      if(!val) return;
+      thoughts.push({ ts:new Date().toISOString(), text:val });
+      state[THOUGHTS_KEY]=thoughts; save(state);
+      ta.value='';
+      renderThoughts();
+    });
+  }
+
+  ['wealth','health','mind','love','family'].forEach(updateRing);
+})();
+</script>
