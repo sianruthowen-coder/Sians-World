@@ -27,6 +27,7 @@
   [data-hue="family"]{   --phue:#CA9BAA; --phue-strong:#663E4A; --phue-soft:#F2EDEF; --phue-on:#2A1E22; }
   [data-hue="love"]{     --phue:#410016; --phue-strong:#93103D; --phue-soft:#F7E8ED; --phue-on:#F7EEF1; }
   [data-hue="thoughts"]{ --phue:#EDE3DD; --phue-strong:#664D3E; --phue-soft:#F2EFED; --phue-on:#2A221E; }
+  [data-hue="gym"]{      --phue:#C1784F; --phue-strong:#7A4225; --phue-soft:#F3E7DE; --phue-on:#FBF2EA; }
 
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -42,6 +43,7 @@
     :root:not([data-theme="light"]) [data-hue="family"]{   --phue:#C3A2AD; --phue-strong:#E0D2D6; --phue-soft:#3C2A30; --phue-on:#2A1E22; }
     :root:not([data-theme="light"]) [data-hue="love"]{     --phue:#E87DA1; --phue-strong:#F0C2D1; --phue-soft:#4F172A; --phue-on:#37101D; }
     :root:not([data-theme="light"]) [data-hue="thoughts"]{ --phue:#C3AEA2; --phue-strong:#E0D7D2; --phue-soft:#3C312A; --phue-on:#2A221E; }
+    :root:not([data-theme="light"]) [data-hue="gym"]{      --phue:#E3A374; --phue-strong:#F0C7A0; --phue-soft:#3F2A1C; --phue-on:#2E1B10; }
   }
   :root[data-theme="dark"]{
     --bg:#211C15; --surface:#2B241B; --surface-2:#362D21;
@@ -56,6 +58,7 @@
   :root[data-theme="dark"] [data-hue="family"]{   --phue:#C3A2AD; --phue-strong:#E0D2D6; --phue-soft:#3C2A30; --phue-on:#2A1E22; }
   :root[data-theme="dark"] [data-hue="love"]{     --phue:#E87DA1; --phue-strong:#F0C2D1; --phue-soft:#4F172A; --phue-on:#37101D; }
   :root[data-theme="dark"] [data-hue="thoughts"]{ --phue:#C3AEA2; --phue-strong:#E0D7D2; --phue-soft:#3C312A; --phue-on:#2A221E; }
+  :root[data-theme="dark"] [data-hue="gym"]{      --phue:#E3A374; --phue-strong:#F0C7A0; --phue-soft:#3F2A1C; --phue-on:#2E1B10; }
 
   *{ box-sizing:border-box; }
   [hidden]{ display:none!important; }
@@ -220,6 +223,25 @@
   .birthday .days{ font-size:12px; color:var(--phue-strong); font-weight:700; font-variant-numeric:tabular-nums; }
   .addbirthday{ margin-top:8px; display:block; text-align:center; padding:10px; border-radius:12px; border:1.4px dashed var(--border); color:var(--ink-soft); font-size:12.5px; background:transparent; width:100%; cursor:pointer; font-family:'Inter'; }
 
+  .gym-input{ border:1.4px solid var(--border); border-radius:10px; background:var(--surface); color:var(--ink); font-family:'Inter'; font-size:15px; padding:8px 10px; font-variant-numeric:tabular-nums; }
+  .gym-input:focus-visible{ outline:none; border-color:var(--phue); }
+  .gymcard{ margin-top:12px; background:var(--phue-soft); border-radius:14px; padding:14px; }
+  .gymcard-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .gymcard-name{ font-weight:800; font-size:14px; color:var(--phue-strong); }
+  .gymlast{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; font-style:italic; line-height:1.4; }
+  .gymsetrow{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .gymsetrow .setnum{ font-size:11px; font-weight:700; color:var(--phue-strong); width:16px; text-align:center; flex:0 0 auto; }
+  .gymsetrow .gym-input{ width:70px; flex:0 0 auto; }
+  .gymsetrow .gymx{ color:var(--ink-soft); font-weight:700; flex:0 0 auto; }
+  .gym-addset{ display:block; margin-top:8px; font-size:12.5px; font-weight:700; color:var(--ink-soft); background:transparent; border:1.4px dashed var(--border); border-radius:10px; padding:7px 12px; width:100%; cursor:pointer; font-family:'Inter'; }
+  .gym-addset:hover{ border-color:var(--phue); color:var(--phue-strong); }
+  .gym-remove{ flex:0 0 auto; width:24px; height:24px; border-radius:50%; border:none; background:transparent; color:var(--ink-soft); font-size:17px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .gym-remove:hover{ color:var(--danger); background:var(--danger-soft); }
+  .gymvolume{ font-size:13.5px; font-weight:700; color:var(--phue-strong); margin:8px 0 0; }
+  .gymhistitem{ padding:12px 26px 12px 0; border-bottom:1px solid var(--border); position:relative; }
+  .gymhistitem:last-child{ border-bottom:none; }
+  .gymhist-line{ font-size:13px; line-height:1.5; margin-top:3px; }
+
   .foot{ margin-top:24px; text-align:center; }
   .foot p{ font-size:12px; color:var(--ink-soft); margin:0; max-width:40ch; margin-inline:auto; }
 </style>
@@ -283,6 +305,14 @@
           <span class="tile-name">Share your thoughts</span>
         </span>
         <span class="weeklytag" id="thoughtsCountTag">0 saved</span>
+      </button>
+
+      <button type="button" class="tile" data-hue="gym" data-target="gym">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h2M18 12h2M6 8v8M18 8v8M8 12h8"></path></svg>
+          <span class="tile-name">Gym</span>
+        </span>
+        <span class="weeklytag" id="gymCountTag">0 sessions this wk</span>
       </button>
     </div>
 
@@ -687,6 +717,38 @@
 
       <p class="section-label">Saved thoughts</p>
       <div id="thoughtsList"></div>
+    </section>
+
+    <section class="pillar" id="gym" data-hue="gym" hidden>
+      <button type="button" class="backbtn">&larr; all pillars</button>
+      <div class="pillar-head">
+        <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h2M18 12h2M6 8v8M18 8v8M8 12h8"></path></svg></span>
+        <div class="pillar-title"><h2>Gym</h2><p class="sub">strength training log</p></div>
+      </div>
+
+      <p class="mantra">Not a daily pillar — a running log of every session, so progress is easy to see over time.</p>
+
+      <p class="section-label">Today's session</p>
+      <div id="gymDraftExercises"></div>
+
+      <div class="voicerow" style="margin-top:12px;">
+        <input type="text" id="gymExerciseInput" class="gym-input" list="gymExerciseNames" placeholder="Exercise name (e.g. Squat)" style="width:100%;">
+        <datalist id="gymExerciseNames"></datalist>
+        <button type="button" class="statbtn" id="addGymExercise" style="margin-top:10px;">+ Add exercise</button>
+      </div>
+
+      <div class="checkin" style="margin-top:16px;">
+        <p class="checkin-q">Session volume so far</p>
+        <p class="gymvolume" id="gymDraftVolumeValue">0kg</p>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <button type="button" class="statbtn" id="saveGymSession">Save session</button>
+        <button type="button" class="statbtn" id="discardGymSession" style="background:var(--surface-2); color:var(--ink-soft);">Discard draft</button>
+      </div>
+
+      <p class="section-label">Session history</p>
+      <div id="gymHistoryList"></div>
     </section>
 
   </main>
@@ -1141,6 +1203,215 @@
       renderThoughts();
     });
   }
+
+  // ---- Gym: session log with per-exercise, per-set weight/reps and a same-day draft ----
+  var GYM_KEY='gym_sessions';
+  var gymSessions = state[GYM_KEY] || [];
+  var GYM_DRAFT_KEY='gym_draft';
+  var gymDateStr = dateKey(now);
+  var gymDraftRaw = state[GYM_DRAFT_KEY];
+  var gymDraft = (gymDraftRaw && gymDraftRaw.date===gymDateStr) ? gymDraftRaw : { date:gymDateStr, exercises:[] };
+  // (a draft from a prior date is silently dropped — never carried over)
+
+  function saveGymDraft(){ state[GYM_DRAFT_KEY]=gymDraft; save(state); }
+  function normGymName(n){ return (n||'').trim().toLowerCase(); }
+
+  function exerciseVolume(ex){
+    return (ex.sets||[]).reduce(function(sum,s){ return sum + (Number(s.weight)||0)*(Number(s.reps)||0); }, 0);
+  }
+  function sessionVolume(session){
+    return (session.exercises||[]).reduce(function(sum,ex){ return sum + exerciseVolume(ex); }, 0);
+  }
+  function formatVolume(n){ return Math.round(n).toLocaleString('en-ZA')+'kg'; }
+
+  // Most recent PRIOR session containing a matching exercise name. gymSessions is only ever
+  // appended to, never reordered, and the in-progress draft never lives in this array until
+  // Save — so this naturally excludes today's draft with no extra filtering needed.
+  function findLastTime(name){
+    var target=normGymName(name);
+    if(!target) return null;
+    for(var i=gymSessions.length-1; i>=0; i--){
+      var exs=gymSessions[i].exercises||[];
+      for(var j=0;j<exs.length;j++){
+        if(normGymName(exs[j].name)===target) return { ts:gymSessions[i].ts, exercise:exs[j] };
+      }
+    }
+    return null;
+  }
+
+  function allGymExerciseNames(){
+    var seen={}, names=[];
+    gymSessions.forEach(function(s){
+      (s.exercises||[]).forEach(function(ex){
+        var k=normGymName(ex.name);
+        if(ex.name && !seen[k]){ seen[k]=true; names.push(ex.name); }
+      });
+    });
+    return names;
+  }
+  function renderGymDatalist(){
+    var dl=document.getElementById('gymExerciseNames');
+    if(!dl) return;
+    dl.innerHTML='';
+    allGymExerciseNames().forEach(function(n){
+      var opt=document.createElement('option'); opt.value=n; dl.appendChild(opt);
+    });
+  }
+
+  // Collected on every full renderGymDraft() so input handlers can patch just the numeric
+  // totals afterwards, instead of re-rendering the whole card tree (which would blow away
+  // focus/cursor position mid-keystroke).
+  var gymVolEls=[];
+  function updateGymVolumes(){
+    gymVolEls.forEach(function(pair){ pair.el.textContent=formatVolume(exerciseVolume(pair.ex)); });
+    var totalEl=document.getElementById('gymDraftVolumeValue');
+    if(totalEl) totalEl.textContent=formatVolume(sessionVolume(gymDraft));
+  }
+
+  function makeGymSetRow(ex, setIdx){
+    var row=document.createElement('div'); row.className='gymsetrow';
+    var num=document.createElement('span'); num.className='setnum'; num.textContent=(setIdx+1)+'.';
+    var w=document.createElement('input'); w.type='text'; w.inputMode='decimal'; w.pattern='[0-9]*[.,]?[0-9]*';
+    w.className='gym-input'; w.placeholder='kg'; w.value = ex.sets[setIdx].weight!=null ? ex.sets[setIdx].weight : '';
+    var x=document.createElement('span'); x.className='gymx'; x.textContent='×';
+    var r=document.createElement('input'); r.type='text'; r.inputMode='numeric';
+    r.className='gym-input'; r.placeholder='reps'; r.value = ex.sets[setIdx].reps!=null ? ex.sets[setIdx].reps : '';
+    var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.setAttribute('aria-label','Remove set'); rm.innerHTML='&times;';
+
+    w.addEventListener('input', function(){ ex.sets[setIdx].weight=w.value.replace(',','.'); saveGymDraft(); updateGymVolumes(); });
+    r.addEventListener('input', function(){ ex.sets[setIdx].reps=r.value; saveGymDraft(); updateGymVolumes(); });
+    rm.addEventListener('click', function(){ ex.sets.splice(setIdx,1); saveGymDraft(); renderGymDraft(); });
+
+    row.appendChild(num); row.appendChild(w); row.appendChild(x); row.appendChild(r); row.appendChild(rm);
+    return row;
+  }
+
+  function renderGymDraft(){
+    var container=document.getElementById('gymDraftExercises');
+    if(!container) return;
+    container.innerHTML='';
+    gymVolEls=[];
+    gymDraft.exercises.forEach(function(ex, exIdx){
+      var card=document.createElement('div'); card.className='gymcard';
+      var head=document.createElement('div'); head.className='gymcard-head';
+      var name=document.createElement('span'); name.className='gymcard-name'; name.textContent=ex.name;
+      var rmEx=document.createElement('button'); rmEx.type='button'; rmEx.className='gym-remove'; rmEx.setAttribute('aria-label','Remove exercise'); rmEx.innerHTML='&times;';
+      rmEx.addEventListener('click', function(){ gymDraft.exercises.splice(exIdx,1); saveGymDraft(); renderGymDraft(); });
+      head.appendChild(name); head.appendChild(rmEx);
+      card.appendChild(head);
+
+      var last=findLastTime(ex.name);
+      if(last){
+        var d=new Date(last.ts);
+        var setsStr=(last.exercise.sets||[]).map(function(s){ return s.weight+'kg×'+s.reps; }).join(', ');
+        var lastEl=document.createElement('p'); lastEl.className='gymlast';
+        lastEl.textContent='Last time ('+d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'})+'): '+setsStr+' — '+formatVolume(exerciseVolume(last.exercise));
+        card.appendChild(lastEl);
+      }
+
+      ex.sets.forEach(function(_, setIdx){ card.appendChild(makeGymSetRow(ex, setIdx)); });
+
+      var addSetBtn=document.createElement('button'); addSetBtn.type='button'; addSetBtn.className='gym-addset'; addSetBtn.textContent='+ Add set';
+      addSetBtn.addEventListener('click', function(){ ex.sets.push({weight:'', reps:''}); saveGymDraft(); renderGymDraft(); });
+      card.appendChild(addSetBtn);
+
+      var vol=document.createElement('p'); vol.className='gymvolume'; vol.textContent=formatVolume(exerciseVolume(ex));
+      card.appendChild(vol);
+      gymVolEls.push({ ex:ex, el:vol });
+
+      container.appendChild(card);
+    });
+    updateGymVolumes();
+    renderGymDatalist();
+  }
+
+  function updateGymTile(){
+    var tag=document.getElementById('gymCountTag');
+    if(!tag) return;
+    var count=gymSessions.filter(function(s){ return 'w:'+isoWeekKey(new Date(s.ts))===wKey; }).length;
+    tag.textContent = count+(count===1 ? ' session' : ' sessions')+' this wk';
+  }
+
+  function renderGymHistory(){
+    var list=document.getElementById('gymHistoryList');
+    if(!list) return;
+    list.innerHTML='';
+    if(!gymSessions.length){
+      var p=document.createElement('p');
+      p.style.cssText='font-size:13px;color:var(--ink-soft);margin-top:4px;';
+      p.textContent='No sessions logged yet.';
+      list.appendChild(p);
+      return;
+    }
+    gymSessions.slice().reverse().forEach(function(session, revIdx){
+      var idx=gymSessions.length-1-revIdx;
+      var row=document.createElement('div'); row.className='gymhistitem';
+      var meta=document.createElement('div'); meta.className='thoughtmeta';
+      var d=new Date(session.ts);
+      meta.textContent=d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'})+' · '+formatVolume(sessionVolume(session));
+      row.appendChild(meta);
+      (session.exercises||[]).forEach(function(ex){
+        var line=document.createElement('div'); line.className='gymhist-line';
+        var setsStr=(ex.sets||[]).map(function(s){ return s.weight+'kg×'+s.reps; }).join(', ');
+        line.textContent=ex.name+': '+setsStr+' — '+formatVolume(exerciseVolume(ex));
+        row.appendChild(line);
+      });
+      var rm=document.createElement('button'); rm.type='button'; rm.className='thought-remove'; rm.setAttribute('aria-label','Delete session'); rm.innerHTML='&times;';
+      rm.addEventListener('click', function(){
+        if(!confirm('Delete this logged session? This can\'t be undone.')) return;
+        gymSessions.splice(idx,1); state[GYM_KEY]=gymSessions; save(state);
+        renderGymHistory(); renderGymDatalist(); updateGymTile();
+      });
+      row.appendChild(rm);
+      list.appendChild(row);
+    });
+  }
+
+  var addGymExerciseBtn=document.getElementById('addGymExercise');
+  if(addGymExerciseBtn){
+    addGymExerciseBtn.addEventListener('click', function(){
+      var input=document.getElementById('gymExerciseInput');
+      var name=input.value.trim();
+      if(!name) return;
+      gymDraft.exercises.push({ name:name, sets:[{weight:'', reps:''}] });
+      saveGymDraft();
+      input.value='';
+      renderGymDraft();
+    });
+  }
+
+  var saveGymBtn=document.getElementById('saveGymSession');
+  if(saveGymBtn){
+    saveGymBtn.addEventListener('click', function(){
+      var cleaned=gymDraft.exercises.map(function(ex){
+        return {
+          name: ex.name,
+          sets: (ex.sets||[]).filter(function(s){ return s.weight!=='' && s.reps!==''; })
+            .map(function(s){ return { weight:Number(String(s.weight).replace(',','.'))||0, reps:Number(s.reps)||0 }; })
+        };
+      }).filter(function(ex){ return ex.sets.length>0; });
+      if(!cleaned.length) return;
+      gymSessions.push({ ts:new Date().toISOString(), exercises:cleaned });
+      state[GYM_KEY]=gymSessions;
+      gymDraft={ date:gymDateStr, exercises:[] };
+      state[GYM_DRAFT_KEY]=gymDraft;
+      save(state);
+      renderGymDraft(); renderGymHistory(); updateGymTile();
+    });
+  }
+
+  var discardGymBtn=document.getElementById('discardGymSession');
+  if(discardGymBtn){
+    discardGymBtn.addEventListener('click', function(){
+      gymDraft={ date:gymDateStr, exercises:[] };
+      state[GYM_DRAFT_KEY]=gymDraft; save(state);
+      renderGymDraft();
+    });
+  }
+
+  renderGymDraft();
+  renderGymHistory();
+  updateGymTile();
 
   ['wealth','health','mind','love','family'].forEach(updateRing);
 })();
