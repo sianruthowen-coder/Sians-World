@@ -787,6 +787,7 @@
 
       <div id="gymEditPlanView" hidden>
         <button type="button" class="gymsubback" id="gymEditPlanBack">&larr; back to Gym</button>
+        <button type="button" class="gymtmpl-addtmpl" id="gymImportSplit" hidden style="border-style:solid; border-color:var(--phue); color:var(--phue-strong);">+ Import my weekly split</button>
         <p class="section-label">Your templates</p>
         <div id="gymTemplateEditor"></div>
         <button type="button" class="gymtmpl-addtmpl" id="gymAddTemplate">+ Add template</button>
@@ -1267,9 +1268,15 @@
   function saveGymLog(){ state[GYM_LOG_KEY]=gymLog; save(state); updateGymTile(); }
 
   // -- 1. Template CRUD --
+  // Date.now() alone collides when several templates/exercises are created in the same
+  // millisecond (e.g. importing a whole split in one synchronous loop) — findTemplate()
+  // would then silently merge distinct templates that share an id. A monotonic counter
+  // suffix guarantees uniqueness regardless of timing.
+  var gymIdCounter=0;
+  function gymUid(prefix){ gymIdCounter+=1; return prefix+Date.now()+'_'+gymIdCounter; }
   function findTemplate(id){ for(var i=0;i<gymTemplates.length;i++) if(gymTemplates[i].id===id) return gymTemplates[i]; return null; }
   function addGymTemplate(name){
-    var t={ id:'tmpl_'+Date.now(), name:name, exercises:[] };
+    var t={ id:gymUid('tmpl_'), name:name, exercises:[] };
     gymTemplates.push(t); saveGymTemplates(); return t;
   }
   function renameGymTemplate(id, name){ var t=findTemplate(id); if(t){ t.name=name; saveGymTemplates(); } }
@@ -1283,7 +1290,7 @@
   }
   function addExerciseToTemplate(templateId, name){
     var t=findTemplate(templateId); if(!t||!name) return;
-    t.exercises.push({ id:'ex_'+Date.now(), name:name }); saveGymTemplates();
+    t.exercises.push({ id:gymUid('ex_'), name:name }); saveGymTemplates();
   }
   function renameTemplateExercise(templateId, exId, name){
     var t=findTemplate(templateId); if(!t) return;
@@ -1546,10 +1553,36 @@
   document.getElementById('gymHistoryBack').addEventListener('click', function(){ showGymView('main'); });
 
   // -- 9. Edit Plan sub-view --
+  // One-time starter data, pulled from Sian's own Ascend weekly split (analysed 30 Sep 2026).
+  // Only offered while she has zero templates of her own — never re-shown once she's
+  // built or imported anything, so it can't silently duplicate her real setup.
+  var GYM_STARTER_SPLIT=[
+    { weekday:1, name:'Legs', exercises:['Hip Thrust','Romanian Deadlift','Glute Focused Step Up','Glute Kickback'] },
+    { weekday:2, name:'Shoulders, Arms, Chest & Core', exercises:['Shoulder Press','Chest Press','Incline Chest Fly','Lateral Raise','Tricep Pressdown','Cable Crunch'] },
+    { weekday:3, name:'Back & Arms', exercises:['Lat Pulldown','Face Pull','Seated Row - High','Seated Row - Left','Seated Row - Right','Bicep Curl'] },
+    { weekday:4, name:'Legs (Lower Body Strength)', exercises:['Back Squat','Split Squat - Right','Split Squat - Left','Hip Thrust - Left','Hip Thrust - Right','Seated Hamstring Curl','Leg Extension'] },
+    { weekday:5, name:'Core & Mobility (Active Recovery)', exercises:['Lat Pulldown - Left','Lat Pulldown - Right','Lateral Raise - Left','Lateral Raise - Right','Bicep Curl','Overhead Tricep Extension'] },
+    { weekday:6, name:'Lower Body Strength', exercises:['Leg Press','Calf Raise','Romanian Deadlift - Left','Romanian Deadlift - Right','Back Extension'] }
+    // Sunday intentionally omitted — the source plan treats it as a rest day, which is
+    // already this app's default for any weekday with no schedule entry.
+  ];
+  function importGymStarterSplit(){
+    GYM_STARTER_SPLIT.forEach(function(day){
+      var t=addGymTemplate(day.name);
+      day.exercises.forEach(function(exName){ addExerciseToTemplate(t.id, exName); });
+      setScheduleDefault(day.weekday, t.id);
+    });
+    renderTemplateEditor(); renderScheduleEditor();
+  }
+  document.getElementById('gymImportSplit').addEventListener('click', function(){
+    importGymStarterSplit();
+  });
+
   function renderTemplateEditor(){
     var wrap=document.getElementById('gymTemplateEditor'); wrap.innerHTML='';
+    document.getElementById('gymImportSplit').hidden = (gymTemplates.length!==0);
     if(!gymTemplates.length){
-      var p=document.createElement('p'); p.style.cssText='font-size:13px;color:var(--ink-soft);'; p.textContent='No templates yet — add one below.';
+      var p=document.createElement('p'); p.style.cssText='font-size:13px;color:var(--ink-soft);'; p.textContent='No templates yet — add one below, or import your split above.';
       wrap.appendChild(p);
     }
     gymTemplates.forEach(function(t){
