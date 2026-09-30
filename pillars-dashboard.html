@@ -88,8 +88,8 @@
   .editbtn[aria-pressed="true"]{ background:var(--danger-soft); color:var(--danger); border-color:transparent; }
   .editbtn-pillar[aria-pressed="true"]{ background:var(--danger-soft); color:var(--danger); border-color:transparent; }
 
-  .backbtn{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--ink); background:var(--surface-2); border:1.4px solid var(--border); border-radius:999px; padding:8px 14px; margin-bottom:16px; cursor:pointer; font-family:'Inter'; }
-  .backbtn:hover, .backbtn:focus-visible{ border-color:var(--phue); color:var(--phue-strong); }
+  .backbtn, .gymsubback{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--ink); background:var(--surface-2); border:1.4px solid var(--border); border-radius:999px; padding:8px 14px; margin-bottom:16px; cursor:pointer; font-family:'Inter'; }
+  .backbtn:hover, .backbtn:focus-visible, .gymsubback:hover, .gymsubback:focus-visible{ border-color:var(--phue); color:var(--phue-strong); }
 
   .tilegrid{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; margin-top:24px; }
   .tile{
@@ -223,24 +223,59 @@
   .birthday .days{ font-size:12px; color:var(--phue-strong); font-weight:700; font-variant-numeric:tabular-nums; }
   .addbirthday{ margin-top:8px; display:block; text-align:center; padding:10px; border-radius:12px; border:1.4px dashed var(--border); color:var(--ink-soft); font-size:12.5px; background:transparent; width:100%; cursor:pointer; font-family:'Inter'; }
 
-  .gym-input{ border:1.4px solid var(--border); border-radius:10px; background:var(--surface); color:var(--ink); font-family:'Inter'; font-size:15px; padding:8px 10px; font-variant-numeric:tabular-nums; }
-  .gym-input:focus-visible{ outline:none; border-color:var(--phue); }
+  .gymdaynav{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; }
+  .gymdaynav-date{ font-weight:800; font-size:14px; text-align:center; flex:1; min-width:0; }
+  .gymdaynav-arrow{ flex:0 0 auto; width:32px; height:32px; border-radius:50%; border:1.4px solid var(--border); background:var(--surface); color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; }
+  .gymdaynav-arrow:hover{ border-color:var(--phue); color:var(--phue-strong); }
+  .gymdaynav-today{ display:block; margin:4px auto 0; font-size:11px; font-weight:700; color:var(--phue-strong); background:transparent; border:none; cursor:pointer; text-decoration:underline; }
+
+  .gymplan{ margin-top:14px; background:var(--phue-soft); border-radius:14px; padding:14px; }
+  .gymplan-status{ font-size:13px; line-height:1.5; }
+  .gymplan-editlink{ font-size:11.5px; font-weight:700; color:var(--phue-strong); background:transparent; border:none; padding:0; margin-top:4px; cursor:pointer; text-decoration:underline; }
+  .gymplan-detail{ font-size:12px; color:var(--ink-soft); line-height:1.5; margin-top:8px; }
+
+  .gympills{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+
   .gymcard{ margin-top:12px; background:var(--phue-soft); border-radius:14px; padding:14px; }
-  .gymcard-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .gymcard-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
   .gymcard-name{ font-weight:800; font-size:14px; color:var(--phue-strong); }
   .gymlast{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; font-style:italic; line-height:1.4; }
-  .gymsetrow{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .gymhistlink{ font-size:11.5px; font-weight:700; color:var(--phue-strong); background:transparent; border:none; padding:0; margin-top:6px; cursor:pointer; text-decoration:underline; }
+
+  .gymsamepill{ display:inline-flex; align-items:center; gap:5px; font-family:'Inter'; font-size:12px; font-weight:700; padding:7px 12px; border-radius:999px; border:1.4px solid var(--border); background:var(--surface); color:var(--ink-soft); cursor:pointer; margin-top:8px; }
+  .gymsamepill.active{ background:var(--phue); border-color:var(--phue); color:var(--phue-on); }
+
+  .gymgroup{ margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+  .gymgroup:first-of-type{ border-top:none; padding-top:0; }
+  .gymgroup-head{ display:flex; align-items:center; gap:8px; }
+  .gym-input{ border:1.4px solid var(--border); border-radius:10px; background:var(--surface); color:var(--ink); font-family:'Inter'; font-size:15px; padding:8px 10px; font-variant-numeric:tabular-nums; }
+  .gym-input:focus-visible{ outline:none; border-color:var(--phue); }
+  .gym-input.weightfield{ width:76px; }
+  .gymsetrow{ display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
   .gymsetrow .setnum{ font-size:11px; font-weight:700; color:var(--phue-strong); width:16px; text-align:center; flex:0 0 auto; }
-  .gymsetrow .gym-input{ width:70px; flex:0 0 auto; }
-  .gymsetrow .gymx{ color:var(--ink-soft); font-weight:700; flex:0 0 auto; }
-  .gym-addset{ display:block; margin-top:8px; font-size:12.5px; font-weight:700; color:var(--ink-soft); background:transparent; border:1.4px dashed var(--border); border-radius:10px; padding:7px 12px; width:100%; cursor:pointer; font-family:'Inter'; }
-  .gym-addset:hover{ border-color:var(--phue); color:var(--phue-strong); }
+  .gymsetrow .gym-input{ width:64px; flex:0 0 auto; }
   .gym-remove{ flex:0 0 auto; width:24px; height:24px; border-radius:50%; border:none; background:transparent; color:var(--ink-soft); font-size:17px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
   .gym-remove:hover{ color:var(--danger); background:var(--danger-soft); }
-  .gymvolume{ font-size:13.5px; font-weight:700; color:var(--phue-strong); margin:8px 0 0; }
-  .gymhistitem{ padding:12px 26px 12px 0; border-bottom:1px solid var(--border); position:relative; }
+  .gym-addset, .gym-addgroup{ display:inline-block; margin-top:8px; margin-right:8px; font-size:12px; font-weight:700; color:var(--ink-soft); background:transparent; border:1.4px dashed var(--border); border-radius:10px; padding:7px 12px; cursor:pointer; font-family:'Inter'; }
+  .gym-addset:hover, .gym-addgroup:hover{ border-color:var(--phue); color:var(--phue-strong); }
+
+  .gymhistitem{ padding:12px 0; border-bottom:1px solid var(--border); }
   .gymhistitem:last-child{ border-bottom:none; }
+  .gymhist-date{ font-size:10.5px; font-weight:700; color:var(--phue-strong); text-transform:lowercase; letter-spacing:.03em; }
   .gymhist-line{ font-size:13px; line-height:1.5; margin-top:3px; }
+
+  .gymtmpl{ margin-top:12px; background:var(--surface); border:1.4px solid var(--border); border-radius:14px; padding:14px; }
+  .gymtmpl-head{ display:flex; align-items:center; gap:8px; }
+  .gymtmpl-name{ flex:1; min-width:0; border:none; border-bottom:1.4px solid var(--border); background:transparent; color:var(--ink); font-family:'Inter'; font-size:15px; font-weight:700; padding:4px 2px; }
+  .gymtmpl-name:focus-visible{ outline:none; border-bottom-color:var(--phue); }
+  .gymtmpl-exrow{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .gymtmpl-exrow .gym-input{ flex:1; min-width:0; }
+  .gymtmpl-reorder{ flex:0 0 auto; width:24px; height:24px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .gymtmpl-reorder:hover{ color:var(--phue-strong); }
+  .gymtmpl-addex, .gymtmpl-addtmpl{ display:block; margin-top:10px; font-size:12.5px; font-weight:700; color:var(--ink-soft); background:transparent; border:1.4px dashed var(--border); border-radius:10px; padding:8px 12px; width:100%; cursor:pointer; font-family:'Inter'; }
+  .gymtmpl-addex:hover, .gymtmpl-addtmpl:hover{ border-color:var(--phue); color:var(--phue-strong); }
+  .gymschedrow{ display:flex; align-items:center; gap:10px; margin-top:10px; }
+  .gymschedrow .day{ width:34px; font-size:12px; font-weight:700; color:var(--phue-strong); flex:0 0 auto; }
 
   .foot{ margin-top:24px; text-align:center; }
   .foot p{ font-size:12px; color:var(--ink-soft); margin:0; max-width:40ch; margin-inline:auto; }
@@ -726,29 +761,39 @@
         <div class="pillar-title"><h2>Gym</h2><p class="sub">strength training log</p></div>
       </div>
 
-      <p class="mantra">Not a daily pillar — a running log of every session, so progress is easy to see over time.</p>
+      <div id="gymMainView">
+        <div class="gymdaynav">
+          <button type="button" class="gymdaynav-arrow" id="gymPrevDay" aria-label="Previous day">&lsaquo;</button>
+          <span class="gymdaynav-date" id="gymDayLabel">&nbsp;</span>
+          <button type="button" class="gymdaynav-arrow" id="gymNextDay" aria-label="Next day">&rsaquo;</button>
+        </div>
+        <button type="button" class="gymdaynav-today" id="gymJumpToday" hidden>Jump to today</button>
 
-      <p class="section-label">Today's session</p>
-      <div id="gymDraftExercises"></div>
+        <div class="gymplan">
+          <p class="gymplan-status" id="gymPlanStatus"></p>
+          <button type="button" class="gymplan-editlink" id="gymEditPlanLink">Edit plan</button>
+          <div class="gympills" id="gymTemplatePills"></div>
+          <p class="gymplan-detail" id="gymPlanDetail"></p>
+        </div>
 
-      <div class="voicerow" style="margin-top:12px;">
-        <input type="text" id="gymExerciseInput" class="gym-input" list="gymExerciseNames" placeholder="Exercise name (e.g. Squat)" style="width:100%;">
-        <datalist id="gymExerciseNames"></datalist>
-        <button type="button" class="statbtn" id="addGymExercise" style="margin-top:10px;">+ Add exercise</button>
+        <div id="gymExerciseCards"></div>
       </div>
 
-      <div class="checkin" style="margin-top:16px;">
-        <p class="checkin-q">Session volume so far</p>
-        <p class="gymvolume" id="gymDraftVolumeValue">0kg</p>
+      <div id="gymHistoryView" hidden>
+        <button type="button" class="gymsubback" id="gymHistoryBack">&larr; back to Gym</button>
+        <p class="section-label" id="gymHistoryTitle">History</p>
+        <div id="gymHistoryList"></div>
       </div>
 
-      <div style="display:flex; gap:8px; margin-top:12px;">
-        <button type="button" class="statbtn" id="saveGymSession">Save session</button>
-        <button type="button" class="statbtn" id="discardGymSession" style="background:var(--surface-2); color:var(--ink-soft);">Discard draft</button>
-      </div>
+      <div id="gymEditPlanView" hidden>
+        <button type="button" class="gymsubback" id="gymEditPlanBack">&larr; back to Gym</button>
+        <p class="section-label">Your templates</p>
+        <div id="gymTemplateEditor"></div>
+        <button type="button" class="gymtmpl-addtmpl" id="gymAddTemplate">+ Add template</button>
 
-      <p class="section-label">Session history</p>
-      <div id="gymHistoryList"></div>
+        <p class="section-label" style="margin-top:18px;">Weekly schedule</p>
+        <div id="gymScheduleEditor"></div>
+      </div>
     </section>
 
   </main>
@@ -1204,213 +1249,391 @@
     });
   }
 
-  // ---- Gym: session log with per-exercise, per-set weight/reps and a same-day draft ----
-  var GYM_KEY='gym_sessions';
-  var gymSessions = state[GYM_KEY] || [];
-  var GYM_DRAFT_KEY='gym_draft';
-  var gymDateStr = dateKey(now);
-  var gymDraftRaw = state[GYM_DRAFT_KEY];
-  var gymDraft = (gymDraftRaw && gymDraftRaw.date===gymDateStr) ? gymDraftRaw : { date:gymDateStr, exercises:[] };
-  // (a draft from a prior date is silently dropped — never carried over)
+  // ---- Gym: custom workout templates, a weekly schedule, day-by-day navigation,
+  // and per-exercise weight-group logging that autosaves on every field change. ----
+  var GYM_TEMPLATES_KEY='gym_templates';
+  var GYM_SCHEDULE_KEY='gym_schedule';
+  var GYM_OVERRIDES_KEY='gym_overrides';
+  var GYM_LOG_KEY='gym_log';
+  var gymTemplates = state[GYM_TEMPLATES_KEY] || [];
+  var gymSchedule  = state[GYM_SCHEDULE_KEY]  || {};
+  var gymOverrides = state[GYM_OVERRIDES_KEY] || {};
+  var gymLog       = state[GYM_LOG_KEY]       || {};
 
-  function saveGymDraft(){ state[GYM_DRAFT_KEY]=gymDraft; save(state); }
   function normGymName(n){ return (n||'').trim().toLowerCase(); }
+  function saveGymTemplates(){ state[GYM_TEMPLATES_KEY]=gymTemplates; save(state); }
+  function saveGymSchedule(){ state[GYM_SCHEDULE_KEY]=gymSchedule; save(state); }
+  function saveGymOverrides(){ state[GYM_OVERRIDES_KEY]=gymOverrides; save(state); }
+  function saveGymLog(){ state[GYM_LOG_KEY]=gymLog; save(state); updateGymTile(); }
 
-  function exerciseVolume(ex){
-    return (ex.sets||[]).reduce(function(sum,s){ return sum + (Number(s.weight)||0)*(Number(s.reps)||0); }, 0);
+  // -- 1. Template CRUD --
+  function findTemplate(id){ for(var i=0;i<gymTemplates.length;i++) if(gymTemplates[i].id===id) return gymTemplates[i]; return null; }
+  function addGymTemplate(name){
+    var t={ id:'tmpl_'+Date.now(), name:name, exercises:[] };
+    gymTemplates.push(t); saveGymTemplates(); return t;
   }
-  function sessionVolume(session){
-    return (session.exercises||[]).reduce(function(sum,ex){ return sum + exerciseVolume(ex); }, 0);
+  function renameGymTemplate(id, name){ var t=findTemplate(id); if(t){ t.name=name; saveGymTemplates(); } }
+  function deleteGymTemplate(id){
+    gymTemplates = gymTemplates.filter(function(t){ return t.id!==id; });
+    Object.keys(gymSchedule).forEach(function(d){ if(gymSchedule[d]===id) gymSchedule[d]='rest'; });
+    Object.keys(gymOverrides).forEach(function(d){ if(gymOverrides[d]===id) delete gymOverrides[d]; });
+    saveGymTemplates(); saveGymSchedule(); saveGymOverrides();
+    // gym_log entries for this template are left in place — deleting a template
+    // never destroys already-logged history, it just becomes unreachable via the UI.
   }
-  function formatVolume(n){ return Math.round(n).toLocaleString('en-ZA')+'kg'; }
+  function addExerciseToTemplate(templateId, name){
+    var t=findTemplate(templateId); if(!t||!name) return;
+    t.exercises.push({ id:'ex_'+Date.now(), name:name }); saveGymTemplates();
+  }
+  function renameTemplateExercise(templateId, exId, name){
+    var t=findTemplate(templateId); if(!t) return;
+    var ex=t.exercises.filter(function(e){ return e.id===exId; })[0];
+    if(ex){ ex.name=name; saveGymTemplates(); }
+  }
+  function removeTemplateExercise(templateId, exId){
+    var t=findTemplate(templateId); if(!t) return;
+    t.exercises=t.exercises.filter(function(e){ return e.id!==exId; }); saveGymTemplates();
+  }
+  function reorderTemplateExercise(templateId, exId, dir){
+    var t=findTemplate(templateId); if(!t) return;
+    var i=t.exercises.findIndex(function(e){ return e.id===exId; });
+    var j=i+dir;
+    if(i<0||j<0||j>=t.exercises.length) return;
+    var tmp=t.exercises[i]; t.exercises[i]=t.exercises[j]; t.exercises[j]=tmp;
+    saveGymTemplates();
+  }
 
-  // Most recent PRIOR session containing a matching exercise name. gymSessions is only ever
-  // appended to, never reordered, and the in-progress draft never lives in this array until
-  // Save — so this naturally excludes today's draft with no extra filtering needed.
-  function findLastTime(name){
-    var target=normGymName(name);
-    if(!target) return null;
-    for(var i=gymSessions.length-1; i>=0; i--){
-      var exs=gymSessions[i].exercises||[];
-      for(var j=0;j<exs.length;j++){
-        if(normGymName(exs[j].name)===target) return { ts:gymSessions[i].ts, exercise:exs[j] };
-      }
+  // -- 2. Weekly schedule + override resolution --
+  function setScheduleDefault(weekday, templateIdOrRest){ gymSchedule[String(weekday)]=templateIdOrRest; saveGymSchedule(); }
+  function setDayOverride(dateStr, templateIdOrRest){ gymOverrides[dateStr]=templateIdOrRest; saveGymOverrides(); }
+  // Explicit per-day override wins; else the weekly default; else rest.
+  function resolveActiveTemplateId(dateStr, dateObj){
+    if(gymOverrides.hasOwnProperty(dateStr)) return gymOverrides[dateStr];
+    var wd=dateObj.getDay();
+    return gymSchedule.hasOwnProperty(String(wd)) ? gymSchedule[String(wd)] : 'rest';
+  }
+
+  // -- 3. Day navigation (runtime-only position — always starts at today) --
+  var gymViewDate = new Date(now);
+  function gymDateStr(){ return dateKey(gymViewDate); }
+  function shiftGymDay(delta){ gymViewDate=new Date(gymViewDate.getFullYear(),gymViewDate.getMonth(),gymViewDate.getDate()+delta); renderGymMain(); }
+  document.getElementById('gymPrevDay').addEventListener('click', function(){ shiftGymDay(-1); });
+  document.getElementById('gymNextDay').addEventListener('click', function(){ shiftGymDay(1); });
+  document.getElementById('gymJumpToday').addEventListener('click', function(){ gymViewDate=new Date(now); renderGymMain(); });
+
+  // -- 4. Session find-or-create + template-scoped "last time" --
+  function gymLogKeyFor(templateId, dateStr){ return templateId+'|'+dateStr; }
+  function ensureSession(templateId, dateStr){
+    var key=gymLogKeyFor(templateId,dateStr);
+    if(!gymLog[key]) gymLog[key] = { templateId:templateId, date:dateStr, exercises:[] };
+    return gymLog[key];
+  }
+  // Most recent STRICTLY PRIOR session under the same template with a non-empty match.
+  function findLastTemplateTime(templateId, exerciseName, beforeDateStr){
+    var target=normGymName(exerciseName);
+    var best=null;
+    Object.keys(gymLog).forEach(function(key){
+      var s=gymLog[key];
+      if(s.templateId!==templateId) return;
+      if(s.date>=beforeDateStr) return;
+      var match=(s.exercises||[]).filter(function(e){ return normGymName(e.name)===target && e.weightGroups && e.weightGroups.length; })[0];
+      if(match && (!best || s.date>best.date)) best={ date:s.date, exercise:match };
+    });
+    return best;
+  }
+
+  // -- 5. Weight-group / set mutation + "Same as last time" prefill --
+  function emptyWeightGroup(){ return { weight:'', reps:[''] }; }
+  function cloneWeightGroups(groups){
+    return (groups||[]).map(function(g){ return { weight:g.weight, reps:(g.reps||[]).slice() }; });
+  }
+  function addWeightGroup(exEntry){ exEntry.weightGroups.push(emptyWeightGroup()); exEntry.sameAsLast=false; }
+  function removeWeightGroup(exEntry, gIdx){ exEntry.weightGroups.splice(gIdx,1); exEntry.sameAsLast=false; }
+  function addSet(exEntry, gIdx){ exEntry.weightGroups[gIdx].reps.push(''); exEntry.sameAsLast=false; }
+  function removeSet(exEntry, gIdx, sIdx){
+    exEntry.weightGroups[gIdx].reps.splice(sIdx,1);
+    if(!exEntry.weightGroups[gIdx].reps.length) exEntry.weightGroups.splice(gIdx,1);
+    exEntry.sameAsLast=false;
+  }
+  // Called the first time an exercise's card is built for a session with no entry yet.
+  // If prior data exists under this template, prefill + mark active + persist immediately;
+  // otherwise start with one empty weight group (not persisted until actually edited).
+  function initExerciseEntry(session, templateExercise, templateId, dateStr){
+    var existing=session.exercises.filter(function(e){ return normGymName(e.name)===normGymName(templateExercise.name); })[0];
+    if(existing) return existing;
+    var last=findLastTemplateTime(templateId, templateExercise.name, dateStr);
+    var entry;
+    if(last){
+      entry={ name:templateExercise.name, sameAsLast:true, weightGroups:cloneWeightGroups(last.exercise.weightGroups) };
+      session.exercises.push(entry);
+      saveGymLog();
+    } else {
+      entry={ name:templateExercise.name, sameAsLast:false, weightGroups:[emptyWeightGroup()] };
+      session.exercises.push(entry);
     }
-    return null;
+    return entry;
+  }
+  function resetToLastTime(exEntry, templateId, exerciseName, dateStr){
+    var last=findLastTemplateTime(templateId, exerciseName, dateStr);
+    if(!last) return;
+    exEntry.weightGroups=cloneWeightGroups(last.exercise.weightGroups);
+    exEntry.sameAsLast=true;
   }
 
-  function allGymExerciseNames(){
-    var seen={}, names=[];
-    gymSessions.forEach(function(s){
-      (s.exercises||[]).forEach(function(ex){
-        var k=normGymName(ex.name);
-        if(ex.name && !seen[k]){ seen[k]=true; names.push(ex.name); }
-      });
-    });
-    return names;
-  }
-  function renderGymDatalist(){
-    var dl=document.getElementById('gymExerciseNames');
-    if(!dl) return;
-    dl.innerHTML='';
-    allGymExerciseNames().forEach(function(n){
-      var opt=document.createElement('option'); opt.value=n; dl.appendChild(opt);
-    });
+  // -- 6. Card rendering (structural rebuilds only on add/remove; per-keystroke
+  //       input handlers patch data + save directly, never re-rendering themselves,
+  //       so focus/cursor position is never disturbed mid-type). --
+  // Patches the "Same as last time" pill's look in place (no re-render), so editing
+  // a weight/rep field can flip it live without disturbing focus on the field itself.
+  function syncSamePill(pill, entry){
+    if(!pill) return;
+    pill.classList.toggle('active', !!entry.sameAsLast);
+    pill.textContent=(entry.sameAsLast?'✓ ':'')+'Same as last time';
   }
 
-  // Collected on every full renderGymDraft() so input handlers can patch just the numeric
-  // totals afterwards, instead of re-rendering the whole card tree (which would blow away
-  // focus/cursor position mid-keystroke).
-  var gymVolEls=[];
-  function updateGymVolumes(){
-    gymVolEls.forEach(function(pair){ pair.el.textContent=formatVolume(exerciseVolume(pair.ex)); });
-    var totalEl=document.getElementById('gymDraftVolumeValue');
-    if(totalEl) totalEl.textContent=formatVolume(sessionVolume(gymDraft));
-  }
-
-  function makeGymSetRow(ex, setIdx){
-    var row=document.createElement('div'); row.className='gymsetrow';
-    var num=document.createElement('span'); num.className='setnum'; num.textContent=(setIdx+1)+'.';
+  function renderWeightGroup(entry, group, gIdx, templateId, dateStr, pill){
+    var wrap=document.createElement('div'); wrap.className='gymgroup';
+    var head=document.createElement('div'); head.className='gymgroup-head';
     var w=document.createElement('input'); w.type='text'; w.inputMode='decimal'; w.pattern='[0-9]*[.,]?[0-9]*';
-    w.className='gym-input'; w.placeholder='kg'; w.value = ex.sets[setIdx].weight!=null ? ex.sets[setIdx].weight : '';
-    var x=document.createElement('span'); x.className='gymx'; x.textContent='×';
-    var r=document.createElement('input'); r.type='text'; r.inputMode='numeric';
-    r.className='gym-input'; r.placeholder='reps'; r.value = ex.sets[setIdx].reps!=null ? ex.sets[setIdx].reps : '';
-    var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.setAttribute('aria-label','Remove set'); rm.innerHTML='&times;';
+    w.className='gym-input weightfield'; w.placeholder='kg'; w.value=group.weight;
+    w.addEventListener('input', function(){ group.weight=w.value.replace(',','.'); entry.sameAsLast=false; saveGymLog(); syncSamePill(pill, entry); });
+    var unit=document.createElement('span'); unit.className='weightunit'; unit.textContent='kg';
+    var rmGroup=document.createElement('button'); rmGroup.type='button'; rmGroup.className='gym-remove'; rmGroup.innerHTML='&times;'; rmGroup.setAttribute('aria-label','Remove weight');
+    rmGroup.addEventListener('click', function(){ removeWeightGroup(entry,gIdx); saveGymLog(); renderGymMain(); });
+    head.appendChild(w); head.appendChild(unit); head.appendChild(rmGroup);
+    wrap.appendChild(head);
 
-    w.addEventListener('input', function(){ ex.sets[setIdx].weight=w.value.replace(',','.'); saveGymDraft(); updateGymVolumes(); });
-    r.addEventListener('input', function(){ ex.sets[setIdx].reps=r.value; saveGymDraft(); updateGymVolumes(); });
-    rm.addEventListener('click', function(){ ex.sets.splice(setIdx,1); saveGymDraft(); renderGymDraft(); });
+    group.reps.forEach(function(_, sIdx){
+      var row=document.createElement('div'); row.className='gymsetrow';
+      var num=document.createElement('span'); num.className='setnum'; num.textContent=(sIdx+1)+'.';
+      var r=document.createElement('input'); r.type='text'; r.inputMode='numeric';
+      r.className='gym-input'; r.placeholder='reps'; r.value=group.reps[sIdx];
+      r.addEventListener('input', function(){ group.reps[sIdx]=r.value; entry.sameAsLast=false; saveGymLog(); syncSamePill(pill, entry); });
+      var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove set');
+      rm.addEventListener('click', function(){ removeSet(entry,gIdx,sIdx); saveGymLog(); renderGymMain(); });
+      row.appendChild(num); row.appendChild(r); row.appendChild(rm);
+      wrap.appendChild(row);
+    });
 
-    row.appendChild(num); row.appendChild(w); row.appendChild(x); row.appendChild(r); row.appendChild(rm);
-    return row;
+    var addSetBtn=document.createElement('button'); addSetBtn.type='button'; addSetBtn.className='gym-addset'; addSetBtn.textContent='+ Add set';
+    addSetBtn.addEventListener('click', function(){ addSet(entry,gIdx); saveGymLog(); renderGymMain(); });
+    wrap.appendChild(addSetBtn);
+    return wrap;
   }
 
-  function renderGymDraft(){
-    var container=document.getElementById('gymDraftExercises');
-    if(!container) return;
-    container.innerHTML='';
-    gymVolEls=[];
-    gymDraft.exercises.forEach(function(ex, exIdx){
-      var card=document.createElement('div'); card.className='gymcard';
-      var head=document.createElement('div'); head.className='gymcard-head';
-      var name=document.createElement('span'); name.className='gymcard-name'; name.textContent=ex.name;
-      var rmEx=document.createElement('button'); rmEx.type='button'; rmEx.className='gym-remove'; rmEx.setAttribute('aria-label','Remove exercise'); rmEx.innerHTML='&times;';
-      rmEx.addEventListener('click', function(){ gymDraft.exercises.splice(exIdx,1); saveGymDraft(); renderGymDraft(); });
-      head.appendChild(name); head.appendChild(rmEx);
+  function renderExerciseCard(session, templateExercise, templateId, dateStr){
+    var entry=initExerciseEntry(session, templateExercise, templateId, dateStr);
+    var card=document.createElement('div'); card.className='gymcard';
+
+    var head=document.createElement('div'); head.className='gymcard-head';
+    var name=document.createElement('span'); name.className='gymcard-name'; name.textContent=templateExercise.name;
+    head.appendChild(name);
+    card.appendChild(head);
+
+    var last=findLastTemplateTime(templateId, templateExercise.name, dateStr);
+    var pill=null;
+    if(last){
+      var d=new Date(last.date+'T00:00:00');
+      var tmpl=findTemplate(templateId);
+      var line=(tmpl?tmpl.name:'')+' · '+d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'})+' · '+
+        last.exercise.weightGroups.map(function(g){ return g.weight+'kg × '+g.reps.join(', '); }).join(' | ');
+      var lastEl=document.createElement('p'); lastEl.className='gymlast'; lastEl.textContent='Last '+line;
+      card.appendChild(lastEl);
+
+      pill=document.createElement('button'); pill.type='button';
+      pill.className='gymsamepill'+(entry.sameAsLast?' active':'');
+      pill.textContent=(entry.sameAsLast?'✓ ':'')+'Same as last time';
+      pill.addEventListener('click', function(){
+        resetToLastTime(entry, templateId, templateExercise.name, dateStr);
+        saveGymLog();
+        renderGymMain();
+      });
+      card.appendChild(pill);
+    }
+
+    entry.weightGroups.forEach(function(group, gIdx){ card.appendChild(renderWeightGroup(entry, group, gIdx, templateId, dateStr, pill)); });
+
+    var addGroupBtn=document.createElement('button'); addGroupBtn.type='button'; addGroupBtn.className='gym-addgroup'; addGroupBtn.textContent='+ Add weight';
+    addGroupBtn.addEventListener('click', function(){ addWeightGroup(entry); saveGymLog(); renderGymMain(); });
+    card.appendChild(addGroupBtn);
+
+    var histBtn=document.createElement('button'); histBtn.type='button'; histBtn.className='gymhistlink'; histBtn.textContent='History';
+    histBtn.addEventListener('click', function(){ openExerciseHistory(templateId, templateExercise.name); });
+    card.appendChild(histBtn);
+
+    return card;
+  }
+
+  // -- 7. Main view render --
+  function templateStatusLine(dateObj, templateId){
+    var tmpl=findTemplate(templateId);
+    if(templateId==='rest' || !tmpl) return 'Rest day.';
+    return tmpl.name+' · '+tmpl.exercises.length+' exercise'+(tmpl.exercises.length===1?'':'s')+'.';
+  }
+
+  function renderGymMain(){
+    var dsStr=gymDateStr();
+    var todayStr=dateKey(now);
+    document.getElementById('gymDayLabel').textContent = gymViewDate.toLocaleDateString('en-ZA',{ weekday:'long', day:'numeric', month:'long' });
+    document.getElementById('gymJumpToday').hidden = (dsStr===todayStr);
+
+    var activeId=resolveActiveTemplateId(dsStr, gymViewDate);
+    var isOverride=gymOverrides.hasOwnProperty(dsStr);
+    var weekday=gymViewDate.getDay();
+    var defaultId=gymSchedule.hasOwnProperty(String(weekday)) ? gymSchedule[String(weekday)] : 'rest';
+
+    var statusEl=document.getElementById('gymPlanStatus');
+    statusEl.textContent = isOverride
+      ? templateStatusLine(gymViewDate, activeId)+' (overriding the usual plan for this day.)'
+      : (defaultId==='rest'
+          ? gymViewDate.toLocaleDateString('en-ZA',{weekday:'long'})+' is a rest day in your plan.'
+          : templateStatusLine(gymViewDate, activeId));
+
+    var pillsEl=document.getElementById('gymTemplatePills'); pillsEl.innerHTML='';
+    gymTemplates.concat([{id:'rest', name:'Rest'}]).forEach(function(t){
+      var chip=document.createElement('button'); chip.type='button'; chip.className='chip'+(t.id===activeId?' active':'');
+      chip.textContent=t.id==='rest' ? 'Rest' : t.name;
+      chip.addEventListener('click', function(){ setDayOverride(dsStr, t.id); renderGymMain(); });
+      pillsEl.appendChild(chip);
+    });
+
+    var cardsEl=document.getElementById('gymExerciseCards'); cardsEl.innerHTML='';
+    var detailEl=document.getElementById('gymPlanDetail');
+    if(activeId==='rest' || !findTemplate(activeId)){
+      detailEl.textContent='';
+      return;
+    }
+    var tmpl=findTemplate(activeId);
+    var session=ensureSession(activeId, dsStr);
+    detailEl.textContent = tmpl.exercises.length
+      ? "Your last "+tmpl.name+" is filled in where available: change what's different, or tap ✓ Same as last time."
+      : 'This template has no exercises yet — add some in Edit plan.';
+    tmpl.exercises.forEach(function(ex){
+      cardsEl.appendChild(renderExerciseCard(session, ex, activeId, dsStr));
+    });
+  }
+
+  // -- 8. Per-exercise History sub-view --
+  function openExerciseHistory(templateId, exerciseName){
+    var tmpl=findTemplate(templateId);
+    document.getElementById('gymHistoryTitle').textContent = exerciseName+(tmpl?' · '+tmpl.name:'');
+    var list=document.getElementById('gymHistoryList'); list.innerHTML='';
+    var target=normGymName(exerciseName);
+    var entries=[];
+    Object.keys(gymLog).forEach(function(key){
+      var s=gymLog[key];
+      if(s.templateId!==templateId) return;
+      var match=(s.exercises||[]).filter(function(e){ return normGymName(e.name)===target && e.weightGroups && e.weightGroups.length; })[0];
+      if(match) entries.push({ date:s.date, exercise:match });
+    });
+    entries.sort(function(a,b){ return a.date<b.date?1:-1; });
+    if(!entries.length){
+      var p=document.createElement('p'); p.style.cssText='font-size:13px;color:var(--ink-soft);margin-top:4px;';
+      p.textContent='No history yet for this exercise.'; list.appendChild(p);
+    } else {
+      entries.forEach(function(e){
+        var row=document.createElement('div'); row.className='gymhistitem';
+        var d=new Date(e.date+'T00:00:00');
+        var dateEl=document.createElement('div'); dateEl.className='gymhist-date';
+        dateEl.textContent=d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'});
+        var line=document.createElement('div'); line.className='gymhist-line';
+        line.textContent=e.exercise.weightGroups.map(function(g){ return g.weight+'kg × '+g.reps.join(', '); }).join(' | ');
+        row.appendChild(dateEl); row.appendChild(line); list.appendChild(row);
+      });
+    }
+    showGymView('history');
+  }
+  document.getElementById('gymHistoryBack').addEventListener('click', function(){ showGymView('main'); });
+
+  // -- 9. Edit Plan sub-view --
+  function renderTemplateEditor(){
+    var wrap=document.getElementById('gymTemplateEditor'); wrap.innerHTML='';
+    if(!gymTemplates.length){
+      var p=document.createElement('p'); p.style.cssText='font-size:13px;color:var(--ink-soft);'; p.textContent='No templates yet — add one below.';
+      wrap.appendChild(p);
+    }
+    gymTemplates.forEach(function(t){
+      var card=document.createElement('div'); card.className='gymtmpl';
+      var head=document.createElement('div'); head.className='gymtmpl-head';
+      var nameInput=document.createElement('input'); nameInput.className='gymtmpl-name'; nameInput.value=t.name;
+      nameInput.addEventListener('blur', function(){ renameGymTemplate(t.id, nameInput.value.trim()||t.name); renderScheduleEditor(); });
+      var del=document.createElement('button'); del.type='button'; del.className='gym-remove'; del.innerHTML='&times;'; del.setAttribute('aria-label','Delete template');
+      del.addEventListener('click', function(){
+        if(!confirm('Delete "'+t.name+'"? Logged history stays, but the template and its schedule links are removed.')) return;
+        deleteGymTemplate(t.id); renderTemplateEditor(); renderScheduleEditor();
+      });
+      head.appendChild(nameInput); head.appendChild(del);
       card.appendChild(head);
 
-      var last=findLastTime(ex.name);
-      if(last){
-        var d=new Date(last.ts);
-        var setsStr=(last.exercise.sets||[]).map(function(s){ return s.weight+'kg×'+s.reps; }).join(', ');
-        var lastEl=document.createElement('p'); lastEl.className='gymlast';
-        lastEl.textContent='Last time ('+d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'})+'): '+setsStr+' — '+formatVolume(exerciseVolume(last.exercise));
-        card.appendChild(lastEl);
-      }
+      t.exercises.forEach(function(ex){
+        var row=document.createElement('div'); row.className='gymtmpl-exrow';
+        var input=document.createElement('input'); input.className='gym-input'; input.value=ex.name;
+        input.addEventListener('blur', function(){ renameTemplateExercise(t.id, ex.id, input.value.trim()||ex.name); });
+        var up=document.createElement('button'); up.type='button'; up.className='gymtmpl-reorder'; up.innerHTML='&uarr;'; up.setAttribute('aria-label','Move up');
+        up.addEventListener('click', function(){ reorderTemplateExercise(t.id, ex.id, -1); renderTemplateEditor(); });
+        var down=document.createElement('button'); down.type='button'; down.className='gymtmpl-reorder'; down.innerHTML='&darr;'; down.setAttribute('aria-label','Move down');
+        down.addEventListener('click', function(){ reorderTemplateExercise(t.id, ex.id, 1); renderTemplateEditor(); });
+        var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove exercise');
+        rm.addEventListener('click', function(){ removeTemplateExercise(t.id, ex.id); renderTemplateEditor(); });
+        row.appendChild(input); row.appendChild(up); row.appendChild(down); row.appendChild(rm);
+        card.appendChild(row);
+      });
 
-      ex.sets.forEach(function(_, setIdx){ card.appendChild(makeGymSetRow(ex, setIdx)); });
-
-      var addSetBtn=document.createElement('button'); addSetBtn.type='button'; addSetBtn.className='gym-addset'; addSetBtn.textContent='+ Add set';
-      addSetBtn.addEventListener('click', function(){ ex.sets.push({weight:'', reps:''}); saveGymDraft(); renderGymDraft(); });
-      card.appendChild(addSetBtn);
-
-      var vol=document.createElement('p'); vol.className='gymvolume'; vol.textContent=formatVolume(exerciseVolume(ex));
-      card.appendChild(vol);
-      gymVolEls.push({ ex:ex, el:vol });
-
-      container.appendChild(card);
+      var addEx=document.createElement('button'); addEx.type='button'; addEx.className='gymtmpl-addex'; addEx.textContent='+ Add exercise';
+      addEx.addEventListener('click', function(){ addExerciseToTemplate(t.id, 'New exercise'); renderTemplateEditor(); });
+      card.appendChild(addEx);
+      wrap.appendChild(card);
     });
-    updateGymVolumes();
-    renderGymDatalist();
   }
+  document.getElementById('gymAddTemplate').addEventListener('click', function(){
+    addGymTemplate('New template'); renderTemplateEditor(); renderScheduleEditor();
+  });
+
+  var GYM_WEEKDAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function renderScheduleEditor(){
+    var wrap=document.getElementById('gymScheduleEditor'); wrap.innerHTML='';
+    GYM_WEEKDAYS.forEach(function(label, idx){
+      var row=document.createElement('div'); row.className='gymschedrow';
+      var d=document.createElement('span'); d.className='day'; d.textContent=label;
+      var pills=document.createElement('div'); pills.className='gympills'; pills.style.marginTop='0';
+      var current=gymSchedule.hasOwnProperty(String(idx)) ? gymSchedule[String(idx)] : 'rest';
+      gymTemplates.concat([{id:'rest', name:'Rest'}]).forEach(function(t){
+        var chip=document.createElement('button'); chip.type='button'; chip.className='chip'+(t.id===current?' active':'');
+        chip.textContent=t.id==='rest' ? 'Rest' : t.name;
+        chip.addEventListener('click', function(){
+          setScheduleDefault(idx, t.id); renderScheduleEditor();
+          if(!document.getElementById('gymMainView').hidden) renderGymMain();
+        });
+        pills.appendChild(chip);
+      });
+      row.appendChild(d); row.appendChild(pills);
+      wrap.appendChild(row);
+    });
+  }
+
+  // -- 10. View switching + bootstrap --
+  function showGymView(name){
+    document.getElementById('gymMainView').hidden = (name!=='main');
+    document.getElementById('gymHistoryView').hidden = (name!=='history');
+    document.getElementById('gymEditPlanView').hidden = (name!=='editplan');
+    window.scrollTo(0,0);
+    if(name==='main') renderGymMain();
+    if(name==='editplan'){ renderTemplateEditor(); renderScheduleEditor(); }
+  }
+  document.getElementById('gymEditPlanLink').addEventListener('click', function(){ showGymView('editplan'); });
+  document.getElementById('gymEditPlanBack').addEventListener('click', function(){ showGymView('main'); });
 
   function updateGymTile(){
     var tag=document.getElementById('gymCountTag');
     if(!tag) return;
-    var count=gymSessions.filter(function(s){ return 'w:'+isoWeekKey(new Date(s.ts))===wKey; }).length;
+    var count=Object.keys(gymLog).filter(function(key){
+      var s=gymLog[key];
+      return 'w:'+isoWeekKey(new Date(s.date+'T00:00:00'))===wKey && (s.exercises||[]).some(function(e){ return e.weightGroups && e.weightGroups.length; });
+    }).length;
     tag.textContent = count+(count===1 ? ' session' : ' sessions')+' this wk';
   }
 
-  function renderGymHistory(){
-    var list=document.getElementById('gymHistoryList');
-    if(!list) return;
-    list.innerHTML='';
-    if(!gymSessions.length){
-      var p=document.createElement('p');
-      p.style.cssText='font-size:13px;color:var(--ink-soft);margin-top:4px;';
-      p.textContent='No sessions logged yet.';
-      list.appendChild(p);
-      return;
-    }
-    gymSessions.slice().reverse().forEach(function(session, revIdx){
-      var idx=gymSessions.length-1-revIdx;
-      var row=document.createElement('div'); row.className='gymhistitem';
-      var meta=document.createElement('div'); meta.className='thoughtmeta';
-      var d=new Date(session.ts);
-      meta.textContent=d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'})+' · '+formatVolume(sessionVolume(session));
-      row.appendChild(meta);
-      (session.exercises||[]).forEach(function(ex){
-        var line=document.createElement('div'); line.className='gymhist-line';
-        var setsStr=(ex.sets||[]).map(function(s){ return s.weight+'kg×'+s.reps; }).join(', ');
-        line.textContent=ex.name+': '+setsStr+' — '+formatVolume(exerciseVolume(ex));
-        row.appendChild(line);
-      });
-      var rm=document.createElement('button'); rm.type='button'; rm.className='thought-remove'; rm.setAttribute('aria-label','Delete session'); rm.innerHTML='&times;';
-      rm.addEventListener('click', function(){
-        if(!confirm('Delete this logged session? This can\'t be undone.')) return;
-        gymSessions.splice(idx,1); state[GYM_KEY]=gymSessions; save(state);
-        renderGymHistory(); renderGymDatalist(); updateGymTile();
-      });
-      row.appendChild(rm);
-      list.appendChild(row);
-    });
-  }
-
-  var addGymExerciseBtn=document.getElementById('addGymExercise');
-  if(addGymExerciseBtn){
-    addGymExerciseBtn.addEventListener('click', function(){
-      var input=document.getElementById('gymExerciseInput');
-      var name=input.value.trim();
-      if(!name) return;
-      gymDraft.exercises.push({ name:name, sets:[{weight:'', reps:''}] });
-      saveGymDraft();
-      input.value='';
-      renderGymDraft();
-    });
-  }
-
-  var saveGymBtn=document.getElementById('saveGymSession');
-  if(saveGymBtn){
-    saveGymBtn.addEventListener('click', function(){
-      var cleaned=gymDraft.exercises.map(function(ex){
-        return {
-          name: ex.name,
-          sets: (ex.sets||[]).filter(function(s){ return s.weight!=='' && s.reps!==''; })
-            .map(function(s){ return { weight:Number(String(s.weight).replace(',','.'))||0, reps:Number(s.reps)||0 }; })
-        };
-      }).filter(function(ex){ return ex.sets.length>0; });
-      if(!cleaned.length) return;
-      gymSessions.push({ ts:new Date().toISOString(), exercises:cleaned });
-      state[GYM_KEY]=gymSessions;
-      gymDraft={ date:gymDateStr, exercises:[] };
-      state[GYM_DRAFT_KEY]=gymDraft;
-      save(state);
-      renderGymDraft(); renderGymHistory(); updateGymTile();
-    });
-  }
-
-  var discardGymBtn=document.getElementById('discardGymSession');
-  if(discardGymBtn){
-    discardGymBtn.addEventListener('click', function(){
-      gymDraft={ date:gymDateStr, exercises:[] };
-      state[GYM_DRAFT_KEY]=gymDraft; save(state);
-      renderGymDraft();
-    });
-  }
-
-  renderGymDraft();
-  renderGymHistory();
+  renderGymMain();
   updateGymTile();
 
   ['wealth','health','mind','love','family'].forEach(updateRing);
