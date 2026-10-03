@@ -223,6 +223,10 @@
   .birthday .days{ font-size:12px; color:var(--phue-strong); font-weight:700; font-variant-numeric:tabular-nums; }
   .addbirthday{ margin-top:8px; display:block; text-align:center; padding:10px; border-radius:12px; border:1.4px dashed var(--border); color:var(--ink-soft); font-size:12.5px; background:transparent; width:100%; cursor:pointer; font-family:'Inter'; }
 
+  .gymgreeting{ font-size:13px; font-style:italic; color:var(--phue-strong); margin:10px 0 0; }
+  .gymtabs{ display:flex; gap:8px; margin-top:14px; }
+  .gymtab{ flex:1; text-align:center; padding:10px 12px; }
+
   .gymdaynav{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; }
   .gymdaynav-date{ font-weight:800; font-size:14px; text-align:center; flex:1; min-width:0; }
   .gymdaynav-arrow{ flex:0 0 auto; width:32px; height:32px; border-radius:50%; border:1.4px solid var(--border); background:var(--surface); color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; }
@@ -263,6 +267,20 @@
   .gymhistitem:last-child{ border-bottom:none; }
   .gymhist-date{ font-size:10.5px; font-weight:700; color:var(--phue-strong); text-transform:lowercase; letter-spacing:.03em; }
   .gymhist-line{ font-size:13px; line-height:1.5; margin-top:3px; }
+
+  .gymchecklist{ margin-top:12px; }
+  .gymchecklist-list{ list-style:none; margin:4px 0 0; padding:4px 14px; background:var(--phue-soft); border-radius:14px; }
+  .gymchecklist-list .check-row{ padding-block:10px; }
+
+  .gymprogchart{ width:100%; height:auto; margin-top:10px; }
+  .gymprog-axis{ stroke:var(--border); stroke-width:1; }
+  .gymprog-line{ fill:none; stroke:var(--phue-strong); stroke-width:2; }
+  .gymprog-dot{ fill:var(--phue-strong); }
+  .gymprog-xlabel, .gymprog-ylabel{ font-size:7px; fill:var(--ink-soft); }
+  .gymprogstats{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+  .gymprogstat{ background:var(--phue-soft); border-radius:12px; padding:10px 12px; }
+  .gymprogstat .label{ font-size:10px; font-weight:700; text-transform:lowercase; color:var(--phue-strong); }
+  .gymprogstat .value{ font-size:16px; font-weight:800; margin-top:2px; }
 
   .gymtmpl{ margin-top:12px; background:var(--surface); border:1.4px solid var(--border); border-radius:14px; padding:14px; }
   .gymtmpl-head{ display:flex; align-items:center; gap:8px; }
@@ -760,6 +778,12 @@
         <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h2M18 12h2M6 8v8M18 8v8M8 12h8"></path></svg></span>
         <div class="pillar-title"><h2>Gym</h2><p class="sub">strength training log</p></div>
       </div>
+      <p class="gymgreeting" id="gymGreeting"></p>
+
+      <div class="gymtabs" id="gymTabs">
+        <button type="button" class="chip gymtab active" data-tab="main">Log</button>
+        <button type="button" class="chip gymtab" data-tab="progress">Progress</button>
+      </div>
 
       <div id="gymMainView">
         <div class="gymdaynav">
@@ -779,10 +803,17 @@
         <div id="gymExerciseCards"></div>
       </div>
 
-      <div id="gymHistoryView" hidden>
-        <button type="button" class="gymsubback" id="gymHistoryBack">&larr; back to Gym</button>
-        <p class="section-label" id="gymHistoryTitle">History</p>
-        <div id="gymHistoryList"></div>
+      <div id="gymProgressView" hidden>
+        <div class="gympills" id="gymProgressTemplatePills"></div>
+        <div class="gympills" id="gymProgressExercisePills" style="margin-top:6px;"></div>
+        <div class="chipselect" id="gymProgressMetricToggle" style="margin-top:12px;">
+          <button type="button" class="chip gymmetricchip active" data-metric="max">Max weight</button>
+          <button type="button" class="chip gymmetricchip" data-metric="volume">Total volume</button>
+        </div>
+        <div id="gymProgressChart"></div>
+        <div class="gymprogstats" id="gymProgressStats"></div>
+        <p class="section-label">History</p>
+        <div id="gymProgressHistoryList"></div>
       </div>
 
       <div id="gymEditPlanView" hidden>
@@ -842,7 +873,6 @@
   var mKey='m:'+now.getFullYear()+'-'+pad(now.getMonth()+1);
   var editing=false;
 
-  var hour=now.getHours();
   var GREETINGS={
     morning: ['Good morning, cutie','Morning, angel','Rise and shine, love','Hello, beautiful','Good morning, sweet girl','Morning, darling'],
     afternoon: ['Good afternoon, cutie','Hi there, angel','Hello, love','Good afternoon, beautiful','Hey there, sweet girl','Good afternoon, darling'],
@@ -850,10 +880,13 @@
     night: ['Hey, night owl','Hello, love','Still up, cutie?','Hi there, angel','Sweet dreams soon, beautiful']
   };
   var GENERAL_CHECKINS = ['Time to check in','How are you feeling today?','What\'s on your mind, angel?','Tell me how you feel, gorgeous?','Check in with yourself, love','What do you need today, cutie?'];
-  var period = hour<5 ? 'night' : hour<12 ? 'morning' : hour<17 ? 'afternoon' : hour<21 ? 'evening' : 'night';
-  var pool = GREETINGS[period].concat(GENERAL_CHECKINS);
-  var greet = pool[Math.floor(Math.random()*pool.length)];
-  document.getElementById('greeting').textContent=greet;
+  function pickGreeting(){
+    var h=new Date().getHours();
+    var p = h<5 ? 'night' : h<12 ? 'morning' : h<17 ? 'afternoon' : h<21 ? 'evening' : 'night';
+    var pool = GREETINGS[p].concat(GENERAL_CHECKINS);
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  document.getElementById('greeting').textContent=pickGreeting();
   document.getElementById('dateLine').textContent= now.toLocaleDateString('en-ZA',{ weekday:'long', day:'numeric', month:'long' });
 
   var ringExtras={};
@@ -1297,6 +1330,19 @@
     if(defaultReps && defaultReps.length) ex.defaultReps=defaultReps.map(String);
     t.exercises.push(ex); saveGymTemplates();
   }
+  // Warm-up/cool-down are bodyweight mobility holds (name+duration, no weight/reps) —
+  // a deliberately simpler, separate shape from `exercises`, seeded only from
+  // GYM_STARTER_SPLIT (no in-app authoring UI yet).
+  function addWarmupItem(templateId, name, duration){
+    var t=findTemplate(templateId); if(!t||!name) return;
+    t.warmup=t.warmup||[]; t.warmup.push({ id:gymUid('wu_'), name:name, duration:duration||'' });
+    saveGymTemplates();
+  }
+  function addCooldownItem(templateId, name, duration){
+    var t=findTemplate(templateId); if(!t||!name) return;
+    t.cooldown=t.cooldown||[]; t.cooldown.push({ id:gymUid('cd_'), name:name, duration:duration||'' });
+    saveGymTemplates();
+  }
   function renameTemplateExercise(templateId, exId, name){
     var t=findTemplate(templateId); if(!t) return;
     var ex=t.exercises.filter(function(e){ return e.id===exId; })[0];
@@ -1327,6 +1373,8 @@
 
   // -- 3. Day navigation (runtime-only position — always starts at today) --
   var gymViewDate = new Date(now);
+  // Progress tab's picker state — runtime-only, same convention as gymViewDate.
+  var gymProgressTemplateId = null, gymProgressExerciseName = null, gymProgressMetric = 'max';
   function gymDateStr(){ return dateKey(gymViewDate); }
   function shiftGymDay(delta){ gymViewDate=new Date(gymViewDate.getFullYear(),gymViewDate.getMonth(),gymViewDate.getDate()+delta); renderGymMain(); }
   document.getElementById('gymPrevDay').addEventListener('click', function(){ shiftGymDay(-1); });
@@ -1337,8 +1385,14 @@
   function gymLogKeyFor(templateId, dateStr){ return templateId+'|'+dateStr; }
   function ensureSession(templateId, dateStr){
     var key=gymLogKeyFor(templateId,dateStr);
-    if(!gymLog[key]) gymLog[key] = { templateId:templateId, date:dateStr, exercises:[] };
+    if(!gymLog[key]) gymLog[key] = { templateId:templateId, date:dateStr, exercises:[], warmupDone:{}, cooldownDone:{} };
+    if(!gymLog[key].warmupDone) gymLog[key].warmupDone={};
+    if(!gymLog[key].cooldownDone) gymLog[key].cooldownDone={};
     return gymLog[key];
+  }
+  function toggleGymChecklistItem(session, listKey, itemId){
+    session[listKey][itemId]=!session[listKey][itemId];
+    saveGymLog();
   }
   // Most recent STRICTLY PRIOR session under the same template with a non-empty match.
   // A weight group with every field blank is just the placeholder created when an
@@ -1501,11 +1555,40 @@
     addGroupBtn.addEventListener('click', function(){ addWeightGroup(entry); saveGymLog(); renderGymMain(); });
     card.appendChild(addGroupBtn);
 
-    var histBtn=document.createElement('button'); histBtn.type='button'; histBtn.className='gymhistlink'; histBtn.textContent='History';
-    histBtn.addEventListener('click', function(){ openExerciseHistory(templateId, templateExercise.name); });
+    var histBtn=document.createElement('button'); histBtn.type='button'; histBtn.className='gymhistlink'; histBtn.textContent='Progress';
+    histBtn.addEventListener('click', function(){
+      gymProgressTemplateId=templateId; gymProgressExerciseName=templateExercise.name;
+      showGymView('progress');
+    });
     card.appendChild(histBtn);
 
     return card;
+  }
+
+  // Simple bodyweight-hold checklist (warm-up/cool-down) — a structural rebuild every
+  // render is fine here since checkboxes have no cursor/focus state to preserve, unlike
+  // the weight/rep text inputs above. Returns null when there's nothing to show (e.g.
+  // Friday has no cool-down), so callers can skip appending it with no special-casing.
+  function renderGymChecklistSection(title, items, session, listKey){
+    if(!items || !items.length) return null;
+    var wrap=document.createElement('div'); wrap.className='gymchecklist';
+    var label=document.createElement('p'); label.className='section-label'; label.textContent=title;
+    wrap.appendChild(label);
+    var ul=document.createElement('ul'); ul.className='gymchecklist-list';
+    items.forEach(function(item){
+      var li=document.createElement('li'); li.className='check-row';
+      var lab=document.createElement('label');
+      var input=document.createElement('input'); input.type='checkbox';
+      input.checked=!!session[listKey][item.id];
+      input.addEventListener('change', function(){ toggleGymChecklistItem(session, listKey, item.id); });
+      var box=document.createElement('span'); box.className='box';
+      var txt=document.createElement('span'); txt.className='txt';
+      txt.textContent=item.name+' · '+item.duration;
+      lab.appendChild(input); lab.appendChild(box); lab.appendChild(txt);
+      li.appendChild(lab); ul.appendChild(li);
+    });
+    wrap.appendChild(ul);
+    return wrap;
   }
 
   // -- 7. Main view render --
@@ -1552,16 +1635,20 @@
     detailEl.textContent = tmpl.exercises.length
       ? "Your last "+tmpl.name+" is filled in where available: change what's different, or tap ✓ Same as last time."
       : 'This template has no exercises yet — add some in Edit plan.';
+    var warmupEl=renderGymChecklistSection('Warm up', tmpl.warmup, session, 'warmupDone');
+    if(warmupEl) cardsEl.appendChild(warmupEl);
     tmpl.exercises.forEach(function(ex){
       cardsEl.appendChild(renderExerciseCard(session, ex, activeId, dsStr));
     });
+    var cooldownEl=renderGymChecklistSection('Cool down', tmpl.cooldown, session, 'cooldownDone');
+    if(cooldownEl) cardsEl.appendChild(cooldownEl);
   }
 
-  // -- 8. Per-exercise History sub-view --
-  function openExerciseHistory(templateId, exerciseName){
-    var tmpl=findTemplate(templateId);
-    document.getElementById('gymHistoryTitle').textContent = exerciseName+(tmpl?' · '+tmpl.name:'');
-    var list=document.getElementById('gymHistoryList'); list.innerHTML='';
+  // -- 8. Shared exercise-entry + metric helpers, and Progress sub-view --
+  // Every real (hasLoggedData-passing) entry for exerciseName under templateId,
+  // ascending by date — single source of truth so a fromProgram-only ghost entry never
+  // appears in either the chart or the raw history list.
+  function getExerciseEntries(templateId, exerciseName){
     var target=normGymName(exerciseName);
     var entries=[];
     Object.keys(gymLog).forEach(function(key){
@@ -1570,24 +1657,177 @@
       var match=(s.exercises||[]).filter(function(e){ return normGymName(e.name)===target && hasLoggedData(e); })[0];
       if(match) entries.push({ date:s.date, exercise:match });
     });
-    entries.sort(function(a,b){ return a.date<b.date?1:-1; });
+    entries.sort(function(a,b){ return a.date<b.date?-1:1; });
+    return entries;
+  }
+  // Weight-based tracker: a group with no real weight entered contributes nothing to
+  // volume, and is skipped (not zeroed) for max-weight so a bodyweight-only group never
+  // drags a session's max down to 0.
+  function exerciseVolume(exercise){
+    return (exercise.weightGroups||[]).reduce(function(sum, g){
+      var w=parseFloat(String(g.weight).replace(',','.'));
+      if(!g.weight || isNaN(w)) return sum;
+      var repSum=(g.reps||[]).reduce(function(rs,r){ var n=parseInt(r,10); return rs+(isNaN(n)?0:n); },0);
+      return sum + w*repSum;
+    },0);
+  }
+  function exerciseMaxWeight(exercise){
+    var max=null;
+    (exercise.weightGroups||[]).forEach(function(g){
+      var w=parseFloat(String(g.weight).replace(',','.'));
+      if(!g.weight || isNaN(w)) return;
+      if(max===null || w>max) max=w;
+    });
+    return max;
+  }
+  function computeExerciseStats(entries){
+    if(!entries.length) return null;
+    var first=entries[0], last=entries[entries.length-1];
+    var lastMax=exerciseMaxWeight(last.exercise), firstMax=exerciseMaxWeight(first.exercise);
+    var best=null;
+    entries.forEach(function(e){ var m=exerciseMaxWeight(e.exercise); if(m!=null && (best===null||m>best)) best=m; });
+    return {
+      lastWeight:lastMax, lastDate:last.date, bestWeight:best,
+      changeSinceFirst: (lastMax!=null && firstMax!=null) ? lastMax-firstMax : null,
+      sessionCount: entries.length
+    };
+  }
+
+  function drawGymProgressChart(container, entries, metric){
+    container.innerHTML='';
+    if(entries.length<2){
+      var p=document.createElement('p'); p.style.cssText='font-size:13px;color:var(--ink-soft);margin-top:8px;';
+      p.textContent = entries.length ? 'Log one more session to see a trend line.' : 'No logged sessions yet for this exercise.';
+      container.appendChild(p); return;
+    }
+    var values=entries.map(function(e){
+      var v = metric==='max' ? exerciseMaxWeight(e.exercise) : exerciseVolume(e.exercise);
+      return v==null ? 0 : v;
+    });
+    var W=320,H=160,padL=30,padR=8,padT=14,padB=22;
+    var minV=Math.min.apply(null,values), maxV=Math.max.apply(null,values);
+    if(minV===maxV){ minV-=1; maxV+=1; }
+    var innerW=W-padL-padR, innerH=H-padT-padB;
+    function xAt(i){ return padL + i/(entries.length-1)*innerW; }
+    function yAt(v){ return padT + innerH*(1-(v-minV)/(maxV-minV)); }
+    var NS='http://www.w3.org/2000/svg';
+    var svg=document.createElementNS(NS,'svg');
+    svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.setAttribute('class','gymprogchart');
+
+    var base=document.createElementNS(NS,'line');
+    base.setAttribute('x1',padL); base.setAttribute('x2',W-padR);
+    base.setAttribute('y1',H-padB); base.setAttribute('y2',H-padB); base.setAttribute('class','gymprog-axis');
+    svg.appendChild(base);
+
+    var poly=document.createElementNS(NS,'polyline');
+    poly.setAttribute('points', values.map(function(v,i){ return xAt(i)+','+yAt(v); }).join(' '));
+    poly.setAttribute('class','gymprog-line'); svg.appendChild(poly);
+
+    var labelEvery = entries.length<=6 ? 1 : Math.ceil(entries.length/6);
+    entries.forEach(function(e,i){
+      var cx=xAt(i), cy=yAt(values[i]);
+      var dot=document.createElementNS(NS,'circle');
+      dot.setAttribute('cx',cx); dot.setAttribute('cy',cy); dot.setAttribute('r',3); dot.setAttribute('class','gymprog-dot');
+      svg.appendChild(dot);
+      if(i%labelEvery===0 || i===entries.length-1){
+        var t=document.createElementNS(NS,'text');
+        var anchor = i===0 ? 'start' : (i===entries.length-1 ? 'end' : 'middle');
+        t.setAttribute('x',cx); t.setAttribute('y',H-padB+13); t.setAttribute('text-anchor',anchor); t.setAttribute('class','gymprog-xlabel');
+        t.textContent=new Date(e.date+'T00:00:00').toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+        svg.appendChild(t);
+      }
+    });
+    [minV,maxV].forEach(function(v,idx){
+      var t=document.createElementNS(NS,'text');
+      t.setAttribute('x',2); t.setAttribute('y', idx===0?H-padB+3:padT+8); t.setAttribute('class','gymprog-ylabel');
+      t.textContent=Math.round(v); svg.appendChild(t);
+    });
+    container.appendChild(svg);
+  }
+
+  function renderGymProgressStats(entries){
+    var statsEl=document.getElementById('gymProgressStats'); statsEl.innerHTML='';
+    var stats=computeExerciseStats(entries);
+    if(!stats) return;
+    var lastDate=new Date(stats.lastDate+'T00:00:00');
+    var tiles=[
+      { label:'last session', value: (stats.lastWeight!=null ? stats.lastWeight+'kg' : '—')+' · '+lastDate.toLocaleDateString('en-ZA',{day:'numeric',month:'short'}) },
+      { label:'personal best', value: stats.bestWeight!=null ? stats.bestWeight+'kg' : '—' },
+      { label:'change since first log', value: stats.changeSinceFirst!=null ? (stats.changeSinceFirst>=0?'+':'')+stats.changeSinceFirst+'kg' : '—' },
+      { label:'sessions logged', value: String(stats.sessionCount) }
+    ];
+    tiles.forEach(function(t){
+      var tile=document.createElement('div'); tile.className='gymprogstat';
+      var lab=document.createElement('div'); lab.className='label'; lab.textContent=t.label;
+      var val=document.createElement('div'); val.className='value'; val.textContent=t.value;
+      tile.appendChild(lab); tile.appendChild(val); statsEl.appendChild(tile);
+    });
+  }
+
+  function renderGymProgressHistoryList(entries){
+    var list=document.getElementById('gymProgressHistoryList'); list.innerHTML='';
     if(!entries.length){
       var p=document.createElement('p'); p.style.cssText='font-size:13px;color:var(--ink-soft);margin-top:4px;';
       p.textContent='No history yet for this exercise.'; list.appendChild(p);
-    } else {
-      entries.forEach(function(e){
-        var row=document.createElement('div'); row.className='gymhistitem';
-        var d=new Date(e.date+'T00:00:00');
-        var dateEl=document.createElement('div'); dateEl.className='gymhist-date';
-        dateEl.textContent=d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'});
-        var line=document.createElement('div'); line.className='gymhist-line';
-        line.textContent=e.exercise.weightGroups.map(function(g){ return g.weight+'kg × '+g.reps.join(', '); }).join(' | ');
-        row.appendChild(dateEl); row.appendChild(line); list.appendChild(row);
-      });
+      return;
     }
-    showGymView('history');
+    entries.slice().reverse().forEach(function(e){
+      var row=document.createElement('div'); row.className='gymhistitem';
+      var d=new Date(e.date+'T00:00:00');
+      var dateEl=document.createElement('div'); dateEl.className='gymhist-date';
+      dateEl.textContent=d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'});
+      var line=document.createElement('div'); line.className='gymhist-line';
+      line.textContent=e.exercise.weightGroups.map(function(g){ return g.weight+'kg × '+g.reps.join(', '); }).join(' | ');
+      row.appendChild(dateEl); row.appendChild(line); list.appendChild(row);
+    });
   }
-  document.getElementById('gymHistoryBack').addEventListener('click', function(){ showGymView('main'); });
+
+  function renderGymProgress(){
+    if(!gymProgressTemplateId || !findTemplate(gymProgressTemplateId)){
+      gymProgressTemplateId = gymTemplates.length ? gymTemplates[0].id : null;
+    }
+    var pillsEl=document.getElementById('gymProgressTemplatePills'); pillsEl.innerHTML='';
+    gymTemplates.forEach(function(t){
+      var chip=document.createElement('button'); chip.type='button';
+      chip.className='chip'+(t.id===gymProgressTemplateId?' active':'');
+      chip.textContent=t.name;
+      chip.addEventListener('click', function(){ gymProgressTemplateId=t.id; gymProgressExerciseName=null; renderGymProgress(); });
+      pillsEl.appendChild(chip);
+    });
+
+    var tmpl=findTemplate(gymProgressTemplateId);
+    var exPillsEl=document.getElementById('gymProgressExercisePills'); exPillsEl.innerHTML='';
+    if(!tmpl || !tmpl.exercises.length){
+      document.getElementById('gymProgressChart').innerHTML='<p style="font-size:13px;color:var(--ink-soft);">No exercises in this template yet.</p>';
+      document.getElementById('gymProgressStats').innerHTML=''; document.getElementById('gymProgressHistoryList').innerHTML='';
+      return;
+    }
+    if(!gymProgressExerciseName || !tmpl.exercises.some(function(e){ return e.name===gymProgressExerciseName; })){
+      gymProgressExerciseName=tmpl.exercises[0].name;
+    }
+    tmpl.exercises.forEach(function(ex){
+      var chip=document.createElement('button'); chip.type='button';
+      chip.className='chip'+(ex.name===gymProgressExerciseName?' active':'');
+      chip.textContent=ex.name;
+      chip.addEventListener('click', function(){ gymProgressExerciseName=ex.name; renderGymProgress(); });
+      exPillsEl.appendChild(chip);
+    });
+
+    document.querySelectorAll('#gymProgressMetricToggle .gymmetricchip').forEach(function(btn){
+      btn.classList.toggle('active', btn.dataset.metric===gymProgressMetric);
+    });
+
+    var entries=getExerciseEntries(gymProgressTemplateId, gymProgressExerciseName);
+    drawGymProgressChart(document.getElementById('gymProgressChart'), entries, gymProgressMetric);
+    renderGymProgressStats(entries);
+    renderGymProgressHistoryList(entries);
+  }
+  document.querySelectorAll('#gymProgressMetricToggle .gymmetricchip').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      gymProgressMetric=btn.dataset.metric;
+      renderGymProgress();
+    });
+  });
 
   // -- 9. Edit Plan sub-view --
   // One-time starter data, pulled from Sian's own Ascend weekly split (analysed 30 Sep 2026,
@@ -1598,31 +1838,87 @@
   // Only offered while she has zero templates of her own — never re-shown once she's
   // built or imported anything, so it can't silently duplicate her real setup.
   var GYM_STARTER_SPLIT=[
-    { weekday:1, name:'Legs', exercises:[
+    { weekday:1, name:'Legs',
+      warmup:[
+        {name:'Hinge', duration:'30 secs'},
+        {name:'Hip Circle - Left', duration:'30 secs'},
+        {name:'Hip Circle - Right', duration:'30 secs'},
+        {name:'Low Lunge - Deep Rock - Left', duration:'30 secs'},
+        {name:'Low Lunge - Deep Rock - Right', duration:'30 secs'},
+        {name:'Deep Squat to Hamstring Stretch - Alternating', duration:'30 secs'}
+      ],
+      exercises:[
       {name:'Hip Thrust', reps:['10','8','8','8']},
       {name:'Romanian Deadlift', reps:['6','6','10']},
       {name:'Glute Focused Step Up - Right', reps:['8','8','8']},
       {name:'Glute Focused Step Up - Left', reps:['8','8','8']},
       {name:'Glute Kickback - Left', reps:['10','12','12']},
       {name:'Glute Kickback - Right', reps:['10','12','12']}
-    ] },
-    { weekday:2, name:'Shoulders, Arms, Chest & Core', exercises:[
+    ],
+      cooldown:[
+        {name:'Static Quad Stretch - Left', duration:'30 secs'},
+        {name:'Static Quad Stretch - Right', duration:'30 secs'},
+        {name:'Pigeon Pose - Left', duration:'30 secs'},
+        {name:'Pigeon Pose - Right', duration:'30 secs'},
+        {name:'Forward Fold - Seated', duration:'30 secs'}
+      ]
+    },
+    { weekday:2, name:'Shoulders, Arms, Chest & Core',
+      warmup:[
+        {name:'Arm Circles - Forward', duration:'30 secs'},
+        {name:'Arm Circles - Backward', duration:'30 secs'},
+        {name:'Shoulder CARs - Right', duration:'30 secs'},
+        {name:'Shoulder CARs - Left', duration:'30 secs'},
+        {name:'Scapular Wall Slide', duration:'30 secs'}
+      ],
+      exercises:[
       {name:'Shoulder Press - Seated Upright', reps:['8','6','6','10']},
       {name:'Chest Press', reps:['10','8','8','8']},
       {name:'Incline Chest Fly', reps:['8','8']},
       {name:'Lateral Raise', reps:['6','6','12']},
       {name:'Tricep Pressdown - Rope/Bar', reps:['10','10','10']},
       {name:'Cable Crunch', reps:['12','12','12']}
-    ] },
-    { weekday:3, name:'Back & Arms', exercises:[
+    ],
+      cooldown:[
+        {name:'Deltoid Stretch - Right', duration:'30 secs'},
+        {name:'Deltoid Stretch - Left', duration:'30 secs'},
+        {name:'Overhead Tricep Stretch - Right', duration:'30 secs'},
+        {name:'Overhead Tricep Stretch - Left', duration:'30 secs'}
+      ]
+    },
+    { weekday:3, name:'Back & Arms',
+      warmup:[
+        {name:'Arm Circles - Forward', duration:'30 secs'},
+        {name:'Arm Circles - Backward', duration:'30 secs'},
+        {name:'Rainbow Stretch - Right', duration:'30 secs'},
+        {name:'Rainbow Stretch - Left', duration:'30 secs'},
+        {name:'Cat Cow', duration:'30 secs'}
+      ],
+      exercises:[
       {name:'Lat Pulldown', reps:['8','8','8']},
       {name:'Face Pull - Rear Delt Focused', reps:['10','12','12']},
       {name:'Seated Row - High', reps:['8','6','6','10']},
       {name:'Seated Row - Left', reps:['8','10','10']},
       {name:'Seated Row - Right', reps:['8','10','10']},
       {name:'Bicep Curl - Seated Incline', reps:['8','8','8']}
-    ] },
-    { weekday:4, name:'Legs (Lower Body Strength)', exercises:[
+    ],
+      cooldown:[
+        {name:'Back Stretch Elbows Up', duration:'30 secs'},
+        {name:'Side Lying Thoracic Windmill - Right', duration:'30 secs'},
+        {name:'Side Lying Thoracic Windmill - Left', duration:'30 secs'},
+        {name:"Child's Pose Thread the Needle - Right", duration:'30 secs'},
+        {name:"Child's Pose Thread the Needle - Left", duration:'30 secs'}
+      ]
+    },
+    { weekday:4, name:'Legs (Lower Body Strength)',
+      warmup:[
+        {name:'Low Lunge - Deep Rock - Right', duration:'30 secs'},
+        {name:'Low Lunge - Deep Rock - Left', duration:'30 secs'},
+        {name:'Walking Quad Stretch', duration:'30 secs'},
+        {name:'Walking Hamstring Sweep', duration:'30 secs'},
+        {name:'Walking Lunge', duration:'30 secs'}
+      ],
+      exercises:[
       {name:'Back Squat', reps:['8','5','6','8']},
       {name:'Split Squat - Right', reps:['6','8','8']},
       {name:'Split Squat - Left', reps:['6','8','8']},
@@ -1630,22 +1926,55 @@
       {name:'Hip Thrust - Right', reps:['8','10','10']},
       {name:'Seated Hamstring Curl', reps:['8','10','10']},
       {name:'Leg Extension', reps:['8','8','8']}
-    ] },
-    { weekday:5, name:'Core & Mobility (Active Recovery)', exercises:[
+    ],
+      cooldown:[
+        {name:'Static Quad Stretch - Left', duration:'30 secs'},
+        {name:'Static Quad Stretch - Right', duration:'30 secs'},
+        {name:'Pigeon Pose - Left', duration:'30 secs'},
+        {name:'Pigeon Pose - Right', duration:'30 secs'},
+        {name:"Child's Pose", duration:'30 secs'}
+      ]
+    },
+    { weekday:5, name:'Core & Mobility (Active Recovery)',
+      warmup:[
+        {name:'Arm Circles - Forward', duration:'30 secs'},
+        {name:'Arm Circles - Backward', duration:'30 secs'},
+        {name:'Rainbow Stretch - Left', duration:'30 secs'},
+        {name:'Rainbow Stretch - Right', duration:'30 secs'},
+        {name:'Crossover Arm Swing', duration:'30 secs'}
+      ],
+      exercises:[
       {name:'Lat Pulldown - Left', reps:['8','10','10']},
       {name:'Lat Pulldown - Right', reps:['8','10','10']},
       {name:'Lateral Raise - Left', reps:['10','10']},
       {name:'Lateral Raise - Right', reps:['10','10']},
       {name:'Bicep Curl', reps:['8','8']},
       {name:'Overhead Tricep Extension', reps:['12','12']}
-    ] },
-    { weekday:6, name:'Lower Body Strength', exercises:[
+    ],
+      cooldown:[]   // confirmed: this day's program genuinely has no cool-down block
+    },
+    { weekday:6, name:'Lower Body Strength',
+      warmup:[
+        {name:'Hip Circle - Left', duration:'30 secs'},
+        {name:'Hip Circle - Right', duration:'30 secs'},
+        {name:'Deep Squat to Hamstring Stretch', duration:'30 secs'},
+        {name:'Walking Hamstring Sweep', duration:'30 secs'},
+        {name:'Walking Lunge', duration:'40 secs'}
+      ],
+      exercises:[
       {name:'Leg Press', reps:['8','8','8']},
       {name:'Calf Raise', reps:['8','8']},
       {name:'Romanian Deadlift - B Stance - Left', reps:['8','8','8']},
       {name:'Romanian Deadlift - B Stance - Right', reps:['8','8','8']},
       {name:'Back Extension', reps:['10','10','10']}
-    ] }
+    ],
+      cooldown:[
+        {name:'Pigeon Pose - Left', duration:'30 secs'},
+        {name:'Pigeon Pose - Right', duration:'30 secs'},
+        {name:'Straight Leg Hamstring Stretch - Left', duration:'30 secs'},
+        {name:'Straight Leg Hamstring Stretch - Right', duration:'30 secs'}
+      ]
+    }
     // Sunday intentionally omitted — the source plan treats it as a rest day, which is
     // already this app's default for any weekday with no schedule entry.
   ];
@@ -1653,9 +1982,24 @@
     GYM_STARTER_SPLIT.forEach(function(day){
       var t=addGymTemplate(day.name);
       day.exercises.forEach(function(ex){ addExerciseToTemplate(t.id, ex.name, ex.reps); });
+      (day.warmup||[]).forEach(function(w){ addWarmupItem(t.id, w.name, w.duration); });
+      (day.cooldown||[]).forEach(function(c){ addCooldownItem(t.id, c.name, c.duration); });
       setScheduleDefault(day.weekday, t.id);
     });
     renderTemplateEditor(); renderScheduleEditor();
+  }
+  // One-time, additive backfill for devices where the starter split already imported
+  // before warmup/cooldown existed (an earlier version of this app) — matches by
+  // template name, only fills in templates truly missing the field, never touches
+  // exercises or any logged gym_log data.
+  function backfillStarterWarmupCooldown(){
+    gymTemplates.forEach(function(t){
+      if(t.warmup) return;
+      var day=GYM_STARTER_SPLIT.filter(function(d){ return d.name===t.name; })[0];
+      if(!day) return;
+      (day.warmup||[]).forEach(function(w){ addWarmupItem(t.id, w.name, w.duration); });
+      (day.cooldown||[]).forEach(function(c){ addCooldownItem(t.id, c.name, c.duration); });
+    });
   }
   document.getElementById('gymImportSplit').addEventListener('click', function(){
     importGymStarterSplit();
@@ -1730,12 +2074,20 @@
   // -- 10. View switching + bootstrap --
   function showGymView(name){
     document.getElementById('gymMainView').hidden = (name!=='main');
-    document.getElementById('gymHistoryView').hidden = (name!=='history');
+    document.getElementById('gymProgressView').hidden = (name!=='progress');
     document.getElementById('gymEditPlanView').hidden = (name!=='editplan');
+    document.getElementById('gymTabs').hidden = (name==='editplan');
+    document.querySelectorAll('#gymTabs .gymtab').forEach(function(btn){
+      btn.classList.toggle('active', btn.dataset.tab===name);
+    });
     window.scrollTo(0,0);
     if(name==='main') renderGymMain();
+    if(name==='progress') renderGymProgress();
     if(name==='editplan'){ renderTemplateEditor(); renderScheduleEditor(); }
   }
+  document.querySelectorAll('#gymTabs .gymtab').forEach(function(btn){
+    btn.addEventListener('click', function(){ showGymView(btn.dataset.tab); });
+  });
   document.getElementById('gymEditPlanLink').addEventListener('click', function(){ showGymView('editplan'); });
   document.getElementById('gymEditPlanBack').addEventListener('click', function(){ showGymView('main'); });
 
@@ -1757,6 +2109,11 @@
   // blank slate. (The manual button stays in Edit plan too, purely as a harmless no-op
   // once this has run, since it's hidden whenever gymTemplates.length!==0.)
   if(!gymTemplates.length) importGymStarterSplit();
+  // Additive safety net for a device where the starter split already imported before
+  // warmup/cooldown existed in this app — fills in just that gap, touches nothing else.
+  backfillStarterWarmupCooldown();
+
+  document.getElementById('gymGreeting').textContent = pickGreeting();
 
   renderGymMain();
   updateGymTile();
