@@ -286,8 +286,10 @@
   .gymtmpl-head{ display:flex; align-items:center; gap:8px; }
   .gymtmpl-name{ flex:1; min-width:0; border:none; border-bottom:1.4px solid var(--border); background:transparent; color:var(--ink); font-family:'Inter'; font-size:15px; font-weight:700; padding:4px 2px; }
   .gymtmpl-name:focus-visible{ outline:none; border-bottom-color:var(--phue); }
-  .gymtmpl-exrow{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .gymtmpl-exblock{ margin-top:8px; }
+  .gymtmpl-exrow{ display:flex; align-items:center; gap:8px; }
   .gymtmpl-exrow .gym-input{ flex:1; min-width:0; }
+  .gymtmpl-exlast{ font-size:11px; font-style:italic; color:var(--ink-soft); opacity:.75; margin:3px 0 0 2px; }
   .gymtmpl-reorder{ flex:0 0 auto; width:24px; height:24px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; }
   .gymtmpl-reorder:hover{ color:var(--phue-strong); }
   .gymtmpl-addex, .gymtmpl-addtmpl{ display:block; margin-top:10px; font-size:12.5px; font-weight:700; color:var(--ink-soft); background:transparent; border:1.4px dashed var(--border); border-radius:10px; padding:8px 12px; width:100%; cursor:pointer; font-family:'Inter'; }
@@ -2026,6 +2028,7 @@
       card.appendChild(head);
 
       t.exercises.forEach(function(ex){
+        var block=document.createElement('div'); block.className='gymtmpl-exblock';
         var row=document.createElement('div'); row.className='gymtmpl-exrow';
         var input=document.createElement('input'); input.className='gym-input'; input.value=ex.name;
         input.addEventListener('blur', function(){ renameTemplateExercise(t.id, ex.id, input.value.trim()||ex.name); });
@@ -2036,7 +2039,20 @@
         var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove exercise');
         rm.addEventListener('click', function(){ removeTemplateExercise(t.id, ex.id); renderTemplateEditor(); });
         row.appendChild(input); row.appendChild(up); row.appendChild(down); row.appendChild(rm);
-        card.appendChild(row);
+        block.appendChild(row);
+
+        // Shaded last-session reference, scoped to this exercise under this specific
+        // template (reuses the same real-data-only entry set the Progress chart uses,
+        // so a fromProgram-only ghost entry never appears here either).
+        var entries=getExerciseEntries(t.id, ex.name);
+        if(entries.length){
+          var lastEntry=entries[entries.length-1];
+          var lastLine=document.createElement('p'); lastLine.className='gymtmpl-exlast';
+          lastLine.textContent='Last: '+lastEntry.exercise.weightGroups.map(function(g){ return g.weight+'kg × '+g.reps.join(', '); }).join(' | ');
+          block.appendChild(lastLine);
+        }
+
+        card.appendChild(block);
       });
 
       var addEx=document.createElement('button'); addEx.type='button'; addEx.className='gymtmpl-addex'; addEx.textContent='+ Add exercise';
