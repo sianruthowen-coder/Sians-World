@@ -245,6 +245,7 @@
   .gymcard-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
   .gymcard-name{ font-weight:800; font-size:14px; color:var(--phue-strong); }
   .gymlast{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; font-style:italic; line-height:1.4; }
+  .gymvolume{ font-size:11px; color:var(--ink-soft); opacity:.8; margin-top:8px; line-height:1.4; }
   .gymhistlink{ font-size:11.5px; font-weight:700; color:var(--phue-strong); background:transparent; border:none; padding:0; margin-top:6px; cursor:pointer; text-decoration:underline; }
 
   .gymsamepill{ display:inline-flex; align-items:center; gap:5px; font-family:'Inter'; font-size:12px; font-weight:700; padding:7px 12px; border-radius:999px; border:1.4px solid var(--border); background:var(--surface); color:var(--ink-soft); cursor:pointer; margin-top:8px; }
@@ -264,24 +265,46 @@
   .gym-addset, .gym-addgroup{ display:inline-block; margin-top:8px; margin-right:8px; font-size:12px; font-weight:700; color:var(--ink-soft); background:transparent; border:1.4px dashed var(--border); border-radius:10px; padding:7px 12px; cursor:pointer; font-family:'Inter'; }
   .gym-addset:hover, .gym-addgroup:hover{ border-color:var(--phue); color:var(--phue-strong); }
 
-  .gymhistitem{ padding:12px 0; border-bottom:1px solid var(--border); }
-  .gymhistitem:last-child{ border-bottom:none; }
-  .gymhist-date{ font-size:10.5px; font-weight:700; color:var(--phue-strong); text-transform:lowercase; letter-spacing:.03em; }
-  .gymhist-line{ font-size:13px; line-height:1.5; margin-top:3px; }
-
   .gymchecklist{ margin-top:12px; }
   .gymchecklist-list{ list-style:none; margin:4px 0 0; padding:4px 14px; background:var(--phue-soft); border-radius:14px; }
   .gymchecklist-list .check-row{ padding-block:10px; }
 
-  .gymprogchart{ width:100%; height:auto; margin-top:10px; }
+  /* Progress tab — each piece (filter, chart, stats, table) is its own bordered
+     section so the dashboard reads as clearly separated blocks, never one crowded
+     card, and every section always renders (with its own empty state) rather than
+     disappearing when there's nothing logged yet. */
+  .gymprogsection{ margin-top:14px; background:var(--surface); border:1.4px solid var(--border); border-radius:14px; padding:14px; }
+  .gymprogfilter{ display:flex; gap:10px; margin-top:8px; }
+  .gymprogfield{ flex:1; min-width:0; }
+  .gymprogfield label{ display:block; font-size:10.5px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--ink-soft); margin-bottom:4px; }
+  .gymprogselect{ width:100%; }
+
+  .gymprogcard-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .gymprogtype .chip{ padding:7px 12px; }
+  .gymprogchartbox{ margin-top:10px; min-height:60px; }
+  .gymprogempty{ font-size:13px; color:var(--ink-soft); padding:20px 4px; text-align:center; }
+  .gymprogchart{ width:100%; height:auto; }
   .gymprog-axis{ stroke:var(--border); stroke-width:1; }
   .gymprog-line{ fill:none; stroke:var(--phue-strong); stroke-width:2; }
   .gymprog-dot{ fill:var(--phue-strong); }
+  .gymprog-dot.selected{ fill:var(--phue); stroke:var(--surface); stroke-width:1.5; }
+  .gymprog-bar{ fill:var(--phue-soft); stroke:var(--phue); stroke-width:1; }
+  .gymprog-bar.selected{ fill:var(--phue); }
   .gymprog-xlabel, .gymprog-ylabel{ font-size:7px; fill:var(--ink-soft); }
-  .gymprogstats{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+
+  .gymprogstats{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
   .gymprogstat{ background:var(--phue-soft); border-radius:12px; padding:10px 12px; }
   .gymprogstat .label{ font-size:10px; font-weight:700; text-transform:lowercase; color:var(--phue-strong); }
   .gymprogstat .value{ font-size:16px; font-weight:800; margin-top:2px; }
+
+  .gymprogtablewrap{ margin-top:8px; overflow-x:auto; }
+  .gymprogtable{ width:100%; border-collapse:collapse; font-size:13px; }
+  .gymprogtable th{ text-align:left; font-size:10.5px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--ink-soft); padding:0 8px 6px 0; border-bottom:1.4px solid var(--border); }
+  .gymprogtable td{ padding:8px 8px 8px 0; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums; color:var(--ink); }
+  .gymprogtable tbody tr:last-child td{ border-bottom:none; }
+  .gymprogtable tbody tr{ cursor:pointer; }
+  .gymprogtable tbody tr.selected td{ color:var(--phue-strong); font-weight:700; }
+  .gymprogtable td.gymprogtable-empty{ color:var(--ink-soft); padding:12px 0; }
 
   .gymtmpl{ margin-top:12px; background:var(--surface); border:1.4px solid var(--border); border-radius:14px; padding:14px; }
   .gymtmpl-head{ display:flex; align-items:center; gap:8px; }
@@ -808,16 +831,45 @@
       </div>
 
       <div id="gymProgressView" hidden>
-        <div class="gympills" id="gymProgressTemplatePills"></div>
-        <div class="gympills" id="gymProgressExercisePills" style="margin-top:6px;"></div>
-        <div class="chipselect" id="gymProgressMetricToggle" style="margin-top:12px;">
-          <button type="button" class="chip gymmetricchip active" data-metric="max">Max weight</button>
-          <button type="button" class="chip gymmetricchip" data-metric="volume">Total volume</button>
-        </div>
-        <div id="gymProgressChart"></div>
-        <div class="gymprogstats" id="gymProgressStats"></div>
-        <p class="section-label">History</p>
-        <div id="gymProgressHistoryList"></div>
+        <section class="gymprogsection">
+          <p class="section-label">Filter</p>
+          <div class="gymprogfilter">
+            <div class="gymprogfield">
+              <label for="gymProgressWorkoutSelect">Workout</label>
+              <select class="gym-input gymprogselect" id="gymProgressWorkoutSelect"></select>
+            </div>
+            <div class="gymprogfield">
+              <label for="gymProgressExerciseSelect">Exercise</label>
+              <select class="gym-input gymprogselect" id="gymProgressExerciseSelect"></select>
+            </div>
+          </div>
+        </section>
+
+        <section class="gymprogsection">
+          <div class="gymprogcard-head">
+            <p class="section-label" id="gymProgressExTitle" style="margin:0;">Progress</p>
+            <div class="chipselect gymprogtype" id="gymProgressTypeToggle">
+              <button type="button" class="chip gymtypechip active" data-type="line">Line</button>
+              <button type="button" class="chip gymtypechip" data-type="bar">Bar</button>
+            </div>
+          </div>
+          <div class="gymprogchartbox" id="gymProgressChart"></div>
+        </section>
+
+        <section class="gymprogsection">
+          <p class="section-label">Key stats</p>
+          <div class="gymprogstats" id="gymProgressStats"></div>
+        </section>
+
+        <section class="gymprogsection">
+          <p class="section-label">Session history (max weight by date)</p>
+          <div class="gymprogtablewrap">
+            <table class="gymprogtable">
+              <thead><tr><th>Date</th><th>Max weight</th></tr></thead>
+              <tbody id="gymProgressTableBody"></tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
       <div id="gymEditPlanView" hidden>
@@ -1289,6 +1341,26 @@
 
   // ---- Gym: custom workout templates, a weekly schedule, day-by-day navigation,
   // and per-exercise weight-group logging that autosaves on every field change. ----
+  // A strength-focused "quote of the day" for the Gym header — distinct from the home
+  // screen's pickGreeting() pool (which stays untouched) and from each template's own
+  // workout-specific mantra. Deterministic per calendar day (not re-rolled on reload),
+  // same warm voice as the rest of the app, pointed squarely at being strong.
+  var GYM_STRONG_QUOTES=[
+    'You are stronger than you think, gorgeous.',
+    "Show up for yourself today — that's where strength starts.",
+    'Strong is the new soft, love.',
+    'Lift heavy, stand taller, angel.',
+    "Your strength was never in question — go prove it anyway.",
+    "Every rep today is a vote for the woman you're becoming.",
+    'Power looks good on you, darling.',
+    "You don't need permission to be powerful, cutie.",
+    'Discipline is just self-love in gym clothes.',
+    'Be the kind of strong that inspires other women.'
+  ];
+  function pickStrongQuoteOfDay(){
+    var dayOfYear=Math.floor((now - new Date(now.getFullYear(),0,0))/86400000);
+    return GYM_STRONG_QUOTES[dayOfYear % GYM_STRONG_QUOTES.length];
+  }
   var GYM_TEMPLATES_KEY='gym_templates';
   var GYM_SCHEDULE_KEY='gym_schedule';
   var GYM_OVERRIDES_KEY='gym_overrides';
@@ -1378,7 +1450,7 @@
   // -- 3. Day navigation (runtime-only position — always starts at today) --
   var gymViewDate = new Date(now);
   // Progress tab's picker state — runtime-only, same convention as gymViewDate.
-  var gymProgressTemplateId = null, gymProgressExerciseName = null, gymProgressMetric = 'max';
+  var gymProgressTemplateId = null, gymProgressExerciseName = null, gymProgressChartType = 'line', gymProgressSelectedIndex = null;
   function gymDateStr(){ return dateKey(gymViewDate); }
   function shiftGymDay(delta){ gymViewDate=new Date(gymViewDate.getFullYear(),gymViewDate.getMonth(),gymViewDate.getDate()+delta); renderGymMain(); }
   document.getElementById('gymPrevDay').addEventListener('click', function(){ shiftGymDay(-1); });
@@ -1489,12 +1561,12 @@
     pill.textContent=(entry.sameAsLast?'✓ ':'')+'Same as last time';
   }
 
-  function renderWeightGroup(entry, group, gIdx, templateId, dateStr, pill){
+  function renderWeightGroup(entry, group, gIdx, templateId, dateStr, pill, volEl){
     var wrap=document.createElement('div'); wrap.className='gymgroup';
     var head=document.createElement('div'); head.className='gymgroup-head';
     var w=document.createElement('input'); w.type='text'; w.inputMode='decimal'; w.pattern='[0-9]*[.,]?[0-9]*';
     w.className='gym-input weightfield'; w.placeholder='kg'; w.value=group.weight;
-    w.addEventListener('input', function(){ group.weight=w.value.replace(',','.'); entry.sameAsLast=false; entry.fromProgram=false; saveGymLog(); syncSamePill(pill, entry); });
+    w.addEventListener('input', function(){ group.weight=w.value.replace(',','.'); entry.sameAsLast=false; entry.fromProgram=false; saveGymLog(); syncSamePill(pill, entry); syncVolumeLine(volEl, entry); });
     var unit=document.createElement('span'); unit.className='weightunit'; unit.textContent='kg';
     var rmGroup=document.createElement('button'); rmGroup.type='button'; rmGroup.className='gym-remove'; rmGroup.innerHTML='&times;'; rmGroup.setAttribute('aria-label','Remove weight');
     rmGroup.addEventListener('click', function(){ removeWeightGroup(entry,gIdx); saveGymLog(); renderGymMain(); });
@@ -1506,7 +1578,7 @@
       var num=document.createElement('span'); num.className='setnum'; num.textContent=(sIdx+1)+'.';
       var r=document.createElement('input'); r.type='text'; r.inputMode='numeric';
       r.className='gym-input'; r.placeholder='reps'; r.value=group.reps[sIdx];
-      r.addEventListener('input', function(){ group.reps[sIdx]=r.value; entry.sameAsLast=false; entry.fromProgram=false; saveGymLog(); syncSamePill(pill, entry); });
+      r.addEventListener('input', function(){ group.reps[sIdx]=r.value; entry.sameAsLast=false; entry.fromProgram=false; saveGymLog(); syncSamePill(pill, entry); syncVolumeLine(volEl, entry); });
       var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove set');
       rm.addEventListener('click', function(){ removeSet(entry,gIdx,sIdx); saveGymLog(); renderGymMain(); });
       row.appendChild(num); row.appendChild(r); row.appendChild(rm);
@@ -1553,11 +1625,16 @@
       card.appendChild(progLine);
     }
 
-    entry.weightGroups.forEach(function(group, gIdx){ card.appendChild(renderWeightGroup(entry, group, gIdx, templateId, dateStr, pill)); });
+    var volEl=document.createElement('p'); volEl.className='gymvolume'; volEl.hidden=true;
+
+    entry.weightGroups.forEach(function(group, gIdx){ card.appendChild(renderWeightGroup(entry, group, gIdx, templateId, dateStr, pill, volEl)); });
 
     var addGroupBtn=document.createElement('button'); addGroupBtn.type='button'; addGroupBtn.className='gym-addgroup'; addGroupBtn.textContent='+ Add weight';
     addGroupBtn.addEventListener('click', function(){ addWeightGroup(entry); saveGymLog(); renderGymMain(); });
     card.appendChild(addGroupBtn);
+
+    syncVolumeLine(volEl, entry);
+    card.appendChild(volEl);
 
     var histBtn=document.createElement('button'); histBtn.type='button'; histBtn.className='gymhistlink'; histBtn.textContent='Progress';
     histBtn.addEventListener('click', function(){
@@ -1688,6 +1765,31 @@
     });
     return max;
   }
+  // Live "sets × reps × weight" breakdown shown under an exercise's inputs on the Log
+  // tab — per weight group (so a warm-up group and a working-set group each get their
+  // own line) plus a bold running total. Nothing shown until at least one group has a
+  // real weight entered.
+  function formatVolumeBreakdown(exercise){
+    var parts=[];
+    (exercise.weightGroups||[]).forEach(function(g){
+      var w=parseFloat(String(g.weight).replace(',','.'));
+      if(!g.weight || isNaN(w)) return;
+      var reps=(g.reps||[]).filter(function(r){ return r!=null && String(r).trim()!==''; });
+      if(!reps.length) return;
+      var repSum=reps.reduce(function(rs,r){ var n=parseInt(r,10); return rs+(isNaN(n)?0:n); },0);
+      parts.push({ text: reps.length+' × '+reps.join(', ')+' × '+w+'kg', subtotal: w*repSum });
+    });
+    if(!parts.length) return null;
+    return { parts:parts, total:exerciseVolume(exercise) };
+  }
+  function syncVolumeLine(volEl, entry){
+    if(!volEl) return;
+    var info=formatVolumeBreakdown(entry);
+    if(!info){ volEl.hidden=true; volEl.textContent=''; return; }
+    volEl.hidden=false;
+    var breakdown=info.parts.map(function(p){ return p.text+' = '+Math.round(p.subtotal)+'kg'; }).join(' · ');
+    volEl.textContent='Total volume: '+Math.round(info.total)+'kg  ('+breakdown+')';
+  }
   function computeExerciseStats(entries){
     if(!entries.length) return null;
     var first=entries[0], last=entries[entries.length-1];
@@ -1701,22 +1803,29 @@
     };
   }
 
-  function drawGymProgressChart(container, entries, metric){
+  // Y axis is always max weight for the session (the heaviest real weight group that
+  // day — so a logged warm-up group never masks the actual working weight). Chart TYPE
+  // (line vs bar) is the only toggle; tapping a point/bar drills into that exact
+  // session via onSelect, without a full page re-render.
+  function drawGymProgressChart(container, entries, type, selectedIdx, onSelect){
     container.innerHTML='';
-    if(entries.length<2){
-      var p=document.createElement('p'); p.style.cssText='font-size:13px;color:var(--ink-soft);margin-top:8px;';
-      p.textContent = entries.length ? 'Log one more session to see a trend line.' : 'No logged sessions yet for this exercise.';
+    if(entries.length<1){
+      var p=document.createElement('p'); p.className='gymprogempty';
+      p.textContent='No logged sessions yet for this exercise — log a weight on the Log tab to start the graph.';
       container.appendChild(p); return;
     }
-    var values=entries.map(function(e){
-      var v = metric==='max' ? exerciseMaxWeight(e.exercise) : exerciseVolume(e.exercise);
-      return v==null ? 0 : v;
-    });
-    var W=320,H=160,padL=30,padR=8,padT=14,padB=22;
+    if(entries.length<2){
+      var p2=document.createElement('p'); p2.className='gymprogempty';
+      p2.textContent='Log one more session to see a trend.';
+      container.appendChild(p2);
+    }
+    var values=entries.map(function(e){ var v=exerciseMaxWeight(e.exercise); return v==null?0:v; });
+    var W=320,H=170,padL=28,padR=10,padT=14,padB=24;
     var minV=Math.min.apply(null,values), maxV=Math.max.apply(null,values);
-    if(minV===maxV){ minV-=1; maxV+=1; }
+    if(type==='bar') minV=0;
+    if(minV===maxV){ minV = type==='bar' ? 0 : minV-1; maxV+=1; }
     var innerW=W-padL-padR, innerH=H-padT-padB;
-    function xAt(i){ return padL + i/(entries.length-1)*innerW; }
+    function xAt(i){ return entries.length===1 ? padL+innerW/2 : padL + i/(entries.length-1)*innerW; }
     function yAt(v){ return padT + innerH*(1-(v-minV)/(maxV-minV)); }
     var NS='http://www.w3.org/2000/svg';
     var svg=document.createElementNS(NS,'svg');
@@ -1727,16 +1836,37 @@
     base.setAttribute('y1',H-padB); base.setAttribute('y2',H-padB); base.setAttribute('class','gymprog-axis');
     svg.appendChild(base);
 
-    var poly=document.createElementNS(NS,'polyline');
-    poly.setAttribute('points', values.map(function(v,i){ return xAt(i)+','+yAt(v); }).join(' '));
-    poly.setAttribute('class','gymprog-line'); svg.appendChild(poly);
+    if(type==='line' && entries.length>1){
+      var poly=document.createElementNS(NS,'polyline');
+      poly.setAttribute('points', values.map(function(v,i){ return xAt(i)+','+yAt(v); }).join(' '));
+      poly.setAttribute('class','gymprog-line'); svg.appendChild(poly);
+    }
 
-    var labelEvery = entries.length<=6 ? 1 : Math.ceil(entries.length/6);
+    var barW = type==='bar' ? Math.min(28, innerW/entries.length*0.6) : 0;
     entries.forEach(function(e,i){
       var cx=xAt(i), cy=yAt(values[i]);
-      var dot=document.createElementNS(NS,'circle');
-      dot.setAttribute('cx',cx); dot.setAttribute('cy',cy); dot.setAttribute('r',3); dot.setAttribute('class','gymprog-dot');
-      svg.appendChild(dot);
+      var hit=document.createElementNS(NS,'rect');
+      var hitW = entries.length>1 ? innerW/entries.length : innerW;
+      hit.setAttribute('x', cx-hitW/2); hit.setAttribute('y', padT); hit.setAttribute('width', hitW); hit.setAttribute('height', innerH);
+      hit.setAttribute('fill','transparent'); hit.style.cursor='pointer';
+      hit.addEventListener('click', function(){ onSelect(i); });
+      svg.appendChild(hit);
+
+      if(type==='bar'){
+        var bar=document.createElementNS(NS,'rect');
+        bar.setAttribute('x', cx-barW/2); bar.setAttribute('y', cy);
+        bar.setAttribute('width', barW); bar.setAttribute('height', Math.max(0,(H-padB)-cy));
+        bar.setAttribute('rx', 3);
+        bar.setAttribute('class','gymprog-bar'+(i===selectedIdx?' selected':''));
+        svg.appendChild(bar);
+      } else {
+        var dot=document.createElementNS(NS,'circle');
+        dot.setAttribute('cx',cx); dot.setAttribute('cy',cy); dot.setAttribute('r', i===selectedIdx?5:3);
+        dot.setAttribute('class','gymprog-dot'+(i===selectedIdx?' selected':''));
+        svg.appendChild(dot);
+      }
+
+      var labelEvery = entries.length<=6 ? 1 : Math.ceil(entries.length/6);
       if(i%labelEvery===0 || i===entries.length-1){
         var t=document.createElementNS(NS,'text');
         var anchor = i===0 ? 'start' : (i===entries.length-1 ? 'end' : 'middle');
@@ -1745,9 +1875,9 @@
         svg.appendChild(t);
       }
     });
-    [minV,maxV].forEach(function(v,idx){
+    [minV,maxV].forEach(function(v){
       var t=document.createElementNS(NS,'text');
-      t.setAttribute('x',2); t.setAttribute('y', idx===0?H-padB+3:padT+8); t.setAttribute('class','gymprog-ylabel');
+      t.setAttribute('x',2); t.setAttribute('y', v===minV?H-padB+3:padT+8); t.setAttribute('class','gymprog-ylabel');
       t.textContent=Math.round(v); svg.appendChild(t);
     });
     container.appendChild(svg);
@@ -1756,13 +1886,12 @@
   function renderGymProgressStats(entries){
     var statsEl=document.getElementById('gymProgressStats'); statsEl.innerHTML='';
     var stats=computeExerciseStats(entries);
-    if(!stats) return;
-    var lastDate=new Date(stats.lastDate+'T00:00:00');
+    var lastDate = stats ? new Date(stats.lastDate+'T00:00:00') : null;
     var tiles=[
-      { label:'last session', value: (stats.lastWeight!=null ? stats.lastWeight+'kg' : '—')+' · '+lastDate.toLocaleDateString('en-ZA',{day:'numeric',month:'short'}) },
-      { label:'personal best', value: stats.bestWeight!=null ? stats.bestWeight+'kg' : '—' },
-      { label:'change since first log', value: stats.changeSinceFirst!=null ? (stats.changeSinceFirst>=0?'+':'')+stats.changeSinceFirst+'kg' : '—' },
-      { label:'sessions logged', value: String(stats.sessionCount) }
+      { label:'last session', value: stats ? (stats.lastWeight!=null ? stats.lastWeight+'kg' : '—')+' · '+lastDate.toLocaleDateString('en-ZA',{day:'numeric',month:'short'}) : '—' },
+      { label:'personal best', value: stats && stats.bestWeight!=null ? stats.bestWeight+'kg' : '—' },
+      { label:'change since first log', value: stats && stats.changeSinceFirst!=null ? (stats.changeSinceFirst>=0?'+':'')+stats.changeSinceFirst+'kg' : '—' },
+      { label:'sessions logged', value: stats ? String(stats.sessionCount) : '0' }
     ];
     tiles.forEach(function(t){
       var tile=document.createElement('div'); tile.className='gymprogstat';
@@ -1772,69 +1901,109 @@
     });
   }
 
-  function renderGymProgressHistoryList(entries){
-    var list=document.getElementById('gymProgressHistoryList'); list.innerHTML='';
+  // The time-series table — the exact numbers the chart plots, in order, so every
+  // graphed point can be read precisely. Rows double as a drill-down control: clicking
+  // one selects that session, which highlights both the row and its chart point/bar.
+  function renderGymProgressTable(entries, selectedIdx, onSelectRow){
+    var body=document.getElementById('gymProgressTableBody'); body.innerHTML='';
     if(!entries.length){
-      var p=document.createElement('p'); p.style.cssText='font-size:13px;color:var(--ink-soft);margin-top:4px;';
-      p.textContent='No history yet for this exercise.'; list.appendChild(p);
+      var tr=document.createElement('tr');
+      var td=document.createElement('td'); td.className='gymprogtable-empty'; td.colSpan=2;
+      td.textContent='No sessions logged yet for this exercise.';
+      tr.appendChild(td); body.appendChild(tr);
       return;
     }
-    entries.slice().reverse().forEach(function(e){
-      var row=document.createElement('div'); row.className='gymhistitem';
+    entries.forEach(function(e,i){
+      var tr=document.createElement('tr'); tr.className = i===selectedIdx ? 'selected' : '';
+      var w=exerciseMaxWeight(e.exercise);
       var d=new Date(e.date+'T00:00:00');
-      var dateEl=document.createElement('div'); dateEl.className='gymhist-date';
-      dateEl.textContent=d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'});
-      var line=document.createElement('div'); line.className='gymhist-line';
-      line.textContent=e.exercise.weightGroups.map(function(g){ return g.weight+'kg × '+g.reps.join(', '); }).join(' | ');
-      row.appendChild(dateEl); row.appendChild(line); list.appendChild(row);
+      var dateTd=document.createElement('td'); dateTd.textContent=d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'});
+      var wTd=document.createElement('td'); wTd.textContent = w!=null ? w+'kg' : '—';
+      tr.appendChild(dateTd); tr.appendChild(wTd);
+      tr.addEventListener('click', function(){ onSelectRow(i); });
+      body.appendChild(tr);
     });
   }
 
+  // Draws the chart and table together and keeps their selection highlight in sync —
+  // clicking a bar/point or a table row both route through this same select().
+  function renderGymProgressChartAndTable(entries){
+    function select(idx){ gymProgressSelectedIndex=idx; draw(); }
+    function draw(){
+      drawGymProgressChart(document.getElementById('gymProgressChart'), entries, gymProgressChartType, gymProgressSelectedIndex, select);
+      renderGymProgressTable(entries, gymProgressSelectedIndex, select);
+    }
+    draw();
+  }
+
+  // Two cascading dropdowns (Workout → Exercise) rather than a combined picker, so
+  // filtering reads as two explicit steps. Every section below always renders its own
+  // structure — chart box, stats tiles, table — even with zero templates/exercises/
+  // logged sessions, so the dashboard never just disappears; each piece shows its own
+  // empty state instead.
   function renderGymProgress(){
+    var workoutSel=document.getElementById('gymProgressWorkoutSelect');
+    var exerciseSel=document.getElementById('gymProgressExerciseSelect');
+
+    workoutSel.innerHTML='';
+    if(!gymTemplates.length){
+      var noTmpl=document.createElement('option'); noTmpl.textContent='No workouts yet'; noTmpl.disabled=true;
+      workoutSel.appendChild(noTmpl);
+    } else {
+      gymTemplates.forEach(function(t){
+        var opt=document.createElement('option'); opt.value=t.id; opt.textContent=t.name;
+        workoutSel.appendChild(opt);
+      });
+    }
+    workoutSel.disabled=!gymTemplates.length;
     if(!gymProgressTemplateId || !findTemplate(gymProgressTemplateId)){
       gymProgressTemplateId = gymTemplates.length ? gymTemplates[0].id : null;
     }
-    var pillsEl=document.getElementById('gymProgressTemplatePills'); pillsEl.innerHTML='';
-    gymTemplates.forEach(function(t){
-      var chip=document.createElement('button'); chip.type='button';
-      chip.className='chip'+(t.id===gymProgressTemplateId?' active':'');
-      chip.textContent=t.name;
-      chip.addEventListener('click', function(){ gymProgressTemplateId=t.id; gymProgressExerciseName=null; renderGymProgress(); });
-      pillsEl.appendChild(chip);
-    });
+    if(gymProgressTemplateId) workoutSel.value=gymProgressTemplateId;
 
     var tmpl=findTemplate(gymProgressTemplateId);
-    var exPillsEl=document.getElementById('gymProgressExercisePills'); exPillsEl.innerHTML='';
+    exerciseSel.innerHTML='';
     if(!tmpl || !tmpl.exercises.length){
-      document.getElementById('gymProgressChart').innerHTML='<p style="font-size:13px;color:var(--ink-soft);">No exercises in this template yet.</p>';
-      document.getElementById('gymProgressStats').innerHTML=''; document.getElementById('gymProgressHistoryList').innerHTML='';
-      return;
+      var noEx=document.createElement('option'); noEx.textContent='No exercises in this workout'; noEx.disabled=true;
+      exerciseSel.appendChild(noEx);
+      exerciseSel.disabled=true;
+      gymProgressExerciseName=null;
+    } else {
+      exerciseSel.disabled=false;
+      tmpl.exercises.forEach(function(ex){
+        var opt=document.createElement('option'); opt.value=ex.name; opt.textContent=ex.name;
+        exerciseSel.appendChild(opt);
+      });
+      if(!gymProgressExerciseName || !tmpl.exercises.some(function(e){ return e.name===gymProgressExerciseName; })){
+        gymProgressExerciseName=tmpl.exercises[0].name;
+      }
+      exerciseSel.value=gymProgressExerciseName;
     }
-    if(!gymProgressExerciseName || !tmpl.exercises.some(function(e){ return e.name===gymProgressExerciseName; })){
-      gymProgressExerciseName=tmpl.exercises[0].name;
-    }
-    tmpl.exercises.forEach(function(ex){
-      var chip=document.createElement('button'); chip.type='button';
-      chip.className='chip'+(ex.name===gymProgressExerciseName?' active':'');
-      chip.textContent=ex.name;
-      chip.addEventListener('click', function(){ gymProgressExerciseName=ex.name; renderGymProgress(); });
-      exPillsEl.appendChild(chip);
+
+    document.getElementById('gymProgressExTitle').textContent =
+      gymProgressExerciseName ? (gymProgressExerciseName+' · '+(tmpl?tmpl.name:'')) : 'Progress';
+
+    document.querySelectorAll('#gymProgressTypeToggle .gymtypechip').forEach(function(btn){
+      btn.classList.toggle('active', btn.dataset.type===gymProgressChartType);
     });
 
-    document.querySelectorAll('#gymProgressMetricToggle .gymmetricchip').forEach(function(btn){
-      btn.classList.toggle('active', btn.dataset.metric===gymProgressMetric);
-    });
-
-    var entries=getExerciseEntries(gymProgressTemplateId, gymProgressExerciseName);
-    drawGymProgressChart(document.getElementById('gymProgressChart'), entries, gymProgressMetric);
+    var entries = (tmpl && gymProgressExerciseName) ? getExerciseEntries(gymProgressTemplateId, gymProgressExerciseName) : [];
+    if(gymProgressSelectedIndex==null || gymProgressSelectedIndex>=entries.length){
+      gymProgressSelectedIndex = entries.length ? entries.length-1 : null;
+    }
+    renderGymProgressChartAndTable(entries);
     renderGymProgressStats(entries);
-    renderGymProgressHistoryList(entries);
   }
-  document.querySelectorAll('#gymProgressMetricToggle .gymmetricchip').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      gymProgressMetric=btn.dataset.metric;
-      renderGymProgress();
-    });
+  document.getElementById('gymProgressWorkoutSelect').addEventListener('change', function(e){
+    gymProgressTemplateId=e.target.value; gymProgressExerciseName=null; gymProgressSelectedIndex=null;
+    renderGymProgress();
+  });
+  document.getElementById('gymProgressExerciseSelect').addEventListener('change', function(e){
+    gymProgressExerciseName=e.target.value; gymProgressSelectedIndex=null;
+    renderGymProgress();
+  });
+  document.querySelectorAll('#gymProgressTypeToggle .gymtypechip').forEach(function(btn){
+    btn.addEventListener('click', function(){ gymProgressChartType=btn.dataset.type; renderGymProgress(); });
   });
 
   // -- 9. Edit Plan sub-view --
@@ -2144,7 +2313,7 @@
   // warmup/cooldown existed in this app — fills in just that gap, touches nothing else.
   backfillStarterWarmupCooldown();
 
-  document.getElementById('gymGreeting').textContent = pickGreeting();
+  document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
 
   renderGymMain();
   updateGymTile();
