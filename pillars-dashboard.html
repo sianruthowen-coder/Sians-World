@@ -234,6 +234,7 @@
   .gymdaynav-today{ display:block; margin:4px auto 0; font-size:11px; font-weight:700; color:var(--phue-strong); background:transparent; border:none; cursor:pointer; text-decoration:underline; }
 
   .gymplan{ margin-top:14px; background:var(--phue-soft); border-radius:14px; padding:14px; }
+  .gymmantra{ font-size:14.5px; font-weight:800; color:var(--phue-strong); line-height:1.4; margin-bottom:8px; }
   .gymplan-status{ font-size:13px; line-height:1.5; }
   .gymplan-editlink{ font-size:11.5px; font-weight:700; color:var(--phue-strong); background:transparent; border:none; padding:0; margin-top:4px; cursor:pointer; text-decoration:underline; }
   .gymplan-detail{ font-size:12px; color:var(--ink-soft); line-height:1.5; margin-top:8px; }
@@ -796,6 +797,7 @@
         <button type="button" class="gymdaynav-today" id="gymJumpToday" hidden>Jump to today</button>
 
         <div class="gymplan">
+          <p class="gymmantra" id="gymMantra" hidden></p>
           <p class="gymplan-status" id="gymPlanStatus"></p>
           <button type="button" class="gymplan-editlink" id="gymEditPlanLink">Edit plan</button>
           <div class="gympills" id="gymTemplatePills"></div>
@@ -1628,11 +1630,15 @@
 
     var cardsEl=document.getElementById('gymExerciseCards'); cardsEl.innerHTML='';
     var detailEl=document.getElementById('gymPlanDetail');
+    var mantraEl=document.getElementById('gymMantra');
     if(activeId==='rest' || !findTemplate(activeId)){
       detailEl.textContent='';
+      mantraEl.hidden=true;
       return;
     }
     var tmpl=findTemplate(activeId);
+    mantraEl.hidden=!tmpl.mantra;
+    mantraEl.textContent=tmpl.mantra||'';
     var session=ensureSession(activeId, dsStr);
     detailEl.textContent = tmpl.exercises.length
       ? "Your last "+tmpl.name+" is filled in where available: change what's different, or tap ✓ Same as last time."
@@ -1841,6 +1847,7 @@
   // built or imported anything, so it can't silently duplicate her real setup.
   var GYM_STARTER_SPLIT=[
     { weekday:1, name:'Legs',
+      mantra:'Strong legs, stronger woman — let’s go, gorgeous.',
       warmup:[
         {name:'Hinge', duration:'30 secs'},
         {name:'Hip Circle - Left', duration:'30 secs'},
@@ -1866,6 +1873,7 @@
       ]
     },
     { weekday:2, name:'Shoulders, Arms, Chest & Core',
+      mantra:'Build the arms that can carry anything, love.',
       warmup:[
         {name:'Arm Circles - Forward', duration:'30 secs'},
         {name:'Arm Circles - Backward', duration:'30 secs'},
@@ -1889,6 +1897,7 @@
       ]
     },
     { weekday:3, name:'Back & Arms',
+      mantra:'A strong back holds up a strong life — show up for yours, darling.',
       warmup:[
         {name:'Arm Circles - Forward', duration:'30 secs'},
         {name:'Arm Circles - Backward', duration:'30 secs'},
@@ -1913,6 +1922,7 @@
       ]
     },
     { weekday:4, name:'Legs (Lower Body Strength)',
+      mantra:'You were built to be powerful — lift like it, cutie.',
       warmup:[
         {name:'Low Lunge - Deep Rock - Right', duration:'30 secs'},
         {name:'Low Lunge - Deep Rock - Left', duration:'30 secs'},
@@ -1938,6 +1948,7 @@
       ]
     },
     { weekday:5, name:'Core & Mobility (Active Recovery)',
+      mantra:'Strength is showing up even on the quiet days, angel.',
       warmup:[
         {name:'Arm Circles - Forward', duration:'30 secs'},
         {name:'Arm Circles - Backward', duration:'30 secs'},
@@ -1956,6 +1967,7 @@
       cooldown:[]   // confirmed: this day's program genuinely has no cool-down block
     },
     { weekday:6, name:'Lower Body Strength',
+      mantra:'Power starts in the legs, and yours are unstoppable.',
       warmup:[
         {name:'Hip Circle - Left', duration:'30 secs'},
         {name:'Hip Circle - Right', duration:'30 secs'},
@@ -1986,21 +1998,24 @@
       day.exercises.forEach(function(ex){ addExerciseToTemplate(t.id, ex.name, ex.reps); });
       (day.warmup||[]).forEach(function(w){ addWarmupItem(t.id, w.name, w.duration); });
       (day.cooldown||[]).forEach(function(c){ addCooldownItem(t.id, c.name, c.duration); });
+      if(day.mantra){ t.mantra=day.mantra; saveGymTemplates(); }
       setScheduleDefault(day.weekday, t.id);
     });
     renderTemplateEditor(); renderScheduleEditor();
   }
   // One-time, additive backfill for devices where the starter split already imported
-  // before warmup/cooldown existed (an earlier version of this app) — matches by
+  // before warmup/cooldown/mantra existed (an earlier version of this app) — matches by
   // template name, only fills in templates truly missing the field, never touches
   // exercises or any logged gym_log data.
   function backfillStarterWarmupCooldown(){
     gymTemplates.forEach(function(t){
-      if(t.warmup) return;
       var day=GYM_STARTER_SPLIT.filter(function(d){ return d.name===t.name; })[0];
       if(!day) return;
-      (day.warmup||[]).forEach(function(w){ addWarmupItem(t.id, w.name, w.duration); });
-      (day.cooldown||[]).forEach(function(c){ addCooldownItem(t.id, c.name, c.duration); });
+      if(!t.warmup){
+        (day.warmup||[]).forEach(function(w){ addWarmupItem(t.id, w.name, w.duration); });
+        (day.cooldown||[]).forEach(function(c){ addCooldownItem(t.id, c.name, c.duration); });
+      }
+      if(!t.mantra && day.mantra){ t.mantra=day.mantra; saveGymTemplates(); }
     });
   }
   document.getElementById('gymImportSplit').addEventListener('click', function(){
