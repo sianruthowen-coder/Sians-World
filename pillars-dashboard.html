@@ -1749,6 +1749,15 @@
     tag.textContent = count+(count===1 ? ' session' : ' sessions')+' this wk';
   }
 
+  // Auto-seed the real Ascend weekly split the first time Gym ever loads with zero
+  // templates of her own — she wants the app fully loaded and ready to use out of the
+  // box, not an opt-in button she has to find. Same empty-state-only guard the old
+  // manual "+ Import my weekly split" button used, so it can never duplicate or
+  // overwrite anything she's already built — it only ever fires once, on a truly
+  // blank slate. (The manual button stays in Edit plan too, purely as a harmless no-op
+  // once this has run, since it's hidden whenever gymTemplates.length!==0.)
+  if(!gymTemplates.length) importGymStarterSplit();
+
   renderGymMain();
   updateGymTile();
 
