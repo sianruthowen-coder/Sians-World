@@ -1336,6 +1336,20 @@
     return gymLog[key];
   }
   // Most recent STRICTLY PRIOR session under the same template with a non-empty match.
+  // A weight group with every field blank is just the placeholder created when an
+  // exercise card is rendered with nothing logged yet — not something she actually
+  // did. Without this check that placeholder (pushed into the in-memory session the
+  // moment its card renders, even if she never types anything) would show up as a
+  // ghost "last time"/History entry, and could get written to storage for good the
+  // next time ANY exercise in that same day's session is actually edited (one save()
+  // call persists the whole session, placeholders included).
+  function hasLoggedData(exercise){
+    return (exercise.weightGroups||[]).some(function(g){
+      return (g.weight!=null && String(g.weight).trim()!=='') ||
+        (g.reps||[]).some(function(r){ return r!=null && String(r).trim()!==''; });
+    });
+  }
+
   function findLastTemplateTime(templateId, exerciseName, beforeDateStr){
     var target=normGymName(exerciseName);
     var best=null;
@@ -1343,7 +1357,7 @@
       var s=gymLog[key];
       if(s.templateId!==templateId) return;
       if(s.date>=beforeDateStr) return;
-      var match=(s.exercises||[]).filter(function(e){ return normGymName(e.name)===target && e.weightGroups && e.weightGroups.length; })[0];
+      var match=(s.exercises||[]).filter(function(e){ return normGymName(e.name)===target && hasLoggedData(e); })[0];
       if(match && (!best || s.date>best.date)) best={ date:s.date, exercise:match };
     });
     return best;
@@ -1530,7 +1544,7 @@
     Object.keys(gymLog).forEach(function(key){
       var s=gymLog[key];
       if(s.templateId!==templateId) return;
-      var match=(s.exercises||[]).filter(function(e){ return normGymName(e.name)===target && e.weightGroups && e.weightGroups.length; })[0];
+      var match=(s.exercises||[]).filter(function(e){ return normGymName(e.name)===target && hasLoggedData(e); })[0];
       if(match) entries.push({ date:s.date, exercise:match });
     });
     entries.sort(function(a,b){ return a.date<b.date?1:-1; });
@@ -1661,7 +1675,7 @@
     if(!tag) return;
     var count=Object.keys(gymLog).filter(function(key){
       var s=gymLog[key];
-      return 'w:'+isoWeekKey(new Date(s.date+'T00:00:00'))===wKey && (s.exercises||[]).some(function(e){ return e.weightGroups && e.weightGroups.length; });
+      return 'w:'+isoWeekKey(new Date(s.date+'T00:00:00'))===wKey && (s.exercises||[]).some(hasLoggedData);
     }).length;
     tag.textContent = count+(count===1 ? ' session' : ' sessions')+' this wk';
   }
