@@ -1288,9 +1288,14 @@
     // gym_log entries for this template are left in place — deleting a template
     // never destroys already-logged history, it just becomes unreachable via the UI.
   }
-  function addExerciseToTemplate(templateId, name){
+  // defaultReps (optional): the program-prescribed rep scheme for this exercise's single
+  // starter weight group, e.g. ['10','8','8','8'] — pre-fills a brand-new day's card before
+  // any real session has ever been logged for it. Omitted for exercises added by hand.
+  function addExerciseToTemplate(templateId, name, defaultReps){
     var t=findTemplate(templateId); if(!t||!name) return;
-    t.exercises.push({ id:gymUid('ex_'), name:name }); saveGymTemplates();
+    var ex={ id:gymUid('ex_'), name:name };
+    if(defaultReps && defaultReps.length) ex.defaultReps=defaultReps.map(String);
+    t.exercises.push(ex); saveGymTemplates();
   }
   function renameTemplateExercise(templateId, exId, name){
     var t=findTemplate(templateId); if(!t) return;
@@ -1343,10 +1348,17 @@
   // ghost "last time"/History entry, and could get written to storage for good the
   // next time ANY exercise in that same day's session is actually edited (one save()
   // call persists the whole session, placeholders included).
+  // An entry pre-filled from a template's program-default reps (fromProgram) has real
+  // numbers in its reps fields the instant its card renders, even if she never touches
+  // it — so for THAT entry specifically, reps alone don't count as "really logged";
+  // weight must be entered too (every exercise in the source program uses real load).
+  // Everything else keeps the original reps-OR-weight rule (e.g. bodyweight logging).
   function hasLoggedData(exercise){
     return (exercise.weightGroups||[]).some(function(g){
-      return (g.weight!=null && String(g.weight).trim()!=='') ||
-        (g.reps||[]).some(function(r){ return r!=null && String(r).trim()!==''; });
+      var hasWeight=(g.weight!=null && String(g.weight).trim()!=='');
+      var hasReps=(g.reps||[]).some(function(r){ return r!=null && String(r).trim()!==''; });
+      if(exercise.fromProgram && !hasWeight) return false;
+      return hasWeight || hasReps;
     });
   }
 
@@ -1368,16 +1380,19 @@
   function cloneWeightGroups(groups){
     return (groups||[]).map(function(g){ return { weight:g.weight, reps:(g.reps||[]).slice() }; });
   }
-  function addWeightGroup(exEntry){ exEntry.weightGroups.push(emptyWeightGroup()); exEntry.sameAsLast=false; }
-  function removeWeightGroup(exEntry, gIdx){ exEntry.weightGroups.splice(gIdx,1); exEntry.sameAsLast=false; }
-  function addSet(exEntry, gIdx){ exEntry.weightGroups[gIdx].reps.push(''); exEntry.sameAsLast=false; }
+  function addWeightGroup(exEntry){ exEntry.weightGroups.push(emptyWeightGroup()); exEntry.sameAsLast=false; exEntry.fromProgram=false; }
+  function removeWeightGroup(exEntry, gIdx){ exEntry.weightGroups.splice(gIdx,1); exEntry.sameAsLast=false; exEntry.fromProgram=false; }
+  function addSet(exEntry, gIdx){ exEntry.weightGroups[gIdx].reps.push(''); exEntry.sameAsLast=false; exEntry.fromProgram=false; }
   function removeSet(exEntry, gIdx, sIdx){
     exEntry.weightGroups[gIdx].reps.splice(sIdx,1);
     if(!exEntry.weightGroups[gIdx].reps.length) exEntry.weightGroups.splice(gIdx,1);
-    exEntry.sameAsLast=false;
+    exEntry.sameAsLast=false; exEntry.fromProgram=false;
   }
   // Called the first time an exercise's card is built for a session with no entry yet.
   // If prior data exists under this template, prefill + mark active + persist immediately;
+  // else if the template exercise carries a program-default rep scheme, prefill reps
+  // (weight left blank for her to fill in) and flag fromProgram — not persisted until she
+  // actually edits something, same as the plain-empty case below;
   // otherwise start with one empty weight group (not persisted until actually edited).
   function initExerciseEntry(session, templateExercise, templateId, dateStr){
     var existing=session.exercises.filter(function(e){ return normGymName(e.name)===normGymName(templateExercise.name); })[0];
@@ -1388,6 +1403,10 @@
       entry={ name:templateExercise.name, sameAsLast:true, weightGroups:cloneWeightGroups(last.exercise.weightGroups) };
       session.exercises.push(entry);
       saveGymLog();
+    } else if(templateExercise.defaultReps && templateExercise.defaultReps.length){
+      entry={ name:templateExercise.name, sameAsLast:false, fromProgram:true,
+        weightGroups:[{ weight:'', reps:templateExercise.defaultReps.slice() }] };
+      session.exercises.push(entry);
     } else {
       entry={ name:templateExercise.name, sameAsLast:false, weightGroups:[emptyWeightGroup()] };
       session.exercises.push(entry);
@@ -1398,7 +1417,7 @@
     var last=findLastTemplateTime(templateId, exerciseName, dateStr);
     if(!last) return;
     exEntry.weightGroups=cloneWeightGroups(last.exercise.weightGroups);
-    exEntry.sameAsLast=true;
+    exEntry.sameAsLast=true; exEntry.fromProgram=false;
   }
 
   // -- 6. Card rendering (structural rebuilds only on add/remove; per-keystroke
@@ -1417,7 +1436,7 @@
     var head=document.createElement('div'); head.className='gymgroup-head';
     var w=document.createElement('input'); w.type='text'; w.inputMode='decimal'; w.pattern='[0-9]*[.,]?[0-9]*';
     w.className='gym-input weightfield'; w.placeholder='kg'; w.value=group.weight;
-    w.addEventListener('input', function(){ group.weight=w.value.replace(',','.'); entry.sameAsLast=false; saveGymLog(); syncSamePill(pill, entry); });
+    w.addEventListener('input', function(){ group.weight=w.value.replace(',','.'); entry.sameAsLast=false; entry.fromProgram=false; saveGymLog(); syncSamePill(pill, entry); });
     var unit=document.createElement('span'); unit.className='weightunit'; unit.textContent='kg';
     var rmGroup=document.createElement('button'); rmGroup.type='button'; rmGroup.className='gym-remove'; rmGroup.innerHTML='&times;'; rmGroup.setAttribute('aria-label','Remove weight');
     rmGroup.addEventListener('click', function(){ removeWeightGroup(entry,gIdx); saveGymLog(); renderGymMain(); });
@@ -1429,7 +1448,7 @@
       var num=document.createElement('span'); num.className='setnum'; num.textContent=(sIdx+1)+'.';
       var r=document.createElement('input'); r.type='text'; r.inputMode='numeric';
       r.className='gym-input'; r.placeholder='reps'; r.value=group.reps[sIdx];
-      r.addEventListener('input', function(){ group.reps[sIdx]=r.value; entry.sameAsLast=false; saveGymLog(); syncSamePill(pill, entry); });
+      r.addEventListener('input', function(){ group.reps[sIdx]=r.value; entry.sameAsLast=false; entry.fromProgram=false; saveGymLog(); syncSamePill(pill, entry); });
       var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove set');
       rm.addEventListener('click', function(){ removeSet(entry,gIdx,sIdx); saveGymLog(); renderGymMain(); });
       row.appendChild(num); row.appendChild(r); row.appendChild(rm);
@@ -1470,6 +1489,10 @@
         renderGymMain();
       });
       card.appendChild(pill);
+    } else if(entry.fromProgram){
+      var progLine=document.createElement('p'); progLine.className='gymlast';
+      progLine.textContent='Program: '+entry.weightGroups.map(function(g){ return g.reps.join(', '); }).join(' | ')+' reps — add weight, or edit if you did something different.';
+      card.appendChild(progLine);
     }
 
     entry.weightGroups.forEach(function(group, gIdx){ card.appendChild(renderWeightGroup(entry, group, gIdx, templateId, dateStr, pill)); });
@@ -1567,23 +1590,69 @@
   document.getElementById('gymHistoryBack').addEventListener('click', function(){ showGymView('main'); });
 
   // -- 9. Edit Plan sub-view --
-  // One-time starter data, pulled from Sian's own Ascend weekly split (analysed 30 Sep 2026).
+  // One-time starter data, pulled from Sian's own Ascend weekly split (analysed 30 Sep 2026,
+  // rep schemes re-verified frame-by-frame at full resolution 3 Oct 2026). Each exercise's
+  // `reps` is the program's prescribed scheme for its one starter weight group — the assumed
+  // default for that exercise until she actually logs something different. Weight is never
+  // seeded (the source app never shows her real kg numbers).
   // Only offered while she has zero templates of her own — never re-shown once she's
   // built or imported anything, so it can't silently duplicate her real setup.
   var GYM_STARTER_SPLIT=[
-    { weekday:1, name:'Legs', exercises:['Hip Thrust','Romanian Deadlift','Glute Focused Step Up','Glute Kickback'] },
-    { weekday:2, name:'Shoulders, Arms, Chest & Core', exercises:['Shoulder Press','Chest Press','Incline Chest Fly','Lateral Raise','Tricep Pressdown','Cable Crunch'] },
-    { weekday:3, name:'Back & Arms', exercises:['Lat Pulldown','Face Pull','Seated Row - High','Seated Row - Left','Seated Row - Right','Bicep Curl'] },
-    { weekday:4, name:'Legs (Lower Body Strength)', exercises:['Back Squat','Split Squat - Right','Split Squat - Left','Hip Thrust - Left','Hip Thrust - Right','Seated Hamstring Curl','Leg Extension'] },
-    { weekday:5, name:'Core & Mobility (Active Recovery)', exercises:['Lat Pulldown - Left','Lat Pulldown - Right','Lateral Raise - Left','Lateral Raise - Right','Bicep Curl','Overhead Tricep Extension'] },
-    { weekday:6, name:'Lower Body Strength', exercises:['Leg Press','Calf Raise','Romanian Deadlift - Left','Romanian Deadlift - Right','Back Extension'] }
+    { weekday:1, name:'Legs', exercises:[
+      {name:'Hip Thrust', reps:['10','8','8','8']},
+      {name:'Romanian Deadlift', reps:['6','6','10']},
+      {name:'Glute Focused Step Up - Right', reps:['8','8','8']},
+      {name:'Glute Focused Step Up - Left', reps:['8','8','8']},
+      {name:'Glute Kickback - Left', reps:['10','12','12']},
+      {name:'Glute Kickback - Right', reps:['10','12','12']}
+    ] },
+    { weekday:2, name:'Shoulders, Arms, Chest & Core', exercises:[
+      {name:'Shoulder Press - Seated Upright', reps:['8','6','6','10']},
+      {name:'Chest Press', reps:['10','8','8','8']},
+      {name:'Incline Chest Fly', reps:['8','8']},
+      {name:'Lateral Raise', reps:['6','6','12']},
+      {name:'Tricep Pressdown - Rope/Bar', reps:['10','10','10']},
+      {name:'Cable Crunch', reps:['12','12','12']}
+    ] },
+    { weekday:3, name:'Back & Arms', exercises:[
+      {name:'Lat Pulldown', reps:['8','8','8']},
+      {name:'Face Pull - Rear Delt Focused', reps:['10','12','12']},
+      {name:'Seated Row - High', reps:['8','6','6','10']},
+      {name:'Seated Row - Left', reps:['8','10','10']},
+      {name:'Seated Row - Right', reps:['8','10','10']},
+      {name:'Bicep Curl - Seated Incline', reps:['8','8','8']}
+    ] },
+    { weekday:4, name:'Legs (Lower Body Strength)', exercises:[
+      {name:'Back Squat', reps:['8','5','6','8']},
+      {name:'Split Squat - Right', reps:['6','8','8']},
+      {name:'Split Squat - Left', reps:['6','8','8']},
+      {name:'Hip Thrust - Left', reps:['8','10','10']},
+      {name:'Hip Thrust - Right', reps:['8','10','10']},
+      {name:'Seated Hamstring Curl', reps:['8','10','10']},
+      {name:'Leg Extension', reps:['8','8','8']}
+    ] },
+    { weekday:5, name:'Core & Mobility (Active Recovery)', exercises:[
+      {name:'Lat Pulldown - Left', reps:['8','10','10']},
+      {name:'Lat Pulldown - Right', reps:['8','10','10']},
+      {name:'Lateral Raise - Left', reps:['10','10']},
+      {name:'Lateral Raise - Right', reps:['10','10']},
+      {name:'Bicep Curl', reps:['8','8']},
+      {name:'Overhead Tricep Extension', reps:['12','12']}
+    ] },
+    { weekday:6, name:'Lower Body Strength', exercises:[
+      {name:'Leg Press', reps:['8','8','8']},
+      {name:'Calf Raise', reps:['8','8']},
+      {name:'Romanian Deadlift - B Stance - Left', reps:['8','8','8']},
+      {name:'Romanian Deadlift - B Stance - Right', reps:['8','8','8']},
+      {name:'Back Extension', reps:['10','10','10']}
+    ] }
     // Sunday intentionally omitted — the source plan treats it as a rest day, which is
     // already this app's default for any weekday with no schedule entry.
   ];
   function importGymStarterSplit(){
     GYM_STARTER_SPLIT.forEach(function(day){
       var t=addGymTemplate(day.name);
-      day.exercises.forEach(function(exName){ addExerciseToTemplate(t.id, exName); });
+      day.exercises.forEach(function(ex){ addExerciseToTemplate(t.id, ex.name, ex.reps); });
       setScheduleDefault(day.weekday, t.id);
     });
     renderTemplateEditor(); renderScheduleEditor();
