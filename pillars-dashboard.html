@@ -1951,7 +1951,7 @@
     var t=findTemplate(templateId); if(!t||!name) return null;
     var ex={ id:gymUid('ex_'), name:name };
     if(defaultReps && defaultReps.length) ex.defaultReps=defaultReps.map(String);
-    if(props) ['sides','limb','singleReps','doubleName','leftName','rightName','styles','equipment'].forEach(function(k){ if(props[k]!=null) ex[k]=props[k]; });
+    if(props) ['sides','limb','singleReps','doubleName','leftName','rightName','styles','equipment','equipLabel'].forEach(function(k){ if(props[k]!=null) ex[k]=props[k]; });
     t.exercises.push(ex); saveGymTemplates();
     return ex;
   }
@@ -2594,7 +2594,7 @@
       if(sd==='single'){ var note=document.createElement('span'); note.className='gympicked-note'; note.textContent='left & right'; head.appendChild(note); }
       wrap.appendChild(head);
       var opts=document.createElement('div'); opts.className='gymopts';
-      if(exHasEquip(ex)) opts.appendChild(row('Equipment', ex.equipment.map(function(e){ return { key:e, label:e }; }), o.equip, 'equip', true));
+      if(exHasEquip(ex)) opts.appendChild(row(ex.equipLabel||'Equipment', ex.equipment.map(function(e){ return { key:e, label:e }; }), o.equip, 'equip', true));
       if(exHasStyles(ex)) opts.appendChild(row('Type', ex.styles.map(function(st){ return { key:st.key, label:st.label }; }), o.style, 'style', false));
       if(sd==='either') opts.appendChild(row('Sides', [ { key:'double', label:'Double '+limb }, { key:'single', label:'Single '+limb } ], o.side, 'side', false));
       if(opts.children.length) wrap.appendChild(opts);
@@ -3015,12 +3015,14 @@
       mantra:'Push past what you thought you could — you’re stronger than you know, love.',
       warmup:secs(['Arm Circles','Shoulder CARs','Scapular Wall Slide']),
       exercises:[
-        {name:'Chest Press', reps:['10','8','8','8']},
-        {name:'Incline Chest Fly', reps:['8','8']},
-        {name:'Shoulder Press - Seated Upright', reps:['8','6','6','10']},
-        {name:'Lateral Raise', sides:'either', limb:'arm', reps:['6','6','12'], singleReps:['10','10']},
-        {name:'Tricep Pressdown - Rope/Bar', reps:['10','10','10']},
-        {name:'Overhead Tricep Extension', reps:['12','12']}
+        {name:'Chest Press', equipment:['Machine','Barbell','Dumbbells'], reps:['10','8','8','8']},
+        {name:'Incline Chest Fly', equipment:['Dumbbells','Machine'], reps:['8','8']},
+        {name:'Shoulder Press', equipment:['Dumbbells','Barbell','Machine'], reps:['8','6','6','10']},
+        {name:'Lateral Raise', sides:'either', limb:'arm', equipLabel:'Setup', equipment:['Seated','Standing','Cable'], reps:['6','6','12'], singleReps:['10','10']},
+        {name:'Front Raise', sides:'either', limb:'arm', equipment:['Cable','Dumbbell']},
+        {name:'Tricep Pressdown', reps:['10','10','10']},
+        {name:'Overhead Tricep Extension', equipment:['Cable','Dumbbell'], reps:['12','12']},
+        {name:'Skull Crusher'}
       ],
       cooldown:secs(['Deltoid Stretch','Overhead Tricep Stretch'])
     },
@@ -3223,6 +3225,41 @@
       if(!t.mantra && day.mantra){ t.mantra=day.mantra; saveGymTemplates(); }
     });
   }
+  // One-time (Oct 2026): Push exercise options — equipment choices, Shoulder Press and Tricep
+  // Pressdown lose their descriptive suffixes (history follows the new names), Front Raise and
+  // Skull Crusher added. Matches by name, so anything she's added herself is left alone.
+  function updatePushLibrary(){
+    if(state.gym_push_lib===1) return;
+    var day=GYM_STARTER_SPLIT.filter(function(d){ return d.name==='Push'; })[0];
+    var push=gymTemplates.filter(function(t){ return t.name==='Push'; })[0];
+    if(day && push){
+      var idx=function(name){ return push.exercises.map(function(e){ return normGymName(e.name); }).indexOf(normGymName(name)); };
+      var renames=[['Shoulder Press - Seated Upright','Shoulder Press'],['Tricep Pressdown - Rope/Bar','Tricep Pressdown']];
+      renames.forEach(function(r){
+        var i=idx(r[0]);
+        if(i!==-1 && idx(r[1])===-1){
+          push.exercises[i].name=r[1];
+          var map={}; map[normGymName(r[0])]=r[1]; renameLoggedNames(push.id, map);
+          var pm={}; pm[normGymName(r[0])]={ base:r[1] }; renamePicks(push.id, pm);
+        }
+      });
+      day.exercises.forEach(function(sx, si){
+        var i=idx(sx.name);
+        if(i===-1){
+          var ex=addExerciseToTemplate(push.id, sx.name, sx.reps, sx); push.exercises.pop();
+          var at=push.exercises.length;
+          for(var j=si-1;j>=0;j--){ var pv=idx(day.exercises[j].name); if(pv!==-1){ at=pv+1; break; } }
+          push.exercises.splice(at,0,ex);
+        } else {
+          var cur=push.exercises[i];
+          if(sx.equipment) cur.equipment=sx.equipment.slice(); else delete cur.equipment;
+          if(sx.equipLabel) cur.equipLabel=sx.equipLabel;
+        }
+      });
+      saveGymTemplates(); saveGymLog();
+    }
+    state.gym_push_lib=1; save(state);
+  }
   // One-time (Oct 2026): warm-up / cool-down lists simplified — no Left/Right splits, no timings.
   // Replaces the lists on the starter groups with the new ones; logged sets are untouched.
   function simplifyWarmupCooldown(){
@@ -3371,6 +3408,7 @@
   // warmup/cooldown existed in this app — fills in just that gap, touches nothing else.
   backfillStarterWarmupCooldown();
   simplifyWarmupCooldown();
+  updatePushLibrary();
   topUpStarterLibrary();
 
   document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
