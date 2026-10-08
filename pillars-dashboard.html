@@ -1622,6 +1622,7 @@
     {name:'Sinead', month:12, day:22},
     {name:'Bryn', month:3, day:11},
     {name:'Liam', month:7, day:19},
+    {name:'Auntie Avril', month:10, day:7},
     {name:'Robyn Daniel', month:4, day:9},
     {name:'Marc Daniel', month:8, day:25},
     {name:'Murrae Stephans', month:6, day:30},
@@ -1716,7 +1717,7 @@
     if(!el) return;
     var names=BIRTHDAYS.filter(function(b){ return daysUntil(b.month,b.day,now)===0; }).map(function(b){ return b.name; });
     el.hidden=!names.length;
-    el.textContent = names.length ? 'Birthday today: '+names.join(' & ') : '';
+    el.textContent = names.length ? 'Birthday today: '+(names.length>1 ? names.slice(0,-1).join(', ')+' & '+names[names.length-1] : names[0]) : '';
   }
   renderDailyBirthday();
 
