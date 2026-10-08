@@ -3031,20 +3031,20 @@
       warmup:secs(['Arm Circles','Rainbow Stretch','Cat Cow']),
       exercises:[
         {name:'Lat Pulldown', sides:'either', limb:'arm', reps:['8','8','8'], singleReps:['8','10','10']},
-        {name:'Seated Row', sides:'either', limb:'arm', doubleName:'Seated Row - High', reps:['8','6','6','10'], singleReps:['8','10','10']},
-        {name:'Face Pull', reps:['10','12','12']},
-        {name:'Incline Bicep Curl', reps:['8','8','8']},
-        {name:'Bicep Curl', reps:['8','8']},
         {name:'Pull-Up'},
         {name:'Assisted Pull-Up'},
+        {name:'Pullover'},
+        {name:'Seated Row', sides:'either', limb:'arm', doubleName:'Seated Row - High', reps:['8','6','6','10'], singleReps:['8','10','10']},
+        {name:'Seated Cable Row'},
         {name:'Bent Over Row'},
         {name:'Chest Supported Row'},
-        {name:'Seated Cable Row'},
+        {name:'Face Pull', reps:['10','12','12']},
         {name:'Reverse Fly'},
         {name:'Shrug'},
+        {name:'Incline Bicep Curl', reps:['8','8','8']},
+        {name:'Bicep Curl', reps:['8','8']},
         {name:'Hammer Curl'},
-        {name:'Preacher Curl'},
-        {name:'Pullover'}
+        {name:'Preacher Curl'}
       ],
       cooldown:secs(['Back Stretch Elbows Up','Side Lying Thoracic Windmill','Child\'s Pose Thread the Needle'])
     },
@@ -3270,6 +3270,20 @@
     }
     state.gym_push_lib=1; save(state);
   }
+  // One-time (Oct 2026): Pull exercises arranged by movement — pulldowns / pull-ups at the top,
+  // rows in the middle, curls at the bottom. Anything she added herself stays at the end.
+  function orderPullLibrary(){
+    if(state.gym_pull_order===1) return;
+    var pull=gymTemplates.filter(function(t){ return t.name==='Pull'; })[0];
+    if(pull){
+      var order=['Lat Pulldown','Pull-Up','Assisted Pull-Up','Pullover','Seated Row','Seated Cable Row','Bent Over Row','Chest Supported Row','Face Pull','Reverse Fly','Shrug','Incline Bicep Curl','Bicep Curl','Hammer Curl','Preacher Curl'].map(normGymName);
+      var rank=function(e){ var i=order.indexOf(normGymName(e.name)); return i===-1 ? 999 : i; };
+      pull.exercises=pull.exercises.map(function(e,i){ return { e:e, i:i }; })
+        .sort(function(a,b){ return rank(a.e)-rank(b.e) || a.i-b.i; }).map(function(x){ return x.e; });
+      saveGymTemplates();
+    }
+    state.gym_pull_order=1; save(state);
+  }
   // One-time (Oct 2026): ten more Pull exercises. Only adds names the group doesn't already have.
   function updatePullLibrary(){
     if(state.gym_pull_lib>=2) return;
@@ -3444,6 +3458,7 @@
   simplifyWarmupCooldown();
   updatePushLibrary();
   updatePullLibrary();
+  orderPullLibrary();
   topUpStarterLibrary();
 
   document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
