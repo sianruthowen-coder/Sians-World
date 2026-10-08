@@ -359,13 +359,30 @@
   .aggmove{ font-size:10.5px; font-weight:700; color:var(--ink-soft); border:1.4px solid var(--border); background:transparent; border-radius:999px; padding:4px 8px; cursor:pointer; font-family:'Inter'; white-space:nowrap; }
   .aggmove:hover{ border-color:var(--phue); color:var(--phue-strong); }
   .aggeditbtn[aria-pressed="true"]{ background:var(--danger-soft); color:var(--danger); border-color:transparent; }
-  .agg-editing .aggchip{ display:none; }
+  .agg-editing .aggrow .aggchip{ display:none; }
   .aggadd{ display:none; flex-wrap:wrap; gap:8px; margin-top:14px; }
   .agg-editing .aggadd{ display:flex; }
   .aggadd select{ flex:0 0 auto; }
   .aggadd input{ flex:1; min-width:140px; }
   .aggadd button{ flex:0 0 auto; width:auto; margin-top:0; }
   .aggempty{ font-size:13px; color:var(--ink-soft); padding:14px 0; }
+
+  /* Check-in blocks (gratitude, rating scales, voice notes, weekly reflections) live in
+     exactly one place at a time: the Daily page, the Weekly page, or back on their
+     pillar page. Wrapped in data-hue so the widgets keep their own pillar colours. */
+  .ckhost{ display:flex; flex-direction:column; }
+  .ckblock{ margin-top:16px; color:var(--phue-strong); }
+  .ckblock > .checkin, .ckblock > .voicecheckin{ margin-top:0; }
+  .ckblock > .section-label{ margin-top:0; }
+  .ckhead{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+  .ckblock.onpillar .ckhead{ display:none; }
+  .pillarhint{ font-size:12px; font-style:italic; color:var(--ink-soft); margin:14px 0 0; }
+  .aggtray{ display:none; margin-top:14px; }
+  .agg-editing .aggtray{ display:block; }
+  .aggtray:empty{ display:none!important; }
+  .aggtray-title{ font-size:11px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--ink-soft); margin:0 0 4px; }
+  .aggtray-row{ display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); }
+  .aggtray-row .t{ flex:1; min-width:0; font-size:12.5px; line-height:1.4; color:var(--ink); }
 
   .gymcomplete{ display:block; width:100%; margin-top:16px; font-family:'Inter'; font-size:13.5px; font-weight:800; padding:13px 16px; border-radius:14px; border:1.4px solid var(--phue); background:var(--surface); color:var(--phue-strong); cursor:pointer; }
   .gymcomplete.done{ background:var(--phue); color:var(--phue-on); }
@@ -436,6 +453,9 @@
       <p class="aggempty" id="dailyEmpty" hidden>Nothing here yet — tap Edit list to add items.</p>
       <p class="section-label" id="dailySuppLabel">Supplements</p>
       <ul class="agglist" id="dailySuppList"></ul>
+      <p class="section-label" id="dailyCkLabel">Check-ins</p>
+      <div class="ckhost" id="dailyCheckins"></div>
+      <div class="aggtray" id="dailyTray"></div>
       <div class="aggadd" id="dailyAdd">
         <select class="gym-input" id="dailyAddPillar" aria-label="Pillar"></select>
         <input type="text" class="gym-input" id="dailyAddText" placeholder="New daily item…">
@@ -453,6 +473,9 @@
       <div class="agglegend" id="weeklyLegend"></div>
       <ul class="agglist" id="weeklyList"></ul>
       <p class="aggempty" id="weeklyEmpty" hidden>Nothing here yet — tap Edit list to add items.</p>
+      <p class="section-label" id="weeklyCkLabel">Check-ins</p>
+      <div class="ckhost" id="weeklyCheckins"></div>
+      <div class="aggtray" id="weeklyTray"></div>
       <div class="aggadd" id="weeklyAdd">
         <select class="gym-input" id="weeklyAddPillar" aria-label="Pillar"></select>
         <input type="text" class="gym-input" id="weeklyAddText" placeholder="New weekly item…">
@@ -531,6 +554,7 @@
         <p><span class="label">Focus now</span><span class="editable" data-gkey="mind-short" contenteditable="false">High quality sleep. Winding down in the evenings. Social connection daily. Gratitude.</span></p>
       </div>
 
+      <p class="pillarhint" data-for="mind" hidden>Your check-ins for this pillar sit on the Daily and Weekly pages.</p>
       <p class="section-label">Today</p>
       <ul class="checklist" data-pillar="mind" data-scope="daily">
         <li class="check-row"><label><input type="checkbox" data-id="social"><span class="box"></span><span class="txt editable" contenteditable="false">A meaningful social connection</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
@@ -540,14 +564,17 @@
       </ul>
       <button type="button" class="additem" data-pillar="mind" data-scope="daily">+ Add item</button>
 
-      <p class="section-label">Gratitude — three things today</p>
+      <div class="ckblock" data-ck="mind-gratitude" data-hue="mind" data-native="daily" data-def="daily">
+<p class="section-label">Gratitude — three things today</p>
       <div class="gratitude">
         <div class="gratitude-row"><span class="gnum">1</span><input type="text" class="gratitude-input" data-pillar="mind" data-scope="daily" data-id="grateful1" placeholder="Something small counts too..."></div>
         <div class="gratitude-row"><span class="gnum">2</span><input type="text" class="gratitude-input" data-pillar="mind" data-scope="daily" data-id="grateful2" placeholder="..."></div>
         <div class="gratitude-row"><span class="gnum">3</span><input type="text" class="gratitude-input" data-pillar="mind" data-scope="daily" data-id="grateful3" placeholder="..."></div>
       </div>
+</div>
 
-      <div class="checkin">
+      <div class="ckblock" data-ck="mind-mood" data-hue="mind" data-native="daily" data-def="daily">
+<div class="checkin">
         <p class="checkin-q">Rate your mood today?</p>
         <div class="numscale" data-pillar="mind" data-id="mood" data-scope="daily">
           <button type="button" class="chip numdot" data-value="0">0</button>
@@ -564,8 +591,10 @@
         </div>
         <div class="scalecaps"><span>not at all</span><span>completely</span></div>
       </div>
+</div>
 
-      <div class="checkin">
+      <div class="ckblock" data-ck="mind-connected" data-hue="mind" data-native="daily" data-def="daily">
+<div class="checkin">
         <p class="checkin-q">How connected did you feel to yourself today?</p>
         <div class="numscale" data-pillar="mind" data-id="connected" data-scope="daily">
           <button type="button" class="chip numdot" data-value="0">0</button>
@@ -587,13 +616,15 @@
           <textarea class="journal voicearea" data-pillar="mind" data-id="prompt" data-scope="daily" placeholder="Speak or type it out — what made today feel that way?"></textarea>
         </div>
       </div>
+</div>
 
-      <p class="section-label">This week</p>
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="mind-weeklyjournal" data-hue="mind" data-native="weekly" data-def="weekly">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">This week in a few lines — what mattered?</p>
         <textarea class="journal voicearea" data-pillar="mind" data-id="weeklyjournal" data-scope="weekly" placeholder="Speak or type it out — a slower reflection than the daily one..."></textarea>
       </div>
+</div>
 
       <p class="section-label" style="margin-top:14px;">Weekly checklist</p>
       <ul class="checklist" data-pillar="mind" data-scope="weekly">
@@ -606,17 +637,21 @@
       </ul>
       <button type="button" class="additem" data-pillar="mind" data-scope="weekly">+ Add item</button>
 
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="mind-learned" data-hue="mind" data-native="weekly" data-def="weekly">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">What did you learn — a podcast, book, or quote?</p>
         <textarea class="journal voicearea" data-pillar="mind" data-id="learnednote" data-scope="weekly" placeholder="Jot it down or talk it through..."></textarea>
       </div>
+</div>
 
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="mind-creative" data-hue="mind" data-native="weekly" data-def="weekly">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">What did you make, and how did it feel?</p>
         <textarea class="journal voicearea" data-pillar="mind" data-id="creativenote" data-scope="weekly" placeholder="A note or two is plenty..."></textarea>
       </div>
+</div>
     </section>
 
     <section class="pillar" id="health" data-hue="health" hidden>
@@ -640,6 +675,7 @@
         <p><span class="label">Focus now</span><span class="editable" data-gkey="health-short" contenteditable="false">4–5 strength sessions this week, every week. Complete a half marathon in 1:50 or less.</span></p>
       </div>
 
+      <p class="pillarhint" data-for="health" hidden>Your check-ins for this pillar sit on the Daily and Weekly pages.</p>
       <p class="section-label">Today</p>
       <ul class="checklist" data-pillar="health" data-scope="daily">
         <li class="check-row"><label><input type="checkbox" data-id="steps"><span class="box"></span><span class="txt editable" contenteditable="false">8,000+ steps</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
@@ -657,19 +693,23 @@
       </ul>
       <button type="button" class="additem" data-pillar="health" data-scope="weekly">+ Add item</button>
 
-      <div class="checkin">
+      <div class="ckblock" data-ck="health-weight" data-hue="health" data-native="weekly" data-def="weekly">
+<div class="checkin">
         <p class="checkin-q">Weight this week</p>
         <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
           <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" class="weight-input" data-pillar="health" data-scope="weekly" data-id="weight" placeholder="56.0">
           <span class="weightunit">kg</span>
         </div>
       </div>
+</div>
 
-      <div class="checkin">
+      <div class="ckblock" data-ck="health-period" data-hue="health" data-native="weekly" data-def="none">
+<div class="checkin">
         <p class="checkin-q">Period tracking</p>
         <div class="statrow" style="margin-top:10px;"><span id="periodValue">Not logged today</span></div>
         <button type="button" class="statbtn" id="logPeriod">Log today</button>
       </div>
+</div>
 
       <p class="section-label">Supplements</p>
       <ul class="checklist" data-pillar="health" data-scope="supplement">
@@ -680,16 +720,20 @@
       </ul>
       <button type="button" class="additem" data-pillar="health" data-scope="supplement">+ Add item</button>
 
-      <div class="checkin">
+      <div class="ckblock" data-ck="health-othermeds" data-hue="health" data-native="weekly" data-def="weekly">
+<div class="checkin">
         <p class="checkin-q">Any other medication taken this week?</p>
         <textarea class="journal" data-pillar="health" data-id="othermeds" data-scope="weekly" placeholder="e.g. antihistamine, painkillers..."></textarea>
       </div>
+</div>
 
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="health-concerns" data-hue="health" data-native="weekly" data-def="weekly">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">Any health concerns or symptoms this week? Talk it through so you've got a record.</p>
         <textarea class="journal voicearea" data-pillar="health" data-id="concerns" data-scope="weekly" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
       </div>
+</div>
     </section>
 
     <section class="pillar" id="wealth" data-hue="wealth" hidden>
@@ -711,6 +755,7 @@
         <p><span class="label">Focus now</span><span class="editable" data-gkey="wealth-short" contenteditable="false">Post consistently — find and repeat whatever drove the Aug 31–Sep 1 spike</span></p>
       </div>
 
+      <p class="pillarhint" data-for="wealth" hidden>Your check-ins for this pillar sit on the Daily and Weekly pages.</p>
       <p class="section-label">Today</p>
       <ul class="checklist" data-pillar="wealth" data-scope="daily">
         <li class="check-row"><label><input type="checkbox" data-id="admin"><span class="box"></span><span class="txt editable" contenteditable="false">Up to date with Perfect Proposal admin</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
@@ -718,7 +763,8 @@
       </ul>
       <button type="button" class="additem" data-pillar="wealth" data-scope="daily">+ Add item</button>
 
-      <div class="checkin">
+      <div class="ckblock" data-ck="wealth-productivity" data-hue="wealth" data-native="daily" data-def="daily">
+<div class="checkin">
         <p class="checkin-q">How productive did you feel in your work today?</p>
         <div class="numscale" data-pillar="wealth" data-id="productivity" data-scope="daily">
           <button type="button" class="chip numdot" data-value="0">0</button>
@@ -735,6 +781,7 @@
         </div>
         <div class="scalecaps"><span>not at all</span><span>completely</span></div>
       </div>
+</div>
 
       <p class="section-label">This week</p>
       <ul class="checklist" data-pillar="wealth" data-scope="weekly">
@@ -743,19 +790,24 @@
       </ul>
       <button type="button" class="additem" data-pillar="wealth" data-scope="weekly">+ Add item</button>
 
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="wealth-money" data-hue="wealth" data-native="weekly" data-def="weekly">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">How are you doing financially this week? Saving, spending, investing, any hurdles — give a brief summary.</p>
         <textarea class="journal voicearea" data-pillar="wealth" data-id="money" data-scope="weekly" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
       </div>
+</div>
 
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="wealth-ideas" data-hue="wealth" data-native="weekly" data-def="weekly">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">Any new business ideas or ways to make money this week? Inspired by any businesses or entrepreneurs? What future work or ventures are pulling at you?</p>
         <textarea class="journal voicearea" data-pillar="wealth" data-id="ideas" data-scope="weekly" placeholder="Speak or type it out — nothing's too half-formed to note down..."></textarea>
       </div>
+</div>
 
-      <div class="checkin">
+      <div class="ckblock" data-ck="wealth-stretch" data-hue="wealth" data-native="weekly" data-def="weekly">
+<div class="checkin">
         <p class="checkin-q">Did this week's work stretch you, or just fill the calendar?</p>
         <div class="chipselect" data-pillar="wealth" data-id="stretch" data-scope="weekly">
           <button type="button" class="chip" data-value="stretched">Genuinely challenged</button>
@@ -769,6 +821,7 @@
           <textarea class="journal voicearea" data-pillar="wealth" data-id="stretchnote" data-scope="weekly" placeholder="Or talk it through if a tick doesn't capture it..."></textarea>
         </div>
       </div>
+</div>
 
       <p class="section-label">This month</p>
       <ul class="checklist" data-pillar="wealth" data-scope="monthly">
@@ -800,14 +853,17 @@
         <p><span class="label">Focus now</span><span class="editable" data-gkey="family-short" contenteditable="false">Make my mom feel loved. Invest in siblings. Deepen friendships.</span></p>
       </div>
 
+      <p class="pillarhint" data-for="family" hidden>Your check-ins for this pillar sit on the Daily and Weekly pages.</p>
       <p class="section-label">Today</p>
       <ul class="checklist" data-pillar="family" data-scope="daily"></ul>
       <button type="button" class="additem" data-pillar="family" data-scope="daily">+ Add item</button>
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="family-voicenote" data-hue="family" data-native="daily" data-def="daily">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">Anything going on in a friendship or family relationship today? Talk it through here.</p>
         <textarea class="journal voicearea" data-pillar="family" data-id="voicenote" data-scope="daily" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
       </div>
+</div>
 
       <p class="section-label" style="margin-top:14px;">This week</p>
       <ul class="checklist" data-pillar="family" data-scope="weekly">
@@ -843,11 +899,13 @@
         <p><span class="label">Focus now</span><span class="editable" data-gkey="love-short" contenteditable="false">Bring an honest, open read on Mike to Dawie — Tue 15 Sep</span></p>
       </div>
 
+      <p class="pillarhint" data-for="love" hidden>Your check-ins for this pillar sit on the Daily and Weekly pages.</p>
       <p class="section-label">Today</p>
       <ul class="checklist" data-pillar="love" data-scope="daily"></ul>
       <button type="button" class="additem" data-pillar="love" data-scope="daily">+ Add item</button>
 
-      <div class="checkin">
+      <div class="ckblock" data-ck="love-attraction-daily" data-hue="love" data-native="daily" data-def="daily">
+<div class="checkin">
         <p class="checkin-q">How attracted are you feeling to Mike today?</p>
         <div class="numscale" data-pillar="love" data-id="attraction-daily" data-scope="daily">
           <button type="button" class="chip numdot" data-value="0">0</button>
@@ -864,33 +922,42 @@
         </div>
         <div class="scalecaps"><span>not at all</span><span>completely</span></div>
       </div>
+</div>
 
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="love-dailyfeeling" data-hue="love" data-native="daily" data-def="daily">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">How did Mike make you feel today?</p>
         <textarea class="journal voicearea" data-pillar="love" data-id="dailyfeeling" data-scope="daily" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
       </div>
+</div>
 
       <p class="section-label" style="margin-top:14px;">This week</p>
       <ul class="checklist" data-pillar="love" data-scope="weekly"></ul>
       <button type="button" class="additem" data-pillar="love" data-scope="weekly">+ Add item</button>
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="love-voicenote" data-hue="love" data-native="weekly" data-def="weekly">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">Tell me how you're currently feeling in your relationship. Reflect on your heart.</p>
         <textarea class="journal voicearea" data-pillar="love" data-id="voicenote" data-scope="weekly" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
       </div>
+</div>
 
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="love-attraction" data-hue="love" data-native="weekly" data-def="weekly">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">How did you feel — physically, sexually, emotionally — attracted to your partner this week?</p>
         <textarea class="journal voicearea" data-pillar="love" data-id="attraction" data-scope="weekly" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
       </div>
+</div>
 
-      <div class="voicecheckin">
+      <div class="ckblock" data-ck="love-lovingacts" data-hue="love" data-native="weekly" data-def="weekly">
+<div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">What did you do this week to make your partner feel special or loved — and what did they do for you?</p>
         <textarea class="journal voicearea" data-pillar="love" data-id="lovingacts" data-scope="weekly" placeholder="Speak or type it out — whatever's actually true right now..."></textarea>
       </div>
+</div>
     </section>
 
     <section class="pillar" id="thoughts" data-hue="thoughts" hidden>
@@ -1066,6 +1133,7 @@
   function registerRingExtra(pillar, fn){ (ringExtras[pillar]=ringExtras[pillar]||[]).push(fn); }
 
   var DAILY_PILLARS=['mind','health','wealth','family','love'];
+  var CK_META={}, CK_ORDER=[];
 
   function pillarProgress(pillar){
     var inputs=document.querySelectorAll('ul.checklist[data-pillar="'+pillar+'"][data-scope="daily"] input[type="checkbox"]');
@@ -1108,6 +1176,8 @@
   }
   function updateAggregateProgress(){
     var d=checklistCounts('daily'), w=checklistCounts('weekly');
+    var dc=ckCounts('daily'), wc=ckCounts('weekly');
+    d.total+=dc.total; d.done+=dc.done; w.total+=wc.total; w.done+=wc.done;
     document.querySelectorAll('.ring[data-ring="daily"], .ring[data-ring="overall"]').forEach(function(r){ paintRing(r, d.total, d.done); });
     document.querySelectorAll('.ring[data-ring="weekly"]').forEach(function(r){ paintRing(r, w.total, w.done); });
   }
@@ -1306,9 +1376,97 @@
     var dailyN=renderAggList(document.getElementById('dailyList'), 'daily', 'daily', true);
     var suppN=renderAggList(document.getElementById('dailySuppList'), 'daily', 'supplement', false);
     document.getElementById('dailySuppLabel').hidden=!suppN;
-    document.getElementById('dailyEmpty').hidden=(dailyN+suppN)>0;
+    document.getElementById('dailyEmpty').hidden=(dailyN+suppN+ckCounts('daily').total)>0;
     var weeklyN=renderAggList(document.getElementById('weeklyList'), 'weekly', 'weekly', true);
-    document.getElementById('weeklyEmpty').hidden=weeklyN>0;
+    document.getElementById('weeklyEmpty').hidden=(weeklyN+ckCounts('weekly').total)>0;
+    updateAggregateProgress();
+  }
+
+  // ---- Check-in blocks: which list each one sits on ----
+  // Gratitude, rating scales, voice notes and weekly reflections used to live only on
+  // their pillar pages. Each is now one movable block that exists in exactly ONE place
+  // (Daily, Weekly, or its pillar page) — never a copy — so what you type is always the
+  // same field. Placement is saved as state['ck:<id>'] = 'daily' | 'weekly' | 'none'.
+  function ckWhere(id){ return state['ck:'+id] || CK_META[id].def; }
+  function ckTitle(id){
+    var q=CK_META[id].block.querySelector('.checkin-q, .section-label');
+    return q ? q.textContent.trim() : id;
+  }
+  function blockAnswered(block){
+    var grat=block.querySelectorAll('.gratitude-input');
+    if(grat.length) return Array.prototype.every.call(grat, function(i){ return i.value.trim().length>0; });
+    if(block.querySelector('.numscale .chip.active, .chipselect .chip.active')) return true;
+    return Array.prototype.some.call(block.querySelectorAll('textarea.journal, .weight-input'), function(el){ return el.value.trim().length>0; });
+  }
+  function ckCounts(where){
+    var total=0, done=0;
+    CK_ORDER.forEach(function(id){
+      if(ckWhere(id)!==where) return;
+      total++; if(blockAnswered(CK_META[id].block)) done++;
+    });
+    return { total:total, done:done };
+  }
+  function setCkWhere(id, where){ state['ck:'+id]=where; save(state); placeCheckins(); }
+
+  function initCheckinBlocks(){
+    document.querySelectorAll('.ckblock').forEach(function(block){
+      var id=block.dataset.ck;
+      var slot=document.createElement('div'); slot.className='ckslot';
+      block.parentNode.insertBefore(slot, block);
+      var head=document.createElement('div'); head.className='ckhead';
+      var chip=document.createElement('span'); chip.className='aggchip'; chip.textContent=PILLAR_SHORT[block.dataset.hue];
+      var ctl=document.createElement('span'); ctl.className='aggctl';
+      head.appendChild(chip); head.appendChild(ctl);
+      block.insertBefore(head, block.firstChild);
+      CK_META[id]={ block:block, slot:slot, ctl:ctl, pillar:block.dataset.hue, native:block.dataset.native, def:block.dataset.def };
+      CK_ORDER.push(id);
+    });
+  }
+
+  function placeCheckins(){
+    var hosts={ daily:document.getElementById('dailyCheckins'), weekly:document.getElementById('weeklyCheckins') };
+    CK_ORDER.forEach(function(id){
+      var m=CK_META[id], where=ckWhere(id);
+      var scope = where==='none' ? m.native : where;
+      if(where==='none') m.slot.appendChild(m.block); else hosts[where].appendChild(m.block);
+      m.block.classList.toggle('onpillar', where==='none');
+      if(m.block.dataset.curscope!==scope){
+        m.block.dataset.curscope=scope;
+        m.block.querySelectorAll('[data-scope]').forEach(function(el){ el.dataset.scope=scope; });
+        m.block.querySelectorAll('.numscale, .chipselect, textarea.journal, .gratitude-input, .weight-input').forEach(function(el){ if(el._refresh) el._refresh(); });
+      }
+      m.ctl.innerHTML='';
+      if(where!=='none'){
+        var other = where==='daily' ? 'weekly' : 'daily';
+        var mv=document.createElement('button'); mv.type='button'; mv.className='aggmove'; mv.textContent='→ '+(other==='daily'?'Daily':'Weekly');
+        mv.addEventListener('click', function(){ setCkWhere(id, other); });
+        var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;';
+        rm.setAttribute('aria-label','Take off this list'); rm.title='Take off this list (it stays on its pillar page)';
+        rm.addEventListener('click', function(){ setCkWhere(id, 'none'); });
+        m.ctl.appendChild(mv); m.ctl.appendChild(rm);
+      }
+    });
+    document.querySelectorAll('.pillarhint').forEach(function(h){
+      h.hidden=!CK_ORDER.some(function(id){ return CK_META[id].pillar===h.dataset.for && ckWhere(id)!=='none'; });
+    });
+    ['daily','weekly'].forEach(function(page){
+      document.getElementById(page+'CkLabel').hidden=!CK_ORDER.some(function(id){ return ckWhere(id)===page; });
+      var tray=document.getElementById(page+'Tray'); tray.innerHTML='';
+      var off=CK_ORDER.filter(function(id){ return ckWhere(id)==='none'; });
+      if(!off.length) return;
+      var Page=page==='daily'?'Daily':'Weekly';
+      var title=document.createElement('p'); title.className='aggtray-title'; title.textContent='Check-ins not on a list — add to '+Page;
+      tray.appendChild(title);
+      off.forEach(function(id){
+        var row=document.createElement('div'); row.className='aggtray-row'; row.dataset.hue=CK_META[id].pillar;
+        var chip=document.createElement('span'); chip.className='aggchip'; chip.textContent=PILLAR_SHORT[CK_META[id].pillar];
+        var t=document.createElement('span'); t.className='t'; t.textContent=ckTitle(id);
+        var add=document.createElement('button'); add.type='button'; add.className='aggmove'; add.textContent='+ '+Page;
+        add.addEventListener('click', function(){ setCkWhere(id, page); });
+        row.appendChild(chip); row.appendChild(t); row.appendChild(add);
+        tray.appendChild(row);
+      });
+    });
     updateAggregateProgress();
   }
 
@@ -1361,22 +1519,30 @@
   }
   editButtons.forEach(function(btn){ btn.addEventListener('click', function(){ setEditing(!editing); }); });
 
+  // Check-in widgets compute their storage key from their CURRENT data-scope each time
+  // (not once at load), because a check-in can be moved between the Daily and Weekly
+  // pages; _refresh() re-reads the saved value for whichever scope it now sits in.
+  function ckKey(el){ return scopeKey(el.dataset.scope||'weekly')+':'+el.dataset.pillar+':'+el.dataset.id; }
   document.querySelectorAll('.chipselect, .numscale').forEach(function(group){
-    var pillar=group.dataset.pillar, id=group.dataset.id, scope=group.dataset.scope||'weekly';
-    var key=scopeKey(scope)+':'+pillar+':'+id;
-    var saved=state[key];
+    var pillar=group.dataset.pillar;
     var chips=group.querySelectorAll('.chip');
+    group._refresh=function(){
+      var saved=state[ckKey(group)];
+      chips.forEach(function(b){ b.classList.toggle('active', b.dataset.value===saved); });
+    };
+    group._refresh();
     chips.forEach(function(btn){
-      if(btn.dataset.value===saved) btn.classList.add('active');
       btn.addEventListener('click', function(){
         chips.forEach(function(b){ b.classList.remove('active'); });
         btn.classList.add('active');
-        state[key]=btn.dataset.value; save(state);
+        state[ckKey(group)]=btn.dataset.value; save(state);
         updateRing(pillar);
       });
     });
-    if(group.classList.contains('numscale') && scope==='daily'){
-      registerRingExtra(pillar, function(){ return { total:1, done: state[key]!=null ? 1 : 0 }; });
+    if(group.classList.contains('numscale')){
+      registerRingExtra(pillar, function(){
+        return group.dataset.scope==='daily' ? { total:1, done: state[ckKey(group)]!=null ? 1 : 0 } : { total:0, done:0 };
+      });
     }
   });
 
@@ -1398,32 +1564,33 @@
   // #thoughtInput is excluded: it has its own save-and-clear flow into the thoughts
   // log below, not the per-pillar draft key this binder uses (data-pillar is unset there).
   document.querySelectorAll('textarea.journal:not(#thoughtInput)').forEach(function(ta){
-    var pillar=ta.dataset.pillar, id=ta.dataset.id, scope=ta.dataset.scope||'daily';
-    var key=scopeKey(scope)+':'+pillar+':'+id;
-    ta.value = state[key]||'';
-    ta.addEventListener('input', function(){ state[key]=ta.value; save(state); updateRing(pillar); });
+    var pillar=ta.dataset.pillar;
+    ta._refresh=function(){ ta.value=state[ckKey(ta)]||''; };
+    ta._refresh();
+    ta.addEventListener('input', function(){ state[ckKey(ta)]=ta.value; save(state); updateRing(pillar); });
   });
 
   document.querySelectorAll('.gratitude-input, .weight-input').forEach(function(inp){
-    var pillar=inp.dataset.pillar, id=inp.dataset.id, scope=inp.dataset.scope||'daily';
-    var key=scopeKey(scope)+':'+pillar+':'+id;
-    inp.value = state[key]||'';
-    inp.addEventListener('input', function(){ state[key]=inp.value; save(state); updateRing(pillar); });
+    var pillar=inp.dataset.pillar;
+    inp._refresh=function(){ inp.value=state[ckKey(inp)]||''; };
+    inp._refresh();
+    inp.addEventListener('input', function(){ state[ckKey(inp)]=inp.value; save(state); updateRing(pillar); });
   });
 
+  // Pillar-ring "extras" only count while their check-in is on the DAILY list.
   function gratitudeDone(pillar){
-    var inputs=document.querySelectorAll('.gratitude-input[data-pillar="'+pillar+'"]');
-    if(!inputs.length) return false;
-    return Array.prototype.every.call(inputs, function(el){ return el.value.trim().length>0; });
+    var inputs=document.querySelectorAll('.gratitude-input[data-pillar="'+pillar+'"][data-scope="daily"]');
+    if(!inputs.length) return { total:0, done:0 };
+    return { total:1, done: Array.prototype.every.call(inputs, function(el){ return el.value.trim().length>0; }) ? 1 : 0 };
   }
-  registerRingExtra('mind', function(){ return { total:1, done: gratitudeDone('mind') ? 1 : 0 }; });
+  registerRingExtra('mind', function(){ return gratitudeDone('mind'); });
 
-  function journalFilled(pillar, id, scope){
-    var ta=document.querySelector('textarea.journal[data-pillar="'+pillar+'"][data-id="'+id+'"][data-scope="'+scope+'"]');
-    return !!(ta && ta.value.trim().length>0);
+  function dailyJournalExtra(pillar, id){
+    var ta=document.querySelector('textarea.journal[data-pillar="'+pillar+'"][data-id="'+id+'"][data-scope="daily"]');
+    return ta ? { total:1, done: ta.value.trim().length>0 ? 1 : 0 } : { total:0, done:0 };
   }
-  registerRingExtra('family', function(){ return { total:1, done: journalFilled('family','voicenote','daily') ? 1 : 0 }; });
-  registerRingExtra('love', function(){ return { total:1, done: journalFilled('love','dailyfeeling','daily') ? 1 : 0 }; });
+  registerRingExtra('family', function(){ return dailyJournalExtra('family','voicenote'); });
+  registerRingExtra('love', function(){ return dailyJournalExtra('love','dailyfeeling'); });
 
   function bindCounter(valueElId, btnElId, storageKey, seedDefault, max, renderFn){
     var el=document.getElementById(valueElId);
@@ -2625,6 +2792,8 @@
   backfillStarterWarmupCooldown();
 
   document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
+  initCheckinBlocks();
+  placeCheckins();
   renderAggregates();
   syncGymDailyTick();
 
