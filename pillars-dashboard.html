@@ -3030,20 +3030,20 @@
       mantra:'A strong back holds up a strong life — show up for yours, darling.',
       warmup:secs(['Arm Circles','Rainbow Stretch','Cat Cow']),
       exercises:[
-        {name:'Lat Pulldown', sides:'either', limb:'arm', reps:['8','8','8'], singleReps:['8','10','10']},
+        {name:'Lat Pulldown', sides:'either', limb:'arm', equipment:['Cable','Machine'], reps:['8','8','8'], singleReps:['8','10','10']},
         {name:'Pull-Up'},
         {name:'Assisted Pull-Up'},
-        {name:'Pullover'},
+        {name:'Pullover', equipment:['Cable','Machine']},
         {name:'Seated Row', sides:'either', limb:'arm', doubleName:'Seated Row - High', reps:['8','6','6','10'], singleReps:['8','10','10']},
-        {name:'Seated Cable Row'},
-        {name:'Bent Over Row'},
-        {name:'Chest Supported Row'},
-        {name:'Face Pull', reps:['10','12','12']},
+        {name:'Seated Cable Row', sides:'either', limb:'arm'},
+        {name:'Bent Over Row', sides:'either', limb:'arm', equipment:['Barbell','Dumbbells']},
+        {name:'Chest Supported Row', sides:'either', limb:'arm'},
+        {name:'Face Pull', equipment:['Kneeling','Seated','Standing'], equipLabel:'Setup', reps:['10','12','12']},
         {name:'Reverse Fly'},
-        {name:'Shrug'},
-        {name:'Incline Bicep Curl', reps:['8','8','8']},
-        {name:'Bicep Curl', reps:['8','8']},
-        {name:'Hammer Curl'},
+        {name:'Shrug', equipment:['Barbell','Dumbbells']},
+        {name:'Incline Bicep Curl', sides:'either', limb:'arm', equipment:['Dumbbells','Barbell'], reps:['8','8','8']},
+        {name:'Bicep Curl', sides:'either', limb:'arm', equipment:['Barbell','Dumbbells','Cable'], reps:['8','8']},
+        {name:'Hammer Curl', sides:'either', limb:'arm', equipment:['Cable','Machine']},
         {name:'Preacher Curl'}
       ],
       cooldown:secs(['Back Stretch Elbows Up','Side Lying Thoracic Windmill','Child\'s Pose Thread the Needle'])
@@ -3270,6 +3270,24 @@
     }
     state.gym_push_lib=1; save(state);
   }
+  // One-time (Oct 2026): single/double-arm and equipment choices on the Pull exercises.
+  // Copies just those choices from the starter list onto the matching exercises; reps, names
+  // and logged history are untouched (plain names keep their existing history).
+  function updatePullOptions(){
+    if(state.gym_pull_opts===1) return;
+    var day=GYM_STARTER_SPLIT.filter(function(d){ return d.name==='Pull'; })[0];
+    var pull=gymTemplates.filter(function(t){ return t.name==='Pull'; })[0];
+    if(day && pull){
+      day.exercises.forEach(function(sx){
+        var ex=pull.exercises.filter(function(e){ return normGymName(e.name)===normGymName(sx.name); })[0];
+        if(!ex) return;
+        if(sx.sides){ ex.sides=sx.sides; ex.limb=sx.limb||'arm'; }
+        if(sx.equipment){ ex.equipment=sx.equipment.slice(); if(sx.equipLabel) ex.equipLabel=sx.equipLabel; }
+      });
+      saveGymTemplates();
+    }
+    state.gym_pull_opts=1; save(state);
+  }
   // One-time (Oct 2026): Pull exercises arranged by movement — pulldowns / pull-ups at the top,
   // rows in the middle, curls at the bottom. Anything she added herself stays at the end.
   function orderPullLibrary(){
@@ -3459,6 +3477,7 @@
   updatePushLibrary();
   updatePullLibrary();
   orderPullLibrary();
+  updatePullOptions();
   topUpStarterLibrary();
 
   document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
