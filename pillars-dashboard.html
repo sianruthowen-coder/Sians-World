@@ -284,6 +284,18 @@
   .gympicker-acts{ display:flex; gap:16px; margin-top:12px; }
   .gympicker-acts .gymplan-editlink{ margin-top:0; }
 
+  .gympicker-add{ display:flex; gap:8px; margin-top:12px; }
+  .gympicker-add input{ flex:1; min-width:0; }
+  .gympicker-add button{ flex:0 0 auto; width:auto; margin-top:0; }
+  .gympicked{ margin-top:6px; }
+  .gympicked-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:16px 2px 0; }
+  .gympicked-name{ font-size:13px; font-weight:800; color:var(--phue-strong); }
+  .gympicked-note{ font-size:11px; font-weight:700; color:var(--ink-soft); }
+  .gymseg{ display:inline-flex; border:1.4px solid var(--border); border-radius:999px; overflow:hidden; background:var(--surface); flex:0 0 auto; }
+  .gymmode{ font-family:'Inter'; font-size:11.5px; font-weight:700; color:var(--ink-soft); background:transparent; border:none; padding:6px 11px; cursor:pointer; }
+  .gymmode.active{ background:var(--phue); color:var(--phue-on); }
+  .gymhow{ flex:0 0 auto; width:auto; padding:8px 6px; font-size:12.5px; }
+
   .gymvolume{ font-size:11px; color:var(--ink-soft); opacity:.8; margin-top:8px; line-height:1.4; }
   .gymhistlink{ font-size:11.5px; font-weight:700; color:var(--phue-strong); background:transparent; border:none; padding:0; margin-top:6px; cursor:pointer; text-decoration:underline; }
 
@@ -1928,11 +1940,13 @@
   // defaultReps (optional): the program-prescribed rep scheme for this exercise's single
   // starter weight group, e.g. ['10','8','8','8'] — pre-fills a brand-new day's card before
   // any real session has ever been logged for it. Omitted for exercises added by hand.
-  function addExerciseToTemplate(templateId, name, defaultReps){
-    var t=findTemplate(templateId); if(!t||!name) return;
+  function addExerciseToTemplate(templateId, name, defaultReps, props){
+    var t=findTemplate(templateId); if(!t||!name) return null;
     var ex={ id:gymUid('ex_'), name:name };
     if(defaultReps && defaultReps.length) ex.defaultReps=defaultReps.map(String);
+    if(props) ['sides','limb','singleReps','doubleName','leftName','rightName'].forEach(function(k){ if(props[k]!=null) ex[k]=props[k]; });
     t.exercises.push(ex); saveGymTemplates();
+    return ex;
   }
   // Warm-up/cool-down are bodyweight mobility holds (name+duration, no weight/reps) —
   // a deliberately simpler, separate shape from `exercises`, seeded only from
@@ -1980,10 +1994,10 @@
   // Progress tab's picker state — runtime-only, same convention as gymViewDate.
   var gymProgressTemplateId = null, gymProgressExerciseName = null, gymProgressChartType = 'line', gymProgressSelectedIndex = null;
   function gymDateStr(){ return dateKey(gymViewDate); }
-  function shiftGymDay(delta){ gymPickerOpen=false; gymViewDate=new Date(gymViewDate.getFullYear(),gymViewDate.getMonth(),gymViewDate.getDate()+delta); renderGymMain(); }
+  function shiftGymDay(delta){ gymPickerOpen={}; gymViewDate=new Date(gymViewDate.getFullYear(),gymViewDate.getMonth(),gymViewDate.getDate()+delta); renderGymMain(); }
   document.getElementById('gymPrevDay').addEventListener('click', function(){ shiftGymDay(-1); });
   document.getElementById('gymNextDay').addEventListener('click', function(){ shiftGymDay(1); });
-  document.getElementById('gymJumpToday').addEventListener('click', function(){ gymPickerOpen=false; gymViewDate=new Date(now); renderGymMain(); });
+  document.getElementById('gymJumpToday').addEventListener('click', function(){ gymPickerOpen={}; gymViewDate=new Date(now); renderGymMain(); });
 
   // -- 4. Session find-or-create + template-scoped "last time" --
   function gymLogKeyFor(templateId, dateStr){ return templateId+'|'+dateStr; }
@@ -2268,84 +2282,200 @@
     return wrap;
   }
 
-  // -- Exercise picker: each session is built from the exercises picked for it --
-  // session.selected holds the picked names in the order they were tapped. Nothing is
-  // picked until she picks it (or taps "Use last session's picks"), so every session is
-  // her own choice rather than a fixed list.
-  var gymPickerOpen=false;
-  function pickedExercises(session, tmpl){
-    return (Array.isArray(session.selected) ? session.selected : []).map(function(name){
-      return tmpl.exercises.filter(function(ex){ return normGymName(ex.name)===normGymName(name); })[0];
-    }).filter(Boolean);
+  // -- Exercise library: one base exercise, optionally done single or double --
+  function exSides(ex){ return ex.sides||'double'; }
+  function exDoubleName(ex){ return ex.doubleName||ex.name; }
+  function exLeftName(ex){ return ex.leftName||ex.name+' - Left'; }
+  function exRightName(ex){ return ex.rightName||ex.name+' - Right'; }
+  function exMode(ex, modes){
+    var sd=exSides(ex);
+    if(sd==='single') return 'single';
+    if(sd==='double') return 'double';
+    return (modes && modes[ex.name]==='single') ? 'single' : 'double';
   }
-  // The most recent earlier session of this muscle group that had picks (or, for sessions
-  // logged before picking existed, logged exercises) — the names to offer for one-tap reuse.
-  function lastSessionPicks(templateId, dateStr){
+  // The cards to log for an exercise in a mode: one for double, a left and a right for single.
+  function exCards(ex, mode){
+    if(mode==='single'){
+      var r=ex.singleReps||ex.defaultReps;
+      return [ { name:exLeftName(ex), defaultReps:r }, { name:exRightName(ex), defaultReps:r } ];
+    }
+    return [ { name:exDoubleName(ex), defaultReps:ex.defaultReps } ];
+  }
+  // Every concrete name an exercise can be logged under (for Progress and history lookups).
+  function exAllNames(ex){
+    var sd=exSides(ex), n=[];
+    if(sd!=='single') n.push(exDoubleName(ex));
+    if(sd!=='double'){ n.push(exLeftName(ex)); n.push(exRightName(ex)); }
+    return n;
+  }
+  function templateExerciseNames(tmpl){
+    var out=[]; tmpl.exercises.forEach(function(ex){ exAllNames(ex).forEach(function(n){ out.push(n); }); });
+    return out;
+  }
+  // concrete logged name -> { ex, mode } within a template
+  function findLibraryHit(tmpl, name){
+    var t=normGymName(name), found=null;
+    tmpl.exercises.forEach(function(ex){
+      if(found) return;
+      if(exSides(ex)!=='single' && normGymName(exDoubleName(ex))===t) found={ ex:ex, mode:'double' };
+      else if(exSides(ex)!=='double' && (normGymName(exLeftName(ex))===t || normGymName(exRightName(ex))===t)) found={ ex:ex, mode:'single' };
+    });
+    return found;
+  }
+  // Latest real entry for a library exercise, whichever way it was logged.
+  function latestEntryForExercise(tmpl, ex){
     var best=null;
-    Object.keys(gymLog).forEach(function(key){
-      var sess=gymLog[key];
-      if(sess.templateId!==templateId || sess.date>=dateStr) return;
-      var names = (Array.isArray(sess.selected) && sess.selected.length)
-        ? sess.selected
-        : (sess.exercises||[]).filter(hasLoggedData).map(function(e){ return e.name; });
-      if(names.length && (!best || sess.date>best.date)) best={ date:sess.date, names:names };
+    exAllNames(ex).forEach(function(n){
+      var es=getExerciseEntries(tmpl.id, n);
+      if(es.length){ var e=es[es.length-1]; if(!best || e.date>best.date) best=e; }
     });
     return best;
   }
-  function setPicks(session, names){
-    var keep=names.map(normGymName);
-    // Drop entries for exercises that were un-picked unless she actually typed something in them.
+
+  // -- Exercise picker: each session is built from the exercises picked for it --
+  // session.selected holds the picked BASE names in tap order; session.modes[base] is
+  // 'single' or 'double' for exercises that can go either way. Nothing is picked until she
+  // picks it (or taps "Use last session's picks"), so every session is her own choice.
+  var gymPickerOpen={};
+  function pickedExercises(session, tmpl){
+    return (Array.isArray(session.selected) ? session.selected : []).map(function(base){
+      var ex=tmpl.exercises.filter(function(x){ return normGymName(x.name)===normGymName(base); })[0];
+      return ex ? { ex:ex, mode:exMode(ex, session.modes) } : null;
+    }).filter(Boolean);
+  }
+  // The most recent earlier session of this group that had picks (or, for sessions logged
+  // before picking existed, logged exercises) — offered for one-tap reuse.
+  function lastSessionPicks(tmpl, dateStr){
+    var best=null;
+    Object.keys(gymLog).forEach(function(key){
+      var sess=gymLog[key];
+      if(sess.templateId!==tmpl.id || sess.date>=dateStr) return;
+      var names=[], modes={};
+      if(Array.isArray(sess.selected) && sess.selected.length){ names=sess.selected.slice(); modes=sess.modes||{}; }
+      else (sess.exercises||[]).filter(function(e){ return countsAsLogged(sess,e); }).forEach(function(e){
+        var hit=findLibraryHit(tmpl, e.name);
+        if(hit && names.indexOf(hit.ex.name)===-1){ names.push(hit.ex.name); modes[hit.ex.name]=hit.mode; }
+      });
+      if(names.length && (!best || sess.date>best.date)) best={ date:sess.date, names:names, modes:modes };
+    });
+    return best;
+  }
+  // Drop cards' data for anything no longer shown, unless she actually typed in it.
+  function pruneEntries(session, tmpl){
+    var keep=[];
+    pickedExercises(session, tmpl).forEach(function(p){ exCards(p.ex,p.mode).forEach(function(c){ keep.push(normGymName(c.name)); }); });
     session.exercises=(session.exercises||[]).filter(function(e){
       if(keep.indexOf(normGymName(e.name))!==-1) return true;
       return e.sameAsLast!==true && !e.fromProgram && hasLoggedData(e);
     });
-    session.selected=names;
+  }
+  function setPicks(session, tmpl, bases, modes){
+    session.selected=bases;
+    if(modes) session.modes=modes;
+    pruneEntries(session, tmpl);
     saveGymLog(); renderGymMain();
   }
-  function renderExercisePicker(session, tmpl, templateId, dateStr, picked){
+  function setMode(session, tmpl, ex, mode){
+    session.modes=session.modes||{}; session.modes[ex.name]=mode;
+    pruneEntries(session, tmpl);
+    saveGymLog(); renderGymMain();
+  }
+
+  // opts: title, collapsedWhenEmpty (extras stay folded until wanted), allowAdd (type a new exercise)
+  function renderExercisePicker(session, tmpl, templateId, dateStr, picked, opts){
+    opts=opts||{};
     var box=document.createElement('details'); box.className='gympicker';
-    box.open = gymPickerOpen || picked.length===0;
-    box.addEventListener('toggle', function(){ gymPickerOpen=box.open; });
+    box.open = !!gymPickerOpen[tmpl.id] || (picked.length===0 && !opts.collapsedWhenEmpty);
+    box.addEventListener('toggle', function(){ gymPickerOpen[tmpl.id]=box.open; });
     var sum=document.createElement('summary'); sum.className='gympicker-sum';
-    sum.textContent='Choose exercises · '+picked.length+' selected';
+    sum.textContent=(opts.title||'Choose exercises')+' · '+picked.length+' selected';
     box.appendChild(sum);
 
     var chips=document.createElement('div'); chips.className='gympicker-chips';
-    var chosen=picked.map(function(ex){ return normGymName(ex.name); });
+    var chosen=picked.map(function(p){ return normGymName(p.ex.name); });
     tmpl.exercises.forEach(function(ex){
       var on=chosen.indexOf(normGymName(ex.name))!==-1;
       var chip=document.createElement('button'); chip.type='button';
       chip.className='chip gympick'+(on?' active':''); chip.setAttribute('aria-pressed', on?'true':'false');
       chip.textContent=ex.name;
       chip.addEventListener('click', function(){
-        gymPickerOpen=true;
-        var names=picked.map(function(p){ return p.name; });
+        gymPickerOpen[tmpl.id]=true;
+        var names=picked.map(function(p){ return p.ex.name; });
         if(on) names=names.filter(function(n){ return normGymName(n)!==normGymName(ex.name); });
         else names.push(ex.name);
-        setPicks(session, names);
+        setPicks(session, tmpl, names);
       });
       chips.appendChild(chip);
     });
     box.appendChild(chips);
 
     var acts=document.createElement('div'); acts.className='gympicker-acts';
-    var last=lastSessionPicks(templateId, dateStr);
+    var last=lastSessionPicks(tmpl, dateStr);
     if(last){
       var reuse=document.createElement('button'); reuse.type='button'; reuse.className='gymplan-editlink';
       reuse.textContent='Use last session’s picks';
       reuse.addEventListener('click', function(){
-        gymPickerOpen=true;
-        setPicks(session, last.names.filter(function(n){ return tmpl.exercises.some(function(ex){ return normGymName(ex.name)===normGymName(n); }); }));
+        gymPickerOpen[tmpl.id]=true;
+        var names=last.names.filter(function(n){ return tmpl.exercises.some(function(ex){ return normGymName(ex.name)===normGymName(n); }); });
+        setPicks(session, tmpl, names, Object.assign({}, last.modes));
       });
       acts.appendChild(reuse);
     }
     if(picked.length){
       var clr=document.createElement('button'); clr.type='button'; clr.className='gymplan-editlink'; clr.textContent='Clear';
-      clr.addEventListener('click', function(){ gymPickerOpen=true; setPicks(session, []); });
+      clr.addEventListener('click', function(){ gymPickerOpen[tmpl.id]=true; setPicks(session, tmpl, []); });
       acts.appendChild(clr);
     }
     if(acts.children.length) box.appendChild(acts);
+
+    if(opts.allowAdd){
+      var add=document.createElement('div'); add.className='gympicker-add';
+      var inp=document.createElement('input'); inp.type='text'; inp.className='gym-input'; inp.placeholder='Add your own exercise…';
+      inp.setAttribute('aria-label','Add your own exercise');
+      var btn=document.createElement('button'); btn.type='button'; btn.className='gymtmpl-addtmpl'; btn.textContent='+ Add';
+      function addOwn(){
+        var name=inp.value.trim(); if(!name) { inp.focus(); return; }
+        var existing=tmpl.exercises.filter(function(ex){ return normGymName(ex.name)===normGymName(name); })[0];
+        if(!existing) existing=addExerciseToTemplate(tmpl.id, name);
+        gymPickerOpen[tmpl.id]=true;
+        var names=picked.map(function(p){ return p.ex.name; });
+        if(names.map(normGymName).indexOf(normGymName(existing.name))===-1) names.push(existing.name);
+        setPicks(session, tmpl, names);
+      }
+      btn.addEventListener('click', addOwn);
+      inp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); addOwn(); } });
+      add.appendChild(inp); add.appendChild(btn);
+      box.appendChild(add);
+    }
     return box;
+  }
+
+  // One picked exercise: its cards, plus the single/double switch when it can go either way.
+  function renderPickedBlock(session, tmpl, p, templateId, dateStr){
+    var wrap=document.createElement('div'); wrap.className='gympicked';
+    var sd=exSides(p.ex);
+    if(sd!=='double'){
+      var head=document.createElement('div'); head.className='gympicked-head';
+      var nm=document.createElement('span'); nm.className='gympicked-name'; nm.textContent=p.ex.name;
+      head.appendChild(nm);
+      var limb=p.ex.limb==='leg' ? 'leg' : 'arm';
+      if(sd==='either'){
+        var seg=document.createElement('span'); seg.className='gymseg';
+        [['double','Double '+limb],['single','Single '+limb]].forEach(function(o){
+          var b=document.createElement('button'); b.type='button'; b.className='gymmode'+(p.mode===o[0]?' active':'');
+          b.setAttribute('aria-pressed', p.mode===o[0]?'true':'false'); b.textContent=o[1];
+          b.addEventListener('click', function(){ if(p.mode!==o[0]) setMode(session, tmpl, p.ex, o[0]); });
+          seg.appendChild(b);
+        });
+        head.appendChild(seg);
+      } else {
+        var note=document.createElement('span'); note.className='gympicked-note'; note.textContent='left & right';
+        head.appendChild(note);
+      }
+      wrap.appendChild(head);
+    }
+    exCards(p.ex, p.mode).forEach(function(c){ wrap.appendChild(renderExerciseCard(session, c, templateId, dateStr)); });
+    return wrap;
   }
 
   // -- 7. Main view render --
@@ -2374,10 +2504,10 @@
           : templateStatusLine(gymViewDate, activeId));
 
     var pillsEl=document.getElementById('gymTemplatePills'); pillsEl.innerHTML='';
-    gymTemplates.concat([{id:'rest', name:'Rest'}]).forEach(function(t){
+    gymTemplates.filter(function(t){ return !t.extras; }).concat([{id:'rest', name:'Rest'}]).forEach(function(t){
       var chip=document.createElement('button'); chip.type='button'; chip.className='chip'+(t.id===activeId?' active':'');
       chip.textContent=t.id==='rest' ? 'Rest' : t.name;
-      chip.addEventListener('click', function(){ gymPickerOpen=false; setDayOverride(dsStr, t.id); renderGymMain(); });
+      chip.addEventListener('click', function(){ gymPickerOpen={}; setDayOverride(dsStr, t.id); renderGymMain(); });
       pillsEl.appendChild(chip);
     });
 
@@ -2395,21 +2525,35 @@
     var session=ensureSession(activeId, dsStr);
     var picked=pickedExercises(session, tmpl);
     detailEl.textContent = tmpl.exercises.length
-      ? 'Choose the exercises you\u2019re doing today, then log reps and weight for each.'
-      : 'This muscle group has no exercises yet \u2014 add some in Edit plan.';
-    cardsEl.appendChild(renderExercisePicker(session, tmpl, activeId, dsStr, picked));
+      ? 'Choose the exercises you’re doing today, then log reps and weight for each.'
+      : 'This group has no exercises yet — add some in Edit plan.';
+    cardsEl.appendChild(renderExercisePicker(session, tmpl, activeId, dsStr, picked, { title:'Choose exercises' }));
     var warmupEl=renderGymChecklistSection('Warm up', tmpl.warmup, session, 'warmupDone');
     if(warmupEl) cardsEl.appendChild(warmupEl);
-    picked.forEach(function(ex){
-      cardsEl.appendChild(renderExerciseCard(session, ex, activeId, dsStr));
-    });
+    picked.forEach(function(p){ cardsEl.appendChild(renderPickedBlock(session, tmpl, p, activeId, dsStr)); });
+
+    // Extras (core or anything else) can be added to the end of any workout (kept as their own group so an
+    // extra's history stays together whichever day it was done on).
+    var extras=gymTemplates.filter(function(t){ return t.extras && t.id!==activeId; })[0];
+    var exSession=null;
+    if(extras){
+      exSession=ensureSession(extras.id, dsStr);
+      var xp=pickedExercises(exSession, extras);
+      cardsEl.appendChild(renderExercisePicker(exSession, extras, extras.id, dsStr, xp,
+        { title:'Add extras (core or anything else)', collapsedWhenEmpty:true, allowAdd:true }));
+      xp.forEach(function(p){ cardsEl.appendChild(renderPickedBlock(exSession, extras, p, extras.id, dsStr)); });
+    }
+
     var cooldownEl=renderGymChecklistSection('Cool down', tmpl.cooldown, session, 'cooldownDone');
     if(cooldownEl) cardsEl.appendChild(cooldownEl);
 
     var doneBtn=document.createElement('button'); doneBtn.type='button';
     doneBtn.className='gymcomplete'+(session.completed?' done':'');
-    doneBtn.textContent=session.completed ? '\u2713 Workout complete \u2014 tap to undo' : 'Mark workout complete';
-    doneBtn.addEventListener('click', function(){ session.completed=!session.completed; saveGymLog(); renderGymMain(); });
+    doneBtn.textContent=session.completed ? '✓ Workout complete — tap to undo' : 'Mark workout complete';
+    doneBtn.addEventListener('click', function(){
+      var v=!session.completed; session.completed=v; if(exSession) exSession.completed=v;
+      saveGymLog(); renderGymMain();
+    });
     cardsEl.appendChild(doneBtn);
     if(dsStr===todayStr){
       var doneNote=document.createElement('p'); doneNote.className='gymcomplete-note';
@@ -2659,12 +2803,13 @@
       gymProgressExerciseName=null;
     } else {
       exerciseSel.disabled=false;
-      tmpl.exercises.forEach(function(ex){
-        var opt=document.createElement('option'); opt.value=ex.name; opt.textContent=ex.name;
+      var allNames=templateExerciseNames(tmpl);
+      allNames.forEach(function(n){
+        var opt=document.createElement('option'); opt.value=n; opt.textContent=n;
         exerciseSel.appendChild(opt);
       });
-      if(!gymProgressExerciseName || !tmpl.exercises.some(function(e){ return e.name===gymProgressExerciseName; })){
-        gymProgressExerciseName=tmpl.exercises[0].name;
+      if(!gymProgressExerciseName || allNames.indexOf(gymProgressExerciseName)===-1){
+        gymProgressExerciseName=allNames[0];
       }
       exerciseSel.value=gymProgressExerciseName;
     }
@@ -2703,30 +2848,29 @@
   // seeded (the source app never shows her real kg numbers).
   // Only offered while she has zero templates of her own — never re-shown once she's
   // built or imported anything, so it can't silently duplicate her real setup.
-  // Muscle groups, each holding EVERY exercise for that area (with the program's prescribed
-  // reps as the prefill). A session no longer runs a fixed list: each day she picks which of
-  // a group's exercises she's doing. `weekdays` is just the group suggested for that day of
-  // the week (the day's pills still let her switch to any group).
+  // Three training groups — Lower body, Push, Pull — each holding EVERY exercise for that
+  // area, plus an "Extras" section that can be added to the end of any workout. A session
+  // is built by picking exercises from the day's group (and extras). `weekdays` just suggests
+  // a group for that day; the day's bubbles (Lower body / Push / Pull / Rest) switch freely.
+  //
+  // Each exercise is stored once under its base name with how it can be done:
+  //   sides 'double' (default) – one card;  'either' – she chooses double or single per
+  //   session;  'single' – always a left and a right card.  singleReps / leftName / rightName /
+  //   doubleName keep the names and rep schemes the older logs already use.
   function secs(names, d){ return names.map(function(n){ return { name:n, duration:d||'30 secs' }; }); }
   var GYM_STARTER_SPLIT=[
-    { name:'Legs', weekdays:[1,4,6],
+    { name:'Lower body', weekdays:[1,4,6],
       mantra:'Strong legs, stronger woman — let’s go, gorgeous.',
       warmup:secs(['Hinge','Hip Circle - Left','Hip Circle - Right','Low Lunge - Deep Rock - Left','Low Lunge - Deep Rock - Right','Deep Squat to Hamstring Stretch - Alternating']),
       exercises:[
         {name:'Back Squat', reps:['8','5','6','8']},
         {name:'Leg Press', reps:['8','8','8']},
-        {name:'Hip Thrust', reps:['10','8','8','8']},
-        {name:'Hip Thrust - Left', reps:['8','10','10']},
-        {name:'Hip Thrust - Right', reps:['8','10','10']},
-        {name:'Romanian Deadlift', reps:['6','6','10']},
-        {name:'Romanian Deadlift - B Stance - Left', reps:['8','8','8']},
-        {name:'Romanian Deadlift - B Stance - Right', reps:['8','8','8']},
-        {name:'Split Squat - Right', reps:['6','8','8']},
-        {name:'Split Squat - Left', reps:['6','8','8']},
-        {name:'Glute Focused Step Up - Right', reps:['8','8','8']},
-        {name:'Glute Focused Step Up - Left', reps:['8','8','8']},
-        {name:'Glute Kickback - Left', reps:['10','12','12']},
-        {name:'Glute Kickback - Right', reps:['10','12','12']},
+        {name:'Hip Thrust', sides:'either', limb:'leg', reps:['10','8','8','8'], singleReps:['8','10','10']},
+        {name:'Romanian Deadlift', sides:'either', limb:'leg', reps:['6','6','10'], singleReps:['8','8','8'],
+          leftName:'Romanian Deadlift - B Stance - Left', rightName:'Romanian Deadlift - B Stance - Right'},
+        {name:'Split Squat', sides:'single', limb:'leg', reps:['6','8','8']},
+        {name:'Glute Focused Step Up', sides:'single', limb:'leg', reps:['8','8','8']},
+        {name:'Glute Kickback', sides:'single', limb:'leg', reps:['10','12','12']},
         {name:'Seated Hamstring Curl', reps:['8','10','10']},
         {name:'Leg Extension', reps:['8','8','8']},
         {name:'Calf Raise', reps:['8','8']},
@@ -2734,88 +2878,77 @@
       ],
       cooldown:secs(['Static Quad Stretch - Left','Static Quad Stretch - Right','Pigeon Pose - Left','Pigeon Pose - Right','Forward Fold - Seated'])
     },
-    { name:'Back', weekdays:[3],
-      mantra:'A strong back holds up a strong life — show up for yours, darling.',
-      warmup:secs(['Arm Circles - Forward','Arm Circles - Backward','Rainbow Stretch - Right','Rainbow Stretch - Left','Cat Cow']),
-      exercises:[
-        {name:'Lat Pulldown', reps:['8','8','8']},
-        {name:'Lat Pulldown - Left', reps:['8','10','10']},
-        {name:'Lat Pulldown - Right', reps:['8','10','10']},
-        {name:'Seated Row - High', reps:['8','6','6','10']},
-        {name:'Seated Row - Left', reps:['8','10','10']},
-        {name:'Seated Row - Right', reps:['8','10','10']},
-        {name:'Face Pull - Rear Delt Focused', reps:['10','12','12']}
-      ],
-      cooldown:secs(['Back Stretch Elbows Up','Side Lying Thoracic Windmill - Right','Side Lying Thoracic Windmill - Left',"Child's Pose Thread the Needle - Right","Child's Pose Thread the Needle - Left"])
-    },
-    { name:'Chest', weekdays:[],
-      mantra:'Strong chest, open heart — own the room, gorgeous.',
+    { name:'Push', weekdays:[2],
+      mantra:'Push past what you thought you could — you’re stronger than you know, love.',
       warmup:secs(['Arm Circles - Forward','Arm Circles - Backward','Shoulder CARs - Right','Shoulder CARs - Left','Scapular Wall Slide']),
       exercises:[
         {name:'Chest Press', reps:['10','8','8','8']},
-        {name:'Incline Chest Fly', reps:['8','8']}
-      ],
-      cooldown:secs(['Deltoid Stretch - Right','Deltoid Stretch - Left'])
-    },
-    { name:'Shoulders', weekdays:[2],
-      mantra:'Shoulders back, head high — you carry it all, angel.',
-      warmup:secs(['Arm Circles - Forward','Arm Circles - Backward','Shoulder CARs - Right','Shoulder CARs - Left','Scapular Wall Slide']),
-      exercises:[
+        {name:'Incline Chest Fly', reps:['8','8']},
         {name:'Shoulder Press - Seated Upright', reps:['8','6','6','10']},
-        {name:'Lateral Raise', reps:['6','6','12']},
-        {name:'Lateral Raise - Left', reps:['10','10']},
-        {name:'Lateral Raise - Right', reps:['10','10']}
-      ],
-      cooldown:secs(['Deltoid Stretch - Right','Deltoid Stretch - Left'])
-    },
-    { name:'Arms', weekdays:[],
-      mantra:'Build the arms that can carry anything, love.',
-      warmup:secs(['Arm Circles - Forward','Arm Circles - Backward','Rainbow Stretch - Left','Rainbow Stretch - Right','Crossover Arm Swing']),
-      exercises:[
-        {name:'Bicep Curl - Seated Incline', reps:['8','8','8']},
-        {name:'Bicep Curl', reps:['8','8']},
+        {name:'Lateral Raise', sides:'either', limb:'arm', reps:['6','6','12'], singleReps:['10','10']},
         {name:'Tricep Pressdown - Rope/Bar', reps:['10','10','10']},
         {name:'Overhead Tricep Extension', reps:['12','12']}
       ],
-      cooldown:secs(['Overhead Tricep Stretch - Right','Overhead Tricep Stretch - Left'])
+      cooldown:secs(['Deltoid Stretch - Right','Deltoid Stretch - Left','Overhead Tricep Stretch - Right','Overhead Tricep Stretch - Left'])
     },
-    { name:'Core', weekdays:[5],
-      mantra:'Strength is showing up even on the quiet days, angel.',
-      warmup:secs(['Arm Circles - Forward','Arm Circles - Backward','Rainbow Stretch - Left','Rainbow Stretch - Right','Crossover Arm Swing']),
+    { name:'Pull', weekdays:[3],
+      mantra:'A strong back holds up a strong life — show up for yours, darling.',
+      warmup:secs(['Arm Circles - Forward','Arm Circles - Backward','Rainbow Stretch - Right','Rainbow Stretch - Left','Cat Cow']),
+      exercises:[
+        {name:'Lat Pulldown', sides:'either', limb:'arm', reps:['8','8','8'], singleReps:['8','10','10']},
+        {name:'Seated Row', sides:'either', limb:'arm', doubleName:'Seated Row - High', reps:['8','6','6','10'], singleReps:['8','10','10']},
+        {name:'Face Pull - Rear Delt Focused', reps:['10','12','12']},
+        {name:'Bicep Curl - Seated Incline', reps:['8','8','8']},
+        {name:'Bicep Curl', reps:['8','8']}
+      ],
+      cooldown:secs(['Back Stretch Elbows Up','Side Lying Thoracic Windmill - Right','Side Lying Thoracic Windmill - Left',"Child's Pose Thread the Needle - Right","Child's Pose Thread the Needle - Left"])
+    },
+    { name:'Extras', extras:true, weekdays:[],
       exercises:[
         {name:'Cable Crunch', reps:['12','12','12']}
       ]
     }
-    // Sunday intentionally unscheduled — it defaults to a rest day.
+    // Fridays and Sundays are left as rest days (the day's bubbles still switch to any group).
   ];
   function importGymStarterSplit(){
     GYM_STARTER_SPLIT.forEach(function(day){
       var t=addGymTemplate(day.name);
-      day.exercises.forEach(function(ex){ addExerciseToTemplate(t.id, ex.name, ex.reps); });
+      if(day.extras) t.extras=true;
+      day.exercises.forEach(function(ex){ addExerciseToTemplate(t.id, ex.name, ex.reps, ex); });
       (day.warmup||[]).forEach(function(w){ addWarmupItem(t.id, w.name, w.duration); });
       (day.cooldown||[]).forEach(function(c){ addCooldownItem(t.id, c.name, c.duration); });
-      if(day.mantra){ t.mantra=day.mantra; saveGymTemplates(); }
+      if(day.mantra) t.mantra=day.mantra;
+      saveGymTemplates();
       (day.weekdays||[]).forEach(function(wd){ setScheduleDefault(wd, t.id); });
     });
     renderTemplateEditor(); renderScheduleEditor();
   }
 
-  // One-time move from the old day-by-day templates (Legs, Back & Arms, Lower Body Strength…)
-  // to the muscle groups above. The old starter templates are replaced, and anything already
-  // logged is carried across: each logged exercise is filed under the muscle group that
-  // contains it, on its original date, and counted as picked for that session. Sessions with an
-  // exercise that matches no group are left untouched. Templates she built herself are kept.
-  var OLD_STARTER_NAMES=['Legs','Shoulders, Arms, Chest & Core','Back & Arms','Legs (Lower Body Strength)','Core & Mobility (Active Recovery)','Lower Body Strength'];
+  // One-time move to the Lower body / Push / Pull structure from ANY earlier layout (the original
+  // day-by-day templates or the six-muscle-group version). The old starter templates are
+  // replaced; everything already logged is filed under the group that now holds that exercise,
+  // on its original date, as a pick (single/double worked out from the name it was logged
+  // under). Sessions with an exercise that matches nothing are left untouched, and templates
+  // she built herself are kept.
+  var OLD_STARTER_NAMES=['Legs','Shoulders, Arms, Chest & Core','Back & Arms','Legs (Lower Body Strength)','Core & Mobility (Active Recovery)','Lower Body Strength','Back','Chest','Shoulders','Arms','Core'];
   function migrateGymToMuscleGroups(){
-    if(state.gym_model===2) return;
+    if(state.gym_model===3) return;
     var old={};
     gymTemplates.forEach(function(t){ if(OLD_STARTER_NAMES.indexOf(t.name)!==-1) old[t.id]=t; });
     if(Object.keys(old).length){
       for(var i=gymTemplates.length-1;i>=0;i--) if(old[gymTemplates[i].id]) gymTemplates.splice(i,1);
       saveGymTemplates();
+      Object.keys(gymSchedule).forEach(function(d){ if(old[gymSchedule[d]]) gymSchedule[d]='rest'; });
       importGymStarterSplit();
       var owner={};
-      gymTemplates.forEach(function(t){ t.exercises.forEach(function(ex){ owner[normGymName(ex.name)]={ tmpl:t, name:ex.name }; }); });
+      gymTemplates.forEach(function(t){
+        t.exercises.forEach(function(ex){
+          exAllNames(ex).forEach(function(n){
+            var isDouble = exSides(ex)!=='single' && normGymName(n)===normGymName(exDoubleName(ex));
+            owner[normGymName(n)]={ tmpl:t, ex:ex, mode:isDouble?'double':'single', name:n };
+          });
+        });
+      });
       Object.keys(gymLog).forEach(function(key){
         var sess=gymLog[key];
         if(!old[sess.templateId]) return;
@@ -2828,8 +2961,9 @@
           if(!ns.exercises.some(function(x){ return normGymName(x.name)===normGymName(e.name); })){
             ns.exercises.push({ name:hit.name, sameAsLast:false, weightGroups:toPerSetGroups(e.weightGroups) });
           }
-          ns.selected=ns.selected||[];
-          if(ns.selected.indexOf(hit.name)===-1) ns.selected.push(hit.name);
+          ns.selected=ns.selected||[]; ns.modes=ns.modes||{};
+          if(ns.selected.indexOf(hit.ex.name)===-1) ns.selected.push(hit.ex.name);
+          ns.modes[hit.ex.name]=hit.mode;
           if(sess.completed) ns.completed=true;
         });
         if(allMapped) delete gymLog[key];
@@ -2837,7 +2971,7 @@
       Object.keys(gymOverrides).forEach(function(d){ if(old[gymOverrides[d]]) delete gymOverrides[d]; });
       saveGymLog(); saveGymOverrides(); saveGymSchedule();
     }
-    state.gym_model=2; save(state);
+    state.gym_model=3; save(state);
   }
 
   // One-time, additive backfill for devices where the starter split already imported
@@ -2890,15 +3024,20 @@
         down.addEventListener('click', function(){ reorderTemplateExercise(t.id, ex.id, 1); renderTemplateEditor(); });
         var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove exercise');
         rm.addEventListener('click', function(){ removeTemplateExercise(t.id, ex.id); renderTemplateEditor(); });
-        row.appendChild(input); row.appendChild(up); row.appendChild(down); row.appendChild(rm);
+        var how=document.createElement('select'); how.className='gym-input gymhow'; how.setAttribute('aria-label','How '+ex.name+' is done');
+        [['double','Double','One card'],['either','Either','Choose double or single each time'],['single','Single','Always left & right']].forEach(function(o){
+          var op=document.createElement('option'); op.value=o[0]; op.textContent=o[1]; op.title=o[2];
+          if(exSides(ex)===o[0]) op.selected=true; how.appendChild(op);
+        });
+        how.addEventListener('change', function(){ ex.sides=how.value; saveGymTemplates(); });
+        row.appendChild(input); row.appendChild(how); row.appendChild(up); row.appendChild(down); row.appendChild(rm);
         block.appendChild(row);
 
         // Shaded last-session reference, scoped to this exercise under this specific
         // template (reuses the same real-data-only entry set the Progress chart uses,
         // so a fromProgram-only ghost entry never appears here either).
-        var entries=getExerciseEntries(t.id, ex.name);
-        if(entries.length){
-          var lastEntry=entries[entries.length-1];
+        var lastEntry=latestEntryForExercise(t, ex);
+        if(lastEntry){
           var lastLine=document.createElement('p'); lastLine.className='gymtmpl-exlast';
           lastLine.textContent='Last: '+describeSets(lastEntry.exercise.weightGroups);
           block.appendChild(lastLine);
@@ -2925,7 +3064,7 @@
       var d=document.createElement('span'); d.className='day'; d.textContent=label;
       var pills=document.createElement('div'); pills.className='gympills'; pills.style.marginTop='0';
       var current=gymSchedule.hasOwnProperty(String(idx)) ? gymSchedule[String(idx)] : 'rest';
-      gymTemplates.concat([{id:'rest', name:'Rest'}]).forEach(function(t){
+      gymTemplates.filter(function(t){ return !t.extras; }).concat([{id:'rest', name:'Rest'}]).forEach(function(t){
         var chip=document.createElement('button'); chip.type='button'; chip.className='chip'+(t.id===current?' active':'');
         chip.textContent=t.id==='rest' ? 'Rest' : t.name;
         chip.addEventListener('click', function(){
