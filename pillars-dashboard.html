@@ -1159,22 +1159,75 @@
   var STORE_KEY='pillars_v1';
   function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'{}'); }catch(e){ return {}; } }
 
-  // Local storage on this phone stays the source of truth — nothing above changes.
-  // dbRef, once resolved, is a one-way mirror: every save() also (debounced) pushes
-  // the whole state blob to a single db document, so Claude can read it back later
-  // via the db capability. If db is unavailable (not opened as a claude.ai artifact,
-  // no grant, offline) dbRef stays null and this is a silent no-op.
-  var dbRef=null, dbSyncTimer=null;
+  // Local storage on this device stays the working copy. dbRef, once resolved, mirrors the whole
+  // state blob (debounced) to one db document so Claude can read it, with two safeguards:
+  //  - a device that opens EMPTY (cleared storage, new browser, a preview) never overwrites a
+  //    fuller mirror — it restores from it instead (or from the newest daily backup);
+  //  - a dated backup copy is kept (at most one write per 10 minutes, last 14 days), and the
+  //    mirror is copied aside before it is ever replaced by a smaller state.
+  // If db is unavailable (not opened as a claude.ai artifact, no grant, offline) it's a silent no-op.
+  var dbRef=null, dbHandle=null, dbSyncTimer=null, mirrorOK=false, lastBackupAt=0;
+  function stateScore(s){
+    var n=0; s=s||{};
+    Object.keys(s).forEach(function(k){ if(k.indexOf('gym')!==0) n++; });
+    var gl=s.gym_log||{};
+    Object.keys(gl).forEach(function(k){ if(gl[k] && (gl[k].exercises||[]).length) n++; });
+    return n;
+  }
+  function cloneJson(o){ try{ return JSON.parse(JSON.stringify(o)); }catch(e){ return null; } }
+  function localDateKey(){ var d=new Date(), p2=function(n){ return n<10?'0'+n:''+n; }; return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
   function scheduleDbSync(){
-    if(!dbRef) return;
+    if(!dbRef || !mirrorOK) return;
     if(dbSyncTimer) clearTimeout(dbSyncTimer);
-    dbSyncTimer=setTimeout(function(){ dbRef.set(state).catch(function(){}); }, 800);
+    dbSyncTimer=setTimeout(function(){
+      if(stateScore(state)===0) return;             // never mirror a blank state
+      dbRef.set(state).catch(function(){});
+      var now=Date.now();
+      if(dbHandle && now-lastBackupAt>600000){
+        lastBackupAt=now;
+        dbHandle.doc('backups/'+localDateKey()).set({ savedAt:new Date().toISOString(), state:state }).catch(function(){});
+      }
+    }, 800);
+  }
+  function pruneBackups(){
+    if(!dbHandle) return;
+    dbHandle.collection('backups').get().then(function(q){
+      var cutoff=new Date(Date.now()-14*86400000), ck=cutoff.getFullYear()+'-'+('0'+(cutoff.getMonth()+1)).slice(-2)+'-'+('0'+cutoff.getDate()).slice(-2);
+      q.docs.forEach(function(d){ if(/^\d{4}-\d{2}-\d{2}$/.test(d.id) && d.id<ck) dbHandle.doc('backups/'+d.id).delete().catch(function(){}); });
+    }).catch(function(){});
+  }
+  // Decide what to do once the db answers: restore into an empty device, or start mirroring.
+  function reconcileWithDb(){
+    var localScore=stateScore(state);
+    dbRef.get().then(function(snap){
+      var remote = snap && snap.exists ? cloneJson(snap.data()) : null;
+      var remoteScore = remote ? stateScore(remote) : 0;
+      if(localScore===0 && remoteScore>0){ restoreFrom(remote); return; }
+      if(localScore===0 && remoteScore===0){
+        // both blank — see whether a dated backup still holds something
+        dbHandle.collection('backups').get().then(function(q){
+          var best=null;
+          q.docs.forEach(function(d){ var dd=d.data(); if(dd && dd.state && stateScore(dd.state)>0 && (!best || d.id>best.id)) best={ id:d.id, state:cloneJson(dd.state) }; });
+          if(best) restoreFrom(best.state); else { mirrorOK=true; }
+        }).catch(function(){ mirrorOK=true; });
+        return;
+      }
+      if(remote && remoteScore>localScore){
+        // about to replace a fuller mirror with a smaller state — keep the old one aside first
+        dbHandle.doc('backups/pre-'+Date.now()).set({ savedAt:new Date().toISOString(), state:remote }).catch(function(){});
+      }
+      mirrorOK=true; scheduleDbSync(); pruneBackups();
+    }).catch(function(){ /* can't read the db: don't mirror, so nothing can be overwritten blind */ });
+  }
+  function restoreFrom(saved){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(saved)); }catch(e){ return; }
+    location.reload();
   }
   if(window.claude && window.claude.use){
     window.claude.use('db').then(function(db){
       if(!db) return;
-      dbRef = db.doc('dashboard/state');
-      scheduleDbSync();
+      dbHandle=db; dbRef = db.doc('dashboard/state');
+      reconcileWithDb();
     }).catch(function(){});
   }
 
