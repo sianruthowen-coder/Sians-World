@@ -2864,11 +2864,18 @@
       warmup:secs(['Hinge','Hip Circle - Left','Hip Circle - Right','Low Lunge - Deep Rock - Left','Low Lunge - Deep Rock - Right','Deep Squat to Hamstring Stretch - Alternating']),
       exercises:[
         {name:'Back Squat', reps:['8','5','6','8']},
+        {name:'Front Squat'},
+        {name:'Sumo Squat'},
         {name:'Leg Press', reps:['8','8','8']},
         {name:'Hip Thrust', sides:'either', limb:'leg', reps:['10','8','8','8'], singleReps:['8','10','10']},
-        {name:'Romanian Deadlift', sides:'either', limb:'leg', reps:['6','6','10'], singleReps:['8','8','8'],
+        {name:'Romanian Deadlift', reps:['6','6','10']},
+        {name:'B Stance RDL', sides:'single', limb:'leg', reps:['8','8','8'],
           leftName:'Romanian Deadlift - B Stance - Left', rightName:'Romanian Deadlift - B Stance - Right'},
         {name:'Split Squat', sides:'single', limb:'leg', reps:['6','8','8']},
+        {name:'Bulgarian Split Squat', sides:'single', limb:'leg'},
+        {name:'Reverse Lunge', sides:'single', limb:'leg'},
+        {name:'Curtsy Lunge', sides:'single', limb:'leg'},
+        {name:'Step Up', sides:'single', limb:'leg'},
         {name:'Glute Focused Step Up', sides:'single', limb:'leg', reps:['8','8','8']},
         {name:'Glute Kickback', sides:'single', limb:'leg', reps:['10','12','12']},
         {name:'Seated Hamstring Curl', reps:['8','10','10']},
@@ -2972,6 +2979,49 @@
       saveGymLog(); saveGymOverrides(); saveGymSchedule();
     }
     state.gym_model=3; save(state);
+  }
+
+  // Adds exercises that were added to the starter library AFTER a device's groups were first
+  // built — once per library version, so one she's deleted since doesn't keep coming back.
+  // New exercises slot in after the exercise that precedes them in the starter list, so
+  // her own ordering is kept. Version 1: the extra lower-body exercises, and B Stance RDL
+  // becoming its own exercise (it used to be Romanian Deadlift's "single" option).
+  var GYM_LIB_VERSION=1;
+  function topUpStarterLibrary(){
+    if((state.gym_lib||0)>=GYM_LIB_VERSION) return;
+    var day=GYM_STARTER_SPLIT.filter(function(d){ return d.name==='Lower body'; })[0];
+    var lower=gymTemplates.filter(function(t){ return t.name==='Lower body'; })[0];
+    if(day && lower){
+      var addedBStance=false;
+      day.exercises.forEach(function(sx, i){
+        if(lower.exercises.some(function(e){ return normGymName(e.name)===normGymName(sx.name); })) return;
+        var ex=addExerciseToTemplate(lower.id, sx.name, sx.reps, sx);   // appended…
+        lower.exercises.pop();                                          // …then placed in order
+        var at=lower.exercises.length;
+        for(var j=i-1;j>=0;j--){
+          var prev=lower.exercises.map(function(e){ return normGymName(e.name); }).indexOf(normGymName(day.exercises[j].name));
+          if(prev!==-1){ at=prev+1; break; }
+        }
+        lower.exercises.splice(at,0,ex);
+        if(normGymName(sx.name)==='b stance rdl') addedBStance=true;
+      });
+      if(addedBStance){
+        var rdl=lower.exercises.filter(function(e){ return normGymName(e.name)==='romanian deadlift'; })[0];
+        if(rdl && rdl.sides==='either'){ rdl.sides='double'; delete rdl.singleReps; delete rdl.leftName; delete rdl.rightName; }
+        // Sessions that picked Romanian Deadlift as "single" were really B-stance work.
+        Object.keys(gymLog).forEach(function(key){
+          var sess=gymLog[key];
+          if(sess.templateId!==lower.id || !Array.isArray(sess.selected)) return;
+          var i=sess.selected.indexOf('Romanian Deadlift');
+          if(i!==-1 && sess.modes && sess.modes['Romanian Deadlift']==='single'){
+            sess.selected[i]='B Stance RDL'; sess.modes['B Stance RDL']='single'; delete sess.modes['Romanian Deadlift'];
+          }
+        });
+        saveGymLog();
+      }
+      saveGymTemplates();
+    }
+    state.gym_lib=GYM_LIB_VERSION; save(state);
   }
 
   // One-time, additive backfill for devices where the starter split already imported
@@ -3122,6 +3172,7 @@
   // Additive safety net for a device where the starter split already imported before
   // warmup/cooldown existed in this app — fills in just that gap, touches nothing else.
   backfillStarterWarmupCooldown();
+  topUpStarterLibrary();
 
   document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
   initCheckinBlocks();
