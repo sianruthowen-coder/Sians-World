@@ -2317,7 +2317,7 @@
       input.addEventListener('change', function(){ toggleGymChecklistItem(session, listKey, item.id); });
       var box=document.createElement('span'); box.className='box';
       var txt=document.createElement('span'); txt.className='txt';
-      txt.textContent=item.name+' · '+item.duration;
+      txt.textContent=item.name+(item.duration?' · '+item.duration:'');
       lab.appendChild(input); lab.appendChild(box); lab.appendChild(txt);
       li.appendChild(lab); ul.appendChild(li);
     });
@@ -2983,11 +2983,11 @@
   //   sides 'double' (default) – one card;  'either' – she chooses double or single per
   //   session;  'single' – always a left and a right card.  singleReps / leftName / rightName /
   //   doubleName keep the names and rep schemes the older logs already use.
-  function secs(names, d){ return names.map(function(n){ return { name:n, duration:d||'30 secs' }; }); }
+  function secs(names){ return names.map(function(n){ return { name:n, duration:'' }; }); }
   var GYM_STARTER_SPLIT=[
     { name:'Lower body', weekdays:[1,4,6],
       mantra:'Strong legs, stronger woman — let’s go, gorgeous.',
-      warmup:secs(['Hinge','Hip Circle - Left','Hip Circle - Right','Low Lunge - Deep Rock - Left','Low Lunge - Deep Rock - Right','Deep Squat to Hamstring Stretch - Alternating']),
+      warmup:secs(['Hinge','Hip Circle','Low Lunge / Deep Rock','Deep Squat to Hamstring Stretch','Pigeon Pose','Child\'s Pose']),
       exercises:[
         {name:'Back Squat', reps:['8','5','6','8']},
         {name:'Front Squat'},
@@ -3009,11 +3009,11 @@
         {name:'Calf Raise', sides:'either', limb:'leg', reps:['8','8']},
         {name:'Hyper Extension', reps:['10','10','10']}
       ],
-      cooldown:secs(['Static Quad Stretch - Left','Static Quad Stretch - Right','Pigeon Pose - Left','Pigeon Pose - Right','Forward Fold - Seated'])
+      cooldown:secs(['Static Quad Stretch','Pigeon Pose','Forward Fold'])
     },
     { name:'Push', weekdays:[2],
       mantra:'Push past what you thought you could — you’re stronger than you know, love.',
-      warmup:secs(['Arm Circles - Forward','Arm Circles - Backward','Shoulder CARs - Right','Shoulder CARs - Left','Scapular Wall Slide']),
+      warmup:secs(['Arm Circles','Shoulder CARs','Scapular Wall Slide']),
       exercises:[
         {name:'Chest Press', reps:['10','8','8','8']},
         {name:'Incline Chest Fly', reps:['8','8']},
@@ -3022,11 +3022,11 @@
         {name:'Tricep Pressdown - Rope/Bar', reps:['10','10','10']},
         {name:'Overhead Tricep Extension', reps:['12','12']}
       ],
-      cooldown:secs(['Deltoid Stretch - Right','Deltoid Stretch - Left','Overhead Tricep Stretch - Right','Overhead Tricep Stretch - Left'])
+      cooldown:secs(['Deltoid Stretch','Overhead Tricep Stretch'])
     },
     { name:'Pull', weekdays:[3],
       mantra:'A strong back holds up a strong life — show up for yours, darling.',
-      warmup:secs(['Arm Circles - Forward','Arm Circles - Backward','Rainbow Stretch - Right','Rainbow Stretch - Left','Cat Cow']),
+      warmup:secs(['Arm Circles','Rainbow Stretch','Cat Cow']),
       exercises:[
         {name:'Lat Pulldown', sides:'either', limb:'arm', reps:['8','8','8'], singleReps:['8','10','10']},
         {name:'Seated Row', sides:'either', limb:'arm', doubleName:'Seated Row - High', reps:['8','6','6','10'], singleReps:['8','10','10']},
@@ -3034,7 +3034,7 @@
         {name:'Bicep Curl - Seated Incline', reps:['8','8','8']},
         {name:'Bicep Curl', reps:['8','8']}
       ],
-      cooldown:secs(['Back Stretch Elbows Up','Side Lying Thoracic Windmill - Right','Side Lying Thoracic Windmill - Left',"Child's Pose Thread the Needle - Right","Child's Pose Thread the Needle - Left"])
+      cooldown:secs(['Back Stretch Elbows Up','Side Lying Thoracic Windmill','Child\'s Pose Thread the Needle'])
     },
     { name:'Extras', extras:true, weekdays:[],
       exercises:[
@@ -3223,6 +3223,20 @@
       if(!t.mantra && day.mantra){ t.mantra=day.mantra; saveGymTemplates(); }
     });
   }
+  // One-time (Oct 2026): warm-up / cool-down lists simplified — no Left/Right splits, no timings.
+  // Replaces the lists on the starter groups with the new ones; logged sets are untouched.
+  function simplifyWarmupCooldown(){
+    if(state.gym_wc_simple===1) return;
+    gymTemplates.forEach(function(t){
+      var day=GYM_STARTER_SPLIT.filter(function(d){ return d.name===t.name; })[0];
+      if(!day || !day.warmup) return;
+      t.warmup=[]; t.cooldown=[];
+      day.warmup.forEach(function(w){ addWarmupItem(t.id, w.name, w.duration); });
+      (day.cooldown||[]).forEach(function(c){ addCooldownItem(t.id, c.name, c.duration); });
+    });
+    saveGymTemplates();
+    state.gym_wc_simple=1; save(state);
+  }
   document.getElementById('gymImportSplit').addEventListener('click', function(){
     importGymStarterSplit();
   });
@@ -3356,6 +3370,7 @@
   // Additive safety net for a device where the starter split already imported before
   // warmup/cooldown existed in this app — fills in just that gap, touches nothing else.
   backfillStarterWarmupCooldown();
+  simplifyWarmupCooldown();
   topUpStarterLibrary();
 
   document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
