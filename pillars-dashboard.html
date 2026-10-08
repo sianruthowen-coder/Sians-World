@@ -243,7 +243,16 @@
 
   .gymgreeting{ font-size:13px; font-style:italic; color:var(--phue-strong); margin:10px 0 0; }
   .gymtabs{ display:flex; gap:8px; margin-top:14px; }
-  .gymtab{ flex:1; text-align:center; padding:10px 12px; }
+  .gymtab{ flex:1; text-align:center; padding:10px 8px; }
+  .gymhist-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 14px; border-radius:16px; background:var(--phue-soft); margin-top:9px; }
+  .gymhist-info{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .gymhist-info strong{ font-size:14px; }
+  .gymhist-info span{ font-size:11.5px; color:var(--ink-soft); }
+  .gymhist-acts{ display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+  .gymhist-view{ font-family:'Inter'; font-size:12.5px; font-weight:800; padding:8px 13px; border-radius:999px; border:none; background:var(--phue-strong); color:var(--surface); cursor:pointer; }
+  .gymhist-edit{ font-family:'Inter'; font-size:12px; font-weight:700; color:var(--phue-strong); background:none; border:none; text-decoration:underline; cursor:pointer; padding:6px 2px; }
+  .gymhist-view:focus-visible, .gymhist-edit:focus-visible{ outline:2px solid var(--phue); outline-offset:2px; }
+  .gymhist-note{ font-size:12px; color:var(--ink-soft); margin:10px 0 0; }
 
   .gymdaynav{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; }
   .gymdaynav-date{ font-weight:800; font-size:14px; text-align:center; flex:1; min-width:0; }
@@ -1077,7 +1086,13 @@
 
       <div class="gymtabs" id="gymTabs">
         <button type="button" class="chip gymtab active" data-tab="main">Log</button>
+        <button type="button" class="chip gymtab" data-tab="history">History</button>
         <button type="button" class="chip gymtab" data-tab="progress">Progress</button>
+      </div>
+
+      <div id="gymHistoryView" hidden>
+        <p class="section-label">Completed workouts</p>
+        <div id="gymHistoryList"></div>
       </div>
 
       <div id="gymMainView">
@@ -2813,15 +2828,12 @@
     var reportSessions=[session]; if(exSession) reportSessions.push(exSession);
     doneBtn.addEventListener('click', function(){
       var v=!session.completed; session.completed=v; if(exSession) exSession.completed=v;
+      // A completed workout is filed under History and the Log starts fresh.
+      var filed = v ? archiveSession(session, exSession && sessionHasLogged(exSession) ? exSession : null) : null;
       saveGymLog(); renderGymMain();
-      if(v) showWorkoutReport(reportSessions, dsStr, tmpl.name, activeId, document.querySelector('.gymcomplete'), true);
+      if(filed) showWorkoutReport(reportSessions, dsStr, tmpl.name, activeId, document.querySelector('.gymcomplete'), true);
     });
     cardsEl.appendChild(doneBtn);
-    if(session.completed){
-      var viewBtn=document.createElement('button'); viewBtn.type='button'; viewBtn.className='gymreport-link'; viewBtn.textContent='View workout report';
-      viewBtn.addEventListener('click', function(){ showWorkoutReport(reportSessions, dsStr, tmpl.name, activeId, viewBtn); });
-      cardsEl.appendChild(viewBtn);
-    }
     if(dsStr===todayStr){
       var doneNote=document.createElement('p'); doneNote.className='gymcomplete-note';
       doneNote.textContent='Logging a workout ticks \u201cStrength training session\u201d on your Daily page.';
@@ -3011,14 +3023,127 @@
     done.addEventListener('click', dismissWorkoutReport);
     body.appendChild(done);
     var edit=el('button','gymreport-edit','Edit workout'); edit.type='button';
-    edit.addEventListener('click', function(){ gymReportGoHome=false; closeWorkoutReport(); });
+    var editNote=el('p','gymreport-editnote','Spotted a mistake? Edit workout re-opens it in your Log — mark it complete again for a fresh report.');
+    edit.addEventListener('click', function(){
+      var bid=sessions[0] && sessions[0].batch;
+      var res=bid ? restoreBatch(bid) : { ok:false };
+      if(!res.ok){
+        editNote.textContent=res.busy ? 'You’ve already started another log for this group today — finish it first, then edit this one from History.' : 'This workout can’t be re-opened right now.';
+        return;
+      }
+      gymReportGoHome=false; closeWorkoutReport(true);
+      openRestored(res.info);
+    });
     body.appendChild(edit);
-    body.appendChild(el('p','gymreport-editnote','Spotted a mistake? Fix your sets, then tap “View workout report” again. To get the celebration again, tap undo and mark the workout complete once more.'));
+    body.appendChild(editNote);
 
     document.body.appendChild(ov);
     document.body.classList.add('gymreport-open');
     document.addEventListener('keydown', reportKeys);
     done.focus({ preventScroll:true });
+  }
+
+  // -- Completed workouts: History --
+  // "Mark workout complete" files the session (and its Extras) away under History, so the Log
+  // starts fresh next time. Archived sessions stay in gymLog (under a longer key), so Progress, PRs
+  // and "last time" numbers keep using them; they just no longer show up as the day's open log.
+  function isExtrasTemplateId(id){ var t=findTemplate(id); return !!(t && t.extras); }
+  function sessionHasLogged(sess){ return (sess.exercises||[]).some(function(e){ return countsAsLogged(sess,e); }); }
+  function plainKeyOf(sess){ return gymLogKeyFor(sess.templateId, sess.date); }
+  // File one completed workout (its main session plus the same day's Extras) into History.
+  function archiveSession(main, extrasSess){
+    if(!main || !sessionHasLogged(main)) return null;
+    var batch='b'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    [main, extrasSess].forEach(function(sx){
+      if(!sx) return;
+      var oldKey=plainKeyOf(sx);
+      sx.batch=batch; sx.completed=true; if(!sx.completedAt) sx.completedAt=new Date().toISOString();
+      if(gymLog[oldKey]===sx){ gymLog[oldKey+'|'+batch]=sx; delete gymLog[oldKey]; }
+    });
+    return batch;
+  }
+  // Sweep: any session still marked complete under its normal key (older completions) moves to History.
+  function archiveCompletedSessions(){
+    var plain=Object.keys(gymLog).filter(function(k){ var sx=gymLog[k]; return sx && sx.completed===true && !sx.batch && k===plainKeyOf(sx); });
+    var extrasByDate={};
+    plain.forEach(function(k){ var sx=gymLog[k]; if(isExtrasTemplateId(sx.templateId)) extrasByDate[sx.date]=sx; });
+    var changed=false;
+    plain.forEach(function(k){
+      var sx=gymLog[k]; if(!sx || isExtrasTemplateId(sx.templateId)) return;
+      var ex=extrasByDate[sx.date]; if(ex){ delete extrasByDate[sx.date]; }
+      if(archiveSession(sx, ex||null)) changed=true;
+    });
+    if(changed) saveGymLog();
+    return changed;
+  }
+  function historyBatches(){
+    var by={};
+    Object.keys(gymLog).forEach(function(k){
+      var sx=gymLog[k]; if(!sx || !sx.batch) return;
+      (by[sx.batch]=by[sx.batch]||[]).push(sx);
+    });
+    return Object.keys(by).map(function(b){
+      var list=by[b], main=list.filter(function(x){ return !isExtrasTemplateId(x.templateId); })[0];
+      return main ? { batch:b, main:main, sessions:list } : null;
+    }).filter(Boolean).sort(function(a,b){
+      return a.main.date===b.main.date ? ((b.main.completedAt||'')<(a.main.completedAt||'') ? -1 : 1) : (a.main.date<b.main.date ? 1 : -1);
+    });
+  }
+  // Re-open a filed workout as the day's open log so it can be corrected. Refuses if that group
+  // already has a log in progress for the same day (nothing is overwritten).
+  function restoreBatch(batch){
+    var members=Object.keys(gymLog).filter(function(k){ return gymLog[k].batch===batch; });
+    if(!members.length) return { ok:false };
+    for(var i=0;i<members.length;i++){
+      var sx=gymLog[members[i]], cur=gymLog[plainKeyOf(sx)];
+      if(cur && cur!==sx && (cur.exercises||[]).some(function(e){ return hasLoggedData(e); })) return { ok:false, busy:true };
+    }
+    var info=null;
+    members.forEach(function(k){
+      var sx=gymLog[k], pk=plainKeyOf(sx);
+      delete gymLog[k]; gymLog[pk]=sx;
+      delete sx.batch; sx.completed=false;
+      if(!isExtrasTemplateId(sx.templateId)) info={ date:sx.date, templateId:sx.templateId };
+    });
+    saveGymLog();
+    return { ok:true, info:info };
+  }
+  function openRestored(info){
+    gymPickerOpen={};
+    gymViewDate=new Date(info.date+'T00:00:00');
+    if(resolveActiveTemplateId(info.date, gymViewDate)!==info.templateId) setDayOverride(info.date, info.templateId);
+    showGymView('main');
+  }
+  function renderGymHistory(){
+    var list=document.getElementById('gymHistoryList'); list.innerHTML='';
+    var rows=historyBatches();
+    if(!rows.length){
+      var p0=document.createElement('p'); p0.className='gymhist-note'; p0.textContent='Nothing here yet. Once you mark a workout complete, it’s filed here with its report.';
+      list.appendChild(p0); return;
+    }
+    rows.forEach(function(r){
+      var tmpl=findTemplate(r.main.templateId);
+      var d=new Date(r.main.date+'T00:00:00');
+      var exCount=0, setCount=0;
+      r.sessions.forEach(function(sx){ (sx.exercises||[]).filter(function(e){ return countsAsLogged(sx,e); }).forEach(function(e){ exCount++; setCount+=sessionSets(e).length; }); });
+      var row=document.createElement('div'); row.className='gymhist-row';
+      var info=document.createElement('div'); info.className='gymhist-info';
+      var st=document.createElement('strong'); st.textContent=d.toLocaleDateString('en-ZA',{ day:'numeric', month:'long' })+(d.getFullYear()!==now.getFullYear() ? ' '+d.getFullYear() : '')+' · '+(tmpl?tmpl.name:'Workout');
+      var sub=document.createElement('span'); sub.textContent=exCount+(exCount===1?' exercise':' exercises')+' · '+setCount+(setCount===1?' set':' sets');
+      info.appendChild(st); info.appendChild(sub);
+      var acts=document.createElement('div'); acts.className='gymhist-acts';
+      var edit=document.createElement('button'); edit.type='button'; edit.className='gymhist-edit'; edit.textContent='Edit';
+      var view=document.createElement('button'); view.type='button'; view.className='gymhist-view'; view.textContent='View report';
+      view.addEventListener('click', function(){ showWorkoutReport(r.sessions, r.main.date, tmpl?tmpl.name:'Workout', r.main.templateId, view, false); });
+      edit.addEventListener('click', function(){
+        var res=restoreBatch(r.batch);
+        if(res.ok) openRestored(res.info);
+        else { var n=list.querySelector('.gymhist-note'); if(!n){ n=document.createElement('p'); n.className='gymhist-note'; list.insertBefore(n, list.firstChild); }
+          n.textContent='You already have a log in progress for that group on that day — finish or clear it first, then edit this one.'; }
+      });
+      acts.appendChild(edit); acts.appendChild(view);
+      row.appendChild(info); row.appendChild(acts); list.appendChild(row);
+    });
   }
 
   // -- 8. Shared exercise-entry + metric helpers, and Progress sub-view --
@@ -3790,6 +3915,7 @@
   function showGymView(name){
     document.getElementById('gymMainView').hidden = (name!=='main');
     document.getElementById('gymProgressView').hidden = (name!=='progress');
+    document.getElementById('gymHistoryView').hidden = (name!=='history');
     document.getElementById('gymEditPlanView').hidden = (name!=='editplan');
     document.getElementById('gymTabs').hidden = (name==='editplan');
     document.querySelectorAll('#gymTabs .gymtab').forEach(function(btn){
@@ -3798,6 +3924,7 @@
     window.scrollTo(0,0);
     if(name==='main') renderGymMain();
     if(name==='progress') renderGymProgress();
+    if(name==='history') renderGymHistory();
     if(name==='editplan'){ renderTemplateEditor(); renderScheduleEditor(); }
   }
   document.querySelectorAll('#gymTabs .gymtab').forEach(function(btn){
@@ -3838,6 +3965,7 @@
   orderPullLibrary();
   updatePullOptions();
   migrateEquipDefaults();
+  archiveCompletedSessions();
   topUpStarterLibrary();
 
   document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
