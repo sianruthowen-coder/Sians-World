@@ -3034,7 +3034,17 @@
         {name:'Seated Row', sides:'either', limb:'arm', doubleName:'Seated Row - High', reps:['8','6','6','10'], singleReps:['8','10','10']},
         {name:'Face Pull - Rear Delt Focused', reps:['10','12','12']},
         {name:'Bicep Curl - Seated Incline', reps:['8','8','8']},
-        {name:'Bicep Curl', reps:['8','8']}
+        {name:'Bicep Curl', reps:['8','8']},
+        {name:'Pull-Up'},
+        {name:'Assisted Pull-Up'},
+        {name:'Bent Over Row'},
+        {name:'Chest Supported Row'},
+        {name:'Seated Cable Row'},
+        {name:'Reverse Fly'},
+        {name:'Shrug'},
+        {name:'Hammer Curl'},
+        {name:'Preacher Curl'},
+        {name:'Pullover'}
       ],
       cooldown:secs(['Back Stretch Elbows Up','Side Lying Thoracic Windmill','Child\'s Pose Thread the Needle'])
     },
@@ -3260,6 +3270,20 @@
     }
     state.gym_push_lib=1; save(state);
   }
+  // One-time (Oct 2026): ten more Pull exercises. Only adds names the group doesn't already have.
+  function updatePullLibrary(){
+    if(state.gym_pull_lib===1) return;
+    var day=GYM_STARTER_SPLIT.filter(function(d){ return d.name==='Pull'; })[0];
+    var pull=gymTemplates.filter(function(t){ return t.name==='Pull'; })[0];
+    if(day && pull){
+      day.exercises.forEach(function(sx){
+        var has=pull.exercises.some(function(e){ return normGymName(e.name)===normGymName(sx.name); });
+        if(!has) addExerciseToTemplate(pull.id, sx.name, sx.reps, sx);
+      });
+      saveGymTemplates();
+    }
+    state.gym_pull_lib=1; save(state);
+  }
   // One-time (Oct 2026): warm-up / cool-down lists simplified — no Left/Right splits, no timings.
   // Replaces the lists on the starter groups with the new ones; logged sets are untouched.
   function simplifyWarmupCooldown(){
@@ -3409,6 +3433,7 @@
   backfillStarterWarmupCooldown();
   simplifyWarmupCooldown();
   updatePushLibrary();
+  updatePullLibrary();
   topUpStarterLibrary();
 
   document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
