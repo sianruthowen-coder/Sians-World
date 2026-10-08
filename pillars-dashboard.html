@@ -121,6 +121,7 @@
   .tile-head svg{ width:22px; height:22px; flex:0 0 auto; }
   .tile-name{ font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.02em; line-height:1.3; text-align:center; min-width:0; overflow-wrap:break-word; }
   .tile .ring{ width:34px; height:34px; }
+  .tile .ring[data-ring="gym"]{ width:46px; height:46px; }
   .tile .ring circle.track{ stroke:color-mix(in srgb, var(--phue-on) 25%, transparent); }
   .tile .ring circle.progress{ stroke:var(--phue-on); }
   .tile .ring .ring-label{ font-size:10px; color:var(--phue-on); }
@@ -476,7 +477,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h2M18 12h2M6 8v8M18 8v8M8 12h8"></path></svg>
           <span class="tile-name">Gym</span>
         </span>
-        <span class="weeklytag" id="gymCountTag">0 sessions this wk</span>
+        <span class="ring" data-ring="gym" id="gymRing" role="img" aria-label="0 of 5 strength sessions this week"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label"></span></span>
       </button>
 
       <button type="button" class="tile" data-hue="pillars" data-target="pillars">
@@ -1197,7 +1198,11 @@
     var len=circle.getTotalLength();
     circle.style.strokeDasharray=len;
     circle.style.strokeDashoffset= total ? len*(1-done/total) : len;
-    ring.querySelector('.ring-label').textContent= done+'/'+total;
+    // The Daily / Weekly / Gym rings are shape-only (open, nearly closed, closed); the pillar
+    // rings keep their count.
+    var shapeOnly=/^(daily|weekly|overall|gym)$/.test(ring.getAttribute('data-ring'));
+    ring.querySelector('.ring-label').textContent= shapeOnly ? '' : done+'/'+total;
+    if(shapeOnly) ring.setAttribute('aria-label', done+' of '+total+(done>=total && total>0 ? ' — complete' : ''));
   }
 
   function updateRing(pillar){
@@ -3450,15 +3455,17 @@
   document.getElementById('gymEditPlanBack').addEventListener('click', function(){ showGymView('main'); });
 
   function updateGymTile(){
-    var tag=document.getElementById('gymCountTag');
-    if(!tag) return;
+    var ring=document.getElementById('gymRing');
+    if(!ring) return;
     var days={};
     Object.keys(gymLog).forEach(function(key){
       var s=gymLog[key];
       if('w:'+isoWeekKey(new Date(s.date+'T00:00:00'))===wKey && (s.exercises||[]).some(function(e){ return countsAsLogged(s,e); })) days[s.date]=true;
     });
     var count=Object.keys(days).length;
-    tag.textContent = count+(count===1 ? ' session' : ' sessions')+' this wk';
+    // five strength sessions closes the ring
+    paintRing(ring, 5, Math.min(count,5));
+    ring.setAttribute('aria-label', count+' of 5 strength sessions this week');
   }
 
   // Auto-seed the real Ascend weekly split the first time Gym ever loads with zero
