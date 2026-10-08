@@ -387,6 +387,17 @@
   .gymcomplete.done{ background:var(--phue); color:var(--phue-on); }
   .gymcomplete-note{ font-size:11px; color:var(--ink-soft); text-align:center; margin-top:6px; }
 
+  .bdblock{ margin-top:14px; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:16px 18px 10px; box-shadow:var(--shadow); }
+  .bdblock .section-label{ margin:0 0 4px; color:var(--phue-strong); }
+  .bdrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+  .bdrow:last-child{ border-bottom:none; }
+  .bdrow .nm{ display:block; font-size:13.5px; font-weight:700; color:var(--ink); }
+  .bdrow .dt{ display:block; font-size:11.5px; color:var(--ink-soft); }
+  .bdrow .until{ flex:0 0 auto; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:color-mix(in srgb, var(--phue) 30%, var(--surface)); color:var(--phue-strong); }
+  .bdrow .until.today{ background:var(--phue-strong); color:var(--surface); }
+  .bdempty{ font-size:13px; color:var(--ink-soft); padding:8px 0 10px; margin:0; }
+  .dailybirthday{ font-size:11.5px; font-weight:700; color:var(--phue-strong); margin:12px 0 0; }
+
   .foot{ margin-top:24px; text-align:center; }
   .foot p{ font-size:12px; color:var(--ink-soft); margin:0; max-width:40ch; margin-inline:auto; }
 </style>
@@ -436,6 +447,10 @@
         <span class="weeklytag">6 areas of life</span>
       </button>
     </div>
+    <div class="bdblock" data-hue="family">
+      <p class="section-label">Upcoming birthdays — next month</p>
+      <div id="homeBirthdayList"></div>
+    </div>
   </section>
 
   <main class="pillars">
@@ -447,6 +462,7 @@
         <div class="pillar-title"><h2>Daily</h2><p class="sub">today · resets every morning</p></div>
         <div class="ring" data-ring="daily"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/0</span></div>
       </div>
+      <p class="dailybirthday" id="dailyBirthday" data-hue="family" hidden></p>
       <div class="agglegend" id="dailyLegend"></div>
       <ul class="agglist" id="dailyList"></ul>
       <p class="aggempty" id="dailyEmpty" hidden>Nothing here yet — tap Edit list to add items.</p>
@@ -1624,6 +1640,7 @@
     {name:'Claire Millwood', month:9, day:12},
     {name:'Mikaela Elam', month:2, day:21},
     {name:'Nadia Reinmuth', month:2, day:22},
+    {name:'Matthew Lennon', month:6, day:4},
     {name:'Chris Rogers', month:3, day:2},
     {name:'Tristan Joseph', month:9, day:10},
     {name:'Lourens Smit', month:10, day:15}
@@ -1664,6 +1681,44 @@
     });
   }
   renderBirthdays();
+
+  // Home: the same next-31-days list as the Friends & Family page, as a compact block.
+  function renderHomeBirthdays(){
+    var box=document.getElementById('homeBirthdayList');
+    if(!box) return;
+    var upcoming=BIRTHDAYS.map(function(b){
+      return { name:b.name, month:b.month, day:b.day, days:daysUntil(b.month,b.day,now) };
+    }).filter(function(b){ return b.days<=BIRTHDAY_WINDOW_DAYS; })
+      .sort(function(a,b){ return a.days-b.days; });
+    box.innerHTML='';
+    if(!upcoming.length){
+      var p=document.createElement('p'); p.className='bdempty';
+      p.textContent='Nothing in the next '+BIRTHDAY_WINDOW_DAYS+' days.';
+      box.appendChild(p); return;
+    }
+    upcoming.forEach(function(b){
+      var row=document.createElement('div'); row.className='bdrow';
+      var left=document.createElement('span');
+      var nm=document.createElement('span'); nm.className='nm'; nm.textContent=b.name;
+      var dt=document.createElement('span'); dt.className='dt'; dt.textContent=b.day+' '+MONTH_NAMES[b.month-1];
+      left.appendChild(nm); left.appendChild(dt);
+      var until=document.createElement('span'); until.className='until'+(b.days===0?' today':'');
+      until.textContent = b.days===0 ? 'today' : b.days===1 ? 'tomorrow' : 'in '+b.days+' days';
+      row.appendChild(left); row.appendChild(until);
+      box.appendChild(row);
+    });
+  }
+  renderHomeBirthdays();
+
+  // Daily page: a small line when someone's birthday is today.
+  function renderDailyBirthday(){
+    var el=document.getElementById('dailyBirthday');
+    if(!el) return;
+    var names=BIRTHDAYS.filter(function(b){ return daysUntil(b.month,b.day,now)===0; }).map(function(b){ return b.name; });
+    el.hidden=!names.length;
+    el.textContent = names.length ? 'Birthday today: '+names.join(' & ') : '';
+  }
+  renderDailyBirthday();
 
   var addBd=document.getElementById('addBirthdayBtn');
   addBd.addEventListener('click', function(){
