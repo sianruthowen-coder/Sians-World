@@ -270,7 +270,9 @@
   .gymsets-head{ font-size:10.5px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--ink-soft); padding-bottom:4px; }
   .gymsets-head span{ text-align:center; }
   .gymset{ margin-top:8px; }
-  .gymset-num{ width:28px; height:28px; border-radius:50%; border:1.6px solid var(--phue-strong); color:var(--phue-strong); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .gymset-num{ width:28px; height:28px; padding:0; border-radius:50%; border:1.6px solid var(--phue-strong); background:transparent; color:var(--phue-strong); display:flex; align-items:center; justify-content:center; font-family:'Inter'; font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; cursor:pointer; transition:background .15s, color .15s; }
+  .gymset-num.done{ background:var(--phue-strong); color:var(--surface); }
+  .gymset-box::placeholder, .gymset-wbox input::placeholder{ color:color-mix(in srgb, var(--ink) 28%, transparent); font-weight:700; opacity:1; }
   .gymset-box{ width:100%; min-width:0; height:42px; border:1.4px solid var(--border); border-radius:12px; background:var(--surface); color:var(--ink); font-family:'Inter'; font-size:16px; font-weight:700; text-align:center; padding:0 8px; font-variant-numeric:tabular-nums; }
   .gymset-box:focus-visible, .gymset-wbox:focus-within{ outline:none; border-color:var(--phue); }
   .gymset-wbox{ display:flex; align-items:center; justify-content:center; gap:4px; cursor:text; }
@@ -2069,7 +2071,11 @@
     var out=[];
     (groups||[]).forEach(function(g){
       var reps=(g.reps&&g.reps.length) ? g.reps : [''];
-      reps.forEach(function(r){ out.push({ weight:(g.weight==null?'':g.weight), reps:[r] }); });
+      reps.forEach(function(r){
+        var one={ weight:(g.weight==null?'':g.weight), reps:[r] };
+        if(g.done) one.done=true;
+        out.push(one);
+      });
     });
     return out.length ? out : [emptySet()];
   }
@@ -2102,35 +2108,46 @@
     if(!exEntry.weightGroups.length) exEntry.weightGroups.push(emptySet());
     exEntry.sameAsLast=false; exEntry.fromProgram=false;
   }
-  // Called the first time an exercise's card is built for a session with no entry yet.
-  // If prior data exists under this template, prefill + mark active + persist immediately;
-  // else if the template exercise carries a program-default rep scheme, prefill one row per
-  // prescribed set (weights left blank for her to fill in) and flag fromProgram — not
-  // persisted until she actually edits something; otherwise start with three blank sets.
+  // Called whenever an exercise's card is built. A new entry starts with BLANK sets (as many
+  // as last time, else the program's, else three): last time's numbers are shown as faint
+  // grey "ghost" placeholders rather than stored, so nothing counts as done until she taps a
+  // set's number to accept them or types her own. Older entries that were pre-filled but
+  // never touched are turned back into blanks (their numbers become the ghosts again); if the
+  // session had been marked complete, those pre-filled numbers are kept and ticked done.
   function initExerciseEntry(session, templateExercise, templateId, dateStr){
     var existing=session.exercises.filter(function(e){ return normGymName(e.name)===normGymName(templateExercise.name); })[0];
-    if(existing){ existing.weightGroups=toPerSetGroups(existing.weightGroups); return existing; }
-    var last=findLastTemplateTime(templateId, templateExercise.name, dateStr);
-    var entry;
-    if(last){
-      entry={ name:templateExercise.name, sameAsLast:true, weightGroups:toPerSetGroups(last.exercise.weightGroups) };
-      session.exercises.push(entry);
-      saveGymLog();
-    } else if(templateExercise.defaultReps && templateExercise.defaultReps.length){
-      entry={ name:templateExercise.name, sameAsLast:false, fromProgram:true,
-        weightGroups:templateExercise.defaultReps.map(function(r){ return { weight:'', reps:[r] }; }) };
-      session.exercises.push(entry);
-    } else {
-      entry={ name:templateExercise.name, sameAsLast:false, weightGroups:[emptySet(), emptySet(), emptySet()] };
-      session.exercises.push(entry);
+    if(existing){
+      var untouched = existing.sameAsLast===true || existing.fromProgram===true;
+      existing.weightGroups=toPerSetGroups(existing.weightGroups);
+      if(untouched){
+        if(session.completed && existing.sameAsLast===true) existing.weightGroups.forEach(function(g){ g.done=true; });
+        else existing.weightGroups=existing.weightGroups.map(function(){ return emptySet(); });
+      }
+      existing.sameAsLast=false; existing.fromProgram=false;
+      return existing;
     }
+    var last=findLastTemplateTime(templateId, templateExercise.name, dateStr);
+    var n = last ? toPerSetGroups(last.exercise.weightGroups).length
+          : (templateExercise.defaultReps && templateExercise.defaultReps.length ? templateExercise.defaultReps.length : 3);
+    var sets=[]; for(var i=0;i<n;i++) sets.push(emptySet());
+    var entry={ name:templateExercise.name, sameAsLast:false, weightGroups:sets };
+    session.exercises.push(entry);
     return entry;
   }
-  function resetToLastTime(exEntry, templateId, exerciseName, dateStr){
-    var last=findLastTemplateTime(templateId, exerciseName, dateStr);
-    if(!last) return;
-    exEntry.weightGroups=toPerSetGroups(last.exercise.weightGroups);
-    exEntry.sameAsLast=true; exEntry.fromProgram=false;
+  // Faint "last time" values for each set row, aligned by set number: last session's reps and
+  // weight when she's done the exercise before (a set she has added beyond that reuses the
+  // final weight), otherwise the program's prescribed reps with no weight.
+  function ghostSets(entry, templateExercise, templateId, dateStr){
+    var last=findLastTemplateTime(templateId, templateExercise.name, dateStr);
+    var src=last ? toPerSetGroups(last.exercise.weightGroups) : null;
+    var defs=templateExercise.defaultReps || [];
+    return entry.weightGroups.map(function(_, i){
+      if(src){
+        var g=src[i] || src[src.length-1];
+        return { reps: src[i] ? String(g.reps[0]==null?'':g.reps[0]) : '', weight: String(g.weight==null?'':g.weight) };
+      }
+      return { reps: defs[i]!=null ? String(defs[i]) : '', weight:'' };
+    });
   }
 
   // -- 6. Card rendering (structural rebuilds only on add/remove; per-keystroke
@@ -2140,8 +2157,9 @@
   // a weight/rep field can flip it live without disturbing focus on the field itself.
   function syncSamePill(pill, entry){
     if(!pill) return;
-    pill.classList.toggle('active', !!entry.sameAsLast);
-    pill.textContent=(entry.sameAsLast?'✓ ':'')+'Same as last time';
+    var all=entry.weightGroups.length>0 && entry.weightGroups.every(function(g){ return g.done; });
+    pill.classList.toggle('active', all);
+    pill.textContent=(all?'✓ ':'')+'Same as last time';
   }
 
   // Best weight ever logged for this exercise under this template (live: includes what's
@@ -2155,10 +2173,11 @@
     maxEl.querySelector('b').textContent = best!=null ? best+' kg' : '\u2014';
   }
 
-  // One row per set: set number, a Reps box and a Weight box (both filled in by hand), and
-  // a remove button. Typing a weight into a set also fills any LATER set whose weight is
-  // still blank or was the same as before, so one weight doesn't need typing four times.
-  function renderSets(entry, pill, volEl, maxEl, templateId, exerciseName){
+  // One row per set: the set number (tap it when the set is done — it fills in solid), a Reps
+  // box and a Weight box. Until she types, each box shows last time's number as faint grey
+  // text; tapping the set number accepts those numbers (they turn black) and marks the set
+  // done, while typing replaces them with her own. Tapping a done set's number un-does it.
+  function renderSets(entry, pill, volEl, maxEl, templateId, exerciseName, ghost){
     var wrap=document.createElement('div'); wrap.className='gymsets';
     var head=document.createElement('div'); head.className='gymsets-head';
     ['Set','Reps','Weight',''].forEach(function(t){ var c=document.createElement('span'); c.textContent=t; head.appendChild(c); });
@@ -2168,30 +2187,49 @@
       entry.sameAsLast=false; entry.fromProgram=false;
       saveGymLog(); syncSamePill(pill, entry); syncVolumeLine(volEl, entry); syncMaxLine(maxEl, templateId, exerciseName);
     }
-    var weightInputs=[];
+    var repInputs=[], weightInputs=[];
     entry.weightGroups.forEach(function(group, i){
+      var gh=ghost[i] || { reps:'', weight:'' };
       var row=document.createElement('div'); row.className='gymset';
-      var num=document.createElement('span'); num.className='gymset-num'; num.textContent=String(i+1);
+
+      var num=document.createElement('button'); num.type='button';
+      num.className='gymset-num'+(group.done?' done':''); num.textContent=String(i+1);
+      num.setAttribute('aria-pressed', group.done?'true':'false'); num.setAttribute('aria-label','Set '+(i+1)+(group.done?', done':''));
 
       var r=document.createElement('input'); r.type='text'; r.inputMode='numeric'; r.className='gymset-box';
-      r.placeholder='reps'; r.setAttribute('aria-label','Reps, set '+(i+1)); r.value=group.reps[0];
+      r.placeholder=gh.reps||'reps'; r.setAttribute('aria-label','Reps, set '+(i+1)); r.value=group.reps[0];
       r.addEventListener('input', function(){ group.reps[0]=r.value; touched(); });
 
       var wBox=document.createElement('label'); wBox.className='gymset-box gymset-wbox';
       var w=document.createElement('input'); w.type='text'; w.inputMode='decimal'; w.pattern='[0-9]*[.,]?[0-9]*';
-      w.placeholder='0'; w.setAttribute('aria-label','Weight in kg, set '+(i+1)); w.value=group.weight;
+      w.placeholder=gh.weight||'0'; w.setAttribute('aria-label','Weight in kg, set '+(i+1)); w.value=group.weight;
       var unit=document.createElement('span'); unit.textContent='kg';
       w.addEventListener('input', function(){
-        var old=String(group.weight);
         group.weight=w.value.replace(',','.');
+        // First time doing an exercise (no last-time weight to show)? One typed weight fills the
+        // later blank sets too, so it isn't typed four times.
         for(var j=i+1;j<entry.weightGroups.length;j++){
-          var later=entry.weightGroups[j];
-          if(String(later.weight)==='' || String(later.weight)===old){ later.weight=group.weight; weightInputs[j].value=group.weight; }
+          var later=entry.weightGroups[j], lg=ghost[j]||{};
+          if(String(later.weight)==='' && !lg.weight && !later.done){ later.weight=group.weight; weightInputs[j].value=group.weight; }
         }
         touched();
       });
-      weightInputs.push(w);
+      repInputs.push(r); weightInputs.push(w);
       wBox.appendChild(w); wBox.appendChild(unit);
+
+      num.addEventListener('click', function(){
+        if(group.done){ group.done=false; }
+        else {
+          if(String(group.reps[0]).trim()==='' && gh.reps){ group.reps[0]=gh.reps; r.value=gh.reps; }
+          if(String(group.weight).trim()==='' && gh.weight){ group.weight=gh.weight; w.value=gh.weight; }
+          if(String(group.reps[0]).trim()==='' && String(group.weight).trim()===''){ r.focus(); return; }
+          group.done=true;
+        }
+        num.classList.toggle('done', !!group.done);
+        num.setAttribute('aria-pressed', group.done?'true':'false');
+        num.setAttribute('aria-label','Set '+(i+1)+(group.done?', done':''));
+        touched();
+      });
 
       var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove set '+(i+1));
       rm.addEventListener('click', function(){ removeSetAt(entry,i); saveGymLog(); renderGymMain(); });
@@ -2229,24 +2267,24 @@
       var lastEl=document.createElement('p'); lastEl.className='gymlast'; lastEl.textContent='Last '+line;
       card.appendChild(lastEl);
 
-      pill=document.createElement('button'); pill.type='button';
-      pill.className='gymsamepill'+(entry.sameAsLast?' active':'');
-      pill.textContent=(entry.sameAsLast?'✓ ':'')+'Same as last time';
+      pill=document.createElement('button'); pill.type='button'; pill.className='gymsamepill';
+      syncSamePill(pill, entry);
+      // One tap: accept last time's numbers for every set and mark them all done.
       pill.addEventListener('click', function(){
-        resetToLastTime(entry, templateId, templateExercise.name, dateStr);
-        saveGymLog();
-        renderGymMain();
+        var gh=ghostSets(entry, templateExercise, templateId, dateStr);
+        entry.weightGroups.forEach(function(g, i){
+          if(String(g.reps[0]).trim()==='' && gh[i].reps) g.reps[0]=gh[i].reps;
+          if(String(g.weight).trim()==='' && gh[i].weight) g.weight=gh[i].weight;
+          if(String(g.reps[0]).trim()!=='' || String(g.weight).trim()!=='') g.done=true;
+        });
+        saveGymLog(); renderGymMain();
       });
       card.appendChild(pill);
-    } else if(entry.fromProgram){
-      var progLine=document.createElement('p'); progLine.className='gymlast';
-      progLine.textContent='Program: '+mergeSets(entry.weightGroups).map(function(g){ return g.reps.join(', '); }).join(' | ')+' reps \u2014 add weight, or edit if you did something different.';
-      card.appendChild(progLine);
     }
 
     var volEl=document.createElement('p'); volEl.className='gymvolume'; volEl.hidden=true;
 
-    card.appendChild(renderSets(entry, pill, volEl, maxEl, templateId, templateExercise.name));
+    card.appendChild(renderSets(entry, pill, volEl, maxEl, templateId, templateExercise.name, ghostSets(entry, templateExercise, templateId, dateStr)));
 
     syncVolumeLine(volEl, entry);
     card.appendChild(volEl);
