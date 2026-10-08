@@ -296,6 +296,11 @@
   .gymmode.active{ background:var(--phue); color:var(--phue-on); }
   .gymhow{ flex:0 0 auto; width:auto; padding:8px 6px; font-size:12.5px; }
 
+  .gymopts{ display:flex; flex-direction:column; gap:8px; margin:8px 2px 0; }
+  .gymopt{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .gymopt-l{ font-size:11px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--ink-soft); flex:0 0 auto; }
+  .gymopt .gymseg{ flex-wrap:wrap; justify-content:flex-end; }
+
   .gymvolume{ font-size:11px; color:var(--ink-soft); opacity:.8; margin-top:8px; line-height:1.4; }
   .gymhistlink{ font-size:11.5px; font-weight:700; color:var(--phue-strong); background:transparent; border:none; padding:0; margin-top:6px; cursor:pointer; text-decoration:underline; }
 
@@ -1944,7 +1949,7 @@
     var t=findTemplate(templateId); if(!t||!name) return null;
     var ex={ id:gymUid('ex_'), name:name };
     if(defaultReps && defaultReps.length) ex.defaultReps=defaultReps.map(String);
-    if(props) ['sides','limb','singleReps','doubleName','leftName','rightName','styles'].forEach(function(k){ if(props[k]!=null) ex[k]=props[k]; });
+    if(props) ['sides','limb','singleReps','doubleName','leftName','rightName','styles','equipment'].forEach(function(k){ if(props[k]!=null) ex[k]=props[k]; });
     t.exercises.push(ex); saveGymTemplates();
     return ex;
   }
@@ -2282,85 +2287,133 @@
     return wrap;
   }
 
-  // -- Exercise library: one base exercise, optionally done single or double --
+  // -- Exercise library: one base exercise with up to three optional choices --
+  //   sides      'double' (default) | 'either' (pick single or double) | 'single' (always L & R)
+  //   styles     named styles, e.g. Hamstring Curl: Seated / Lying
+  //   equipment  e.g. Machine / Barbell — adds " (Barbell)" to the logged name so each setup
+  //              keeps its own history; left unselected the plain name is used
+  // A session stores the picked choices per exercise as session.modes[base] = { side, style, equip }
+  // (older sessions stored just 'single' / 'double' / a style key — still understood).
   function exSides(ex){ return ex.sides||'double'; }
   function exDoubleName(ex){ return ex.doubleName||ex.name; }
   function exLeftName(ex){ return ex.leftName||ex.name+' - Left'; }
   function exRightName(ex){ return ex.rightName||ex.name+' - Right'; }
-  // An exercise can instead come in named styles (e.g. Hamstring Curl: Seated or Lying) —
-  // one card per session, named for the style picked.
-  function exMode(ex, modes){
-    if(ex.styles && ex.styles.length){
-      var m=modes && modes[ex.name];
-      return ex.styles.some(function(st){ return st.key===m; }) ? m : ex.styles[0].key;
-    }
+  function exHasStyles(ex){ return !!(ex.styles && ex.styles.length); }
+  function exHasEquip(ex){ return !!(ex.equipment && ex.equipment.length); }
+
+  // Normalise whatever was stored into a complete choice set for this exercise.
+  function exOpts(ex, raw){
+    var o={};
+    if(typeof raw==='string'){
+      if(exHasStyles(ex) && ex.styles.some(function(st){ return st.key===raw; })) o.style=raw;
+      else if(raw==='single' || raw==='double') o.side=raw;
+    } else if(raw && typeof raw==='object'){ o=raw; }
     var sd=exSides(ex);
-    if(sd==='single') return 'single';
-    if(sd==='double') return 'double';
-    return (modes && modes[ex.name]==='single') ? 'single' : 'double';
+    return {
+      side: sd==='single' ? 'single' : sd==='double' ? 'double' : (o.side==='single' ? 'single' : 'double'),
+      style: exHasStyles(ex) ? (ex.styles.some(function(st){ return st.key===o.style; }) ? o.style : ex.styles[0].key) : '',
+      equip: (exHasEquip(ex) && ex.equipment.indexOf(o.equip)!==-1) ? o.equip : ''
+    };
   }
-  // The cards to log for an exercise in a mode: one for double, a left and a right for single.
-  function exCards(ex, mode){
-    if(ex.styles && ex.styles.length){
-      var st=ex.styles.filter(function(x){ return x.key===mode; })[0] || ex.styles[0];
-      return [ { name:st.name, defaultReps:st.reps||ex.defaultReps } ];
+  // Every base way to log an exercise (before equipment): { name, side, style }.
+  function exBaseCombos(ex){
+    var out=[], sd=exSides(ex);
+    if(exHasStyles(ex)){
+      ex.styles.forEach(function(st){
+        if(sd!=='single') out.push({ name:st.name, side:'double', style:st.key });
+        if(sd!=='double'){
+          out.push({ name:st.leftName||st.name+' - Left',  side:'single', style:st.key });
+          out.push({ name:st.rightName||st.name+' - Right', side:'single', style:st.key });
+        }
+      });
+    } else {
+      if(sd!=='single') out.push({ name:exDoubleName(ex), side:'double', style:'' });
+      if(sd!=='double'){
+        out.push({ name:exLeftName(ex),  side:'single', style:'' });
+        out.push({ name:exRightName(ex), side:'single', style:'' });
+      }
     }
-    if(mode==='single'){
-      var r=ex.singleReps||ex.defaultReps;
-      return [ { name:exLeftName(ex), defaultReps:r }, { name:exRightName(ex), defaultReps:r } ];
-    }
-    return [ { name:exDoubleName(ex), defaultReps:ex.defaultReps } ];
-  }
-  function exModeForName(ex, name){
-    var t=normGymName(name);
-    if(ex.styles && ex.styles.length){ var st=ex.styles.filter(function(x){ return normGymName(x.name)===t; })[0]; return st ? st.key : ex.styles[0].key; }
-    return (exSides(ex)!=='single' && t===normGymName(exDoubleName(ex))) ? 'double' : 'single';
-  }
-  // Every concrete name an exercise can be logged under (for Progress and history lookups).
-  function exAllNames(ex){
-    if(ex.styles && ex.styles.length) return ex.styles.map(function(st){ return st.name; });
-    var sd=exSides(ex), n=[];
-    if(sd!=='single') n.push(exDoubleName(ex));
-    if(sd!=='double'){ n.push(exLeftName(ex)); n.push(exRightName(ex)); }
-    return n;
-  }
-  function templateExerciseNames(tmpl){
-    var out=[]; tmpl.exercises.forEach(function(ex){ exAllNames(ex).forEach(function(n){ out.push(n); }); });
     return out;
   }
-  // concrete logged name -> { ex, mode } within a template
+  function exAllNames(ex){ return exBaseCombos(ex).map(function(c){ return c.name; }); }
+  // The cards to log for an exercise with these choices: one card, or a left and a right.
+  function exCards(ex, o){
+    var suffix=o.equip ? ' ('+o.equip+')' : '';
+    var st=exHasStyles(ex) ? (ex.styles.filter(function(x){ return x.key===o.style; })[0] || ex.styles[0]) : null;
+    var reps = o.side==='single'
+      ? (ex.singleReps || (st && st.reps) || ex.defaultReps)
+      : ((st && st.reps) || ex.defaultReps);
+    return exBaseCombos(ex).filter(function(c){ return c.side===o.side && c.style===(st?st.key:''); })
+      .map(function(c){ return { name:c.name+suffix, defaultReps:reps }; });
+  }
+  function stripEquip(ex, name){
+    if(exHasEquip(ex)){
+      var t=normGymName(name);
+      for(var i=0;i<ex.equipment.length;i++){
+        var suf=normGymName(' ('+ex.equipment[i]+')');
+        if(t.length>suf.length && t.slice(-suf.length)===suf) return { base:name.slice(0, name.length-suf.length), equip:ex.equipment[i] };
+      }
+    }
+    return { base:name, equip:'' };
+  }
+  function templateExerciseNames(tmpl){
+    // The names she has actually logged (Progress is about what's been done), in library
+    // order; before anything is logged, the plain names so the screen still has structure.
+    var seen={}, rows=[];
+    Object.keys(gymLog).forEach(function(key){
+      var sess=gymLog[key];
+      if(sess.templateId!==tmpl.id) return;
+      (sess.exercises||[]).forEach(function(e){
+        var k=normGymName(e.name);
+        if(seen[k] || !countsAsLogged(sess,e)) return;
+        seen[k]=1;
+        var hit=findLibraryHit(tmpl, e.name);
+        rows.push({ name:e.name, idx:hit ? tmpl.exercises.indexOf(hit.ex) : 999 });
+      });
+    });
+    if(!rows.length){
+      tmpl.exercises.forEach(function(ex, i){ exAllNames(ex).forEach(function(n){ rows.push({ name:n, idx:i }); }); });
+      return rows.map(function(r){ return r.name; });
+    }
+    rows.sort(function(a,b){ return a.idx-b.idx || (a.name<b.name?-1:1); });
+    return rows.map(function(r){ return r.name; });
+  }
+  // concrete logged name -> { ex, mode:{side,style,equip} } within a template
   function findLibraryHit(tmpl, name){
-    var t=normGymName(name), found=null;
+    var found=null;
     tmpl.exercises.forEach(function(ex){
       if(found) return;
-      if(ex.styles && ex.styles.length){
-        ex.styles.forEach(function(st){ if(!found && normGymName(st.name)===t) found={ ex:ex, mode:st.key }; });
-        return;
-      }
-      if(exSides(ex)!=='single' && normGymName(exDoubleName(ex))===t) found={ ex:ex, mode:'double' };
-      else if(exSides(ex)!=='double' && (normGymName(exLeftName(ex))===t || normGymName(exRightName(ex))===t)) found={ ex:ex, mode:'single' };
+      var sp=stripEquip(ex, name), t=normGymName(sp.base);
+      exBaseCombos(ex).forEach(function(c){
+        if(!found && normGymName(c.name)===t) found={ ex:ex, mode:{ side:c.side, style:c.style, equip:sp.equip } };
+      });
     });
     return found;
   }
-  // Latest real entry for a library exercise, whichever way it was logged.
+  // Latest real entry for a library exercise, however it was logged (any side / style / equipment).
   function latestEntryForExercise(tmpl, ex){
     var best=null;
-    exAllNames(ex).forEach(function(n){
-      var es=getExerciseEntries(tmpl.id, n);
-      if(es.length){ var e=es[es.length-1]; if(!best || e.date>best.date) best=e; }
+    Object.keys(gymLog).forEach(function(key){
+      var sess=gymLog[key];
+      if(sess.templateId!==tmpl.id) return;
+      (sess.exercises||[]).forEach(function(e){
+        if(!countsAsLogged(sess,e)) return;
+        var hit=findLibraryHit(tmpl, e.name);
+        if(hit && hit.ex===ex && (!best || sess.date>best.date)) best={ date:sess.date, exercise:e };
+      });
     });
     return best;
   }
 
   // -- Exercise picker: each session is built from the exercises picked for it --
-  // session.selected holds the picked BASE names in tap order; session.modes[base] is
-  // 'single' or 'double' for exercises that can go either way. Nothing is picked until she
-  // picks it (or taps "Use last session's picks"), so every session is her own choice.
+  // session.selected holds the picked BASE names in tap order; session.modes[base] holds her
+  // single/double, style and equipment choices. Nothing is picked until she picks it (or taps
+  // "Use last session's picks"), so every session is her own choice.
   var gymPickerOpen={};
   function pickedExercises(session, tmpl){
     return (Array.isArray(session.selected) ? session.selected : []).map(function(base){
       var ex=tmpl.exercises.filter(function(x){ return normGymName(x.name)===normGymName(base); })[0];
-      return ex ? { ex:ex, mode:exMode(ex, session.modes) } : null;
+      return ex ? { ex:ex, mode:exOpts(ex, session.modes && session.modes[ex.name]) } : null;
     }).filter(Boolean);
   }
   // The most recent earlier session of this group that had picks (or, for sessions logged
@@ -2371,7 +2424,7 @@
       var sess=gymLog[key];
       if(sess.templateId!==tmpl.id || sess.date>=dateStr) return;
       var names=[], modes={};
-      if(Array.isArray(sess.selected) && sess.selected.length){ names=sess.selected.slice(); modes=sess.modes||{}; }
+      if(Array.isArray(sess.selected) && sess.selected.length){ names=sess.selected.slice(); modes=JSON.parse(JSON.stringify(sess.modes||{})); }
       else (sess.exercises||[]).filter(function(e){ return countsAsLogged(sess,e); }).forEach(function(e){
         var hit=findLibraryHit(tmpl, e.name);
         if(hit && names.indexOf(hit.ex.name)===-1){ names.push(hit.ex.name); modes[hit.ex.name]=hit.mode; }
@@ -2395,8 +2448,11 @@
     pruneEntries(session, tmpl);
     saveGymLog(); renderGymMain();
   }
-  function setMode(session, tmpl, ex, mode){
-    session.modes=session.modes||{}; session.modes[ex.name]=mode;
+  // Change one choice (dim = 'side' | 'style' | 'equip') for a picked exercise.
+  function setMode(session, tmpl, ex, dim, value){
+    var next=exOpts(ex, session.modes && session.modes[ex.name]);
+    next[dim]=value;
+    session.modes=session.modes||{}; session.modes[ex.name]=next;
     pruneEntries(session, tmpl);
     saveGymLog(); renderGymMain();
   }
@@ -2437,7 +2493,7 @@
       reuse.addEventListener('click', function(){
         gymPickerOpen[tmpl.id]=true;
         var names=last.names.filter(function(n){ return tmpl.exercises.some(function(ex){ return normGymName(ex.name)===normGymName(n); }); });
-        setPicks(session, tmpl, names, Object.assign({}, last.modes));
+        setPicks(session, tmpl, names, JSON.parse(JSON.stringify(last.modes)));
       });
       acts.appendChild(reuse);
     }
@@ -2470,42 +2526,42 @@
     return box;
   }
 
-  // One picked exercise: its cards, plus the single/double switch when it can go either way.
+  // One picked exercise: its cards, plus a switch for each choice it has (equipment, style,
+  // single/double).
   function renderPickedBlock(session, tmpl, p, templateId, dateStr){
     var wrap=document.createElement('div'); wrap.className='gympicked';
-    var sd=exSides(p.ex);
-    if(p.ex.styles && p.ex.styles.length){
-      var shead=document.createElement('div'); shead.className='gympicked-head';
-      var snm=document.createElement('span'); snm.className='gympicked-name'; snm.textContent=p.ex.name;
-      var sseg=document.createElement('span'); sseg.className='gymseg';
-      p.ex.styles.forEach(function(st){
-        var b=document.createElement('button'); b.type='button'; b.className='gymmode'+(p.mode===st.key?' active':'');
-        b.setAttribute('aria-pressed', p.mode===st.key?'true':'false'); b.textContent=st.label;
-        b.addEventListener('click', function(){ if(p.mode!==st.key) setMode(session, tmpl, p.ex, st.key); });
-        sseg.appendChild(b);
-      });
-      shead.appendChild(snm); shead.appendChild(sseg); wrap.appendChild(shead);
-    } else if(sd!=='double'){
-      var head=document.createElement('div'); head.className='gympicked-head';
-      var nm=document.createElement('span'); nm.className='gympicked-name'; nm.textContent=p.ex.name;
-      head.appendChild(nm);
-      var limb=p.ex.limb==='leg' ? 'leg' : 'arm';
-      if(sd==='either'){
-        var seg=document.createElement('span'); seg.className='gymseg';
-        [['double','Double '+limb],['single','Single '+limb]].forEach(function(o){
-          var b=document.createElement('button'); b.type='button'; b.className='gymmode'+(p.mode===o[0]?' active':'');
-          b.setAttribute('aria-pressed', p.mode===o[0]?'true':'false'); b.textContent=o[1];
-          b.addEventListener('click', function(){ if(p.mode!==o[0]) setMode(session, tmpl, p.ex, o[0]); });
-          seg.appendChild(b);
+    var ex=p.ex, o=p.mode, sd=exSides(ex);
+    var limb=ex.limb==='leg' ? 'leg' : 'arm';
+    var hasChoices = exHasEquip(ex) || exHasStyles(ex) || sd!=='double';
+    function row(label, options, current, dim, canClear){
+      var r=document.createElement('div'); r.className='gymopt';
+      var l=document.createElement('span'); l.className='gymopt-l'; l.textContent=label; r.appendChild(l);
+      var seg=document.createElement('span'); seg.className='gymseg';
+      options.forEach(function(op){
+        var on=current===op.key;
+        var b=document.createElement('button'); b.type='button'; b.className='gymmode'+(on?' active':'');
+        b.setAttribute('aria-pressed', on?'true':'false'); b.textContent=op.label;
+        b.addEventListener('click', function(){
+          if(on && !canClear) return;
+          setMode(session, tmpl, ex, dim, (on && canClear) ? '' : op.key);
         });
-        head.appendChild(seg);
-      } else {
-        var note=document.createElement('span'); note.className='gympicked-note'; note.textContent='left & right';
-        head.appendChild(note);
-      }
-      wrap.appendChild(head);
+        seg.appendChild(b);
+      });
+      r.appendChild(seg); return r;
     }
-    exCards(p.ex, p.mode).forEach(function(c){ wrap.appendChild(renderExerciseCard(session, c, templateId, dateStr)); });
+    if(hasChoices){
+      var head=document.createElement('div'); head.className='gympicked-head';
+      var nm=document.createElement('span'); nm.className='gympicked-name'; nm.textContent=ex.name;
+      head.appendChild(nm);
+      if(sd==='single'){ var note=document.createElement('span'); note.className='gympicked-note'; note.textContent='left & right'; head.appendChild(note); }
+      wrap.appendChild(head);
+      var opts=document.createElement('div'); opts.className='gymopts';
+      if(exHasEquip(ex)) opts.appendChild(row('Equipment', ex.equipment.map(function(e){ return { key:e, label:e }; }), o.equip, 'equip', true));
+      if(exHasStyles(ex)) opts.appendChild(row('Type', ex.styles.map(function(st){ return { key:st.key, label:st.label }; }), o.style, 'style', false));
+      if(sd==='either') opts.appendChild(row('Sides', [ { key:'double', label:'Double '+limb }, { key:'single', label:'Single '+limb } ], o.side, 'side', false));
+      if(opts.children.length) wrap.appendChild(opts);
+    }
+    exCards(ex, o).forEach(function(c){ wrap.appendChild(renderExerciseCard(session, c, templateId, dateStr)); });
     return wrap;
   }
 
@@ -2835,6 +2891,7 @@
     } else {
       exerciseSel.disabled=false;
       var allNames=templateExerciseNames(tmpl);
+      if(gymProgressExerciseName && allNames.indexOf(gymProgressExerciseName)===-1 && findLibraryHit(tmpl, gymProgressExerciseName)) allNames.push(gymProgressExerciseName);
       allNames.forEach(function(n){
         var opt=document.createElement('option'); opt.value=n; opt.textContent=n;
         exerciseSel.appendChild(opt);
@@ -2898,20 +2955,20 @@
         {name:'Front Squat'},
         {name:'Sumo Squat'},
         {name:'Leg Press', reps:['8','8','8']},
-        {name:'Hip Thrust', sides:'either', limb:'leg', reps:['10','8','8','8'], singleReps:['8','10','10']},
-        {name:'Romanian Deadlift', reps:['6','6','10']},
+        {name:'Hip Thrust', sides:'either', limb:'leg', equipment:['Machine','Barbell'], reps:['10','8','8','8'], singleReps:['8','10','10']},
+        {name:'Romanian Deadlift', equipment:['Machine','Trap bar','Barbell'], reps:['6','6','10']},
         {name:'B Stance RDL', sides:'single', limb:'leg', reps:['8','8','8'],
           leftName:'Romanian Deadlift - B Stance - Left', rightName:'Romanian Deadlift - B Stance - Right'},
-        {name:'Bulgarian Split Squat', sides:'single', limb:'leg', reps:['6','8','8']},
-        {name:'Reverse Lunge', sides:'single', limb:'leg'},
-        {name:'Curtsy Lunge', sides:'single', limb:'leg'},
-        {name:'Step Up', sides:'single', limb:'leg', reps:['8','8','8']},
-        {name:'Glute Kickback', sides:'single', limb:'leg', reps:['10','12','12']},
-        {name:'Hamstring Curl', styles:[
+        {name:'Bulgarian Split Squat', sides:'single', limb:'leg', equipment:['Dumbbells','Barbell','Smith machine'], reps:['6','8','8']},
+        {name:'Reverse Lunge', sides:'single', limb:'leg', equipment:['Barbell','Dumbbells','Smith machine']},
+        {name:'Curtsy Lunge', sides:'single', limb:'leg', equipment:['Barbell','Smith machine','Dumbbells']},
+        {name:'Step Up', sides:'single', limb:'leg', equipment:['Cable','Dumbbells','Smith machine'], reps:['8','8','8']},
+        {name:'Glute Kickback', sides:'single', limb:'leg', equipment:['Machine','Cable'], reps:['10','12','12']},
+        {name:'Hamstring Curl', sides:'either', limb:'leg', styles:[
           { key:'seated', label:'Seated', name:'Seated Hamstring Curl', reps:['8','10','10'] },
           { key:'lying',  label:'Lying',  name:'Lying Hamstring Curl' } ]},
-        {name:'Leg Extension', reps:['8','8','8']},
-        {name:'Calf Raise', reps:['8','8']},
+        {name:'Leg Extension', sides:'either', limb:'leg', reps:['8','8','8']},
+        {name:'Calf Raise', sides:'either', limb:'leg', reps:['8','8']},
         {name:'Hyper Extension', reps:['10','10','10']}
       ],
       cooldown:secs(['Static Quad Stretch - Left','Static Quad Stretch - Right','Pigeon Pose - Left','Pigeon Pose - Right','Forward Fold - Seated'])
@@ -2981,8 +3038,8 @@
       var owner={};
       gymTemplates.forEach(function(t){
         t.exercises.forEach(function(ex){
-          exAllNames(ex).forEach(function(n){
-            owner[normGymName(n)]={ tmpl:t, ex:ex, mode:exModeForName(ex,n), name:n };
+          exBaseCombos(ex).forEach(function(c){
+            owner[normGymName(c.name)]={ tmpl:t, ex:ex, mode:{ side:c.side, style:c.style, equip:'' }, name:c.name };
           });
         });
       });
@@ -3019,7 +3076,9 @@
   //   2: Split Squat + Glute Focused Step Up merged into Bulgarian Split Squat + Step Up;
   //      Seated Hamstring Curl becomes "Hamstring Curl" (seated or lying); Back Extension
   //      becomes Hyper Extension
-  var GYM_LIB_VERSION=2;
+  //   3: equipment choices on the lower-body exercises, and single/double on Hamstring Curl,
+  //      Leg Extension and Calf Raise
+  var GYM_LIB_VERSION=3;
   function renameLoggedNames(templateId, map){
     Object.keys(gymLog).forEach(function(key){
       var sess=gymLog[key];
@@ -3097,6 +3156,15 @@
           renamePicks(lower.id, { 'back extension':{ base:'Hyper Extension' } });
         } else addStarter('Hyper Extension');
       }
+      if(have<3){
+        day.exercises.forEach(function(sx){
+          var ex=lower.exercises.filter(function(e){ return normGymName(e.name)===normGymName(sx.name); })[0];
+          if(!ex) return;
+          if(sx.equipment) ex.equipment=sx.equipment.slice();
+          if(sx.sides) ex.sides=sx.sides;
+          if(sx.limb) ex.limb=sx.limb;
+        });
+      }
       saveGymTemplates(); saveGymLog();
     }
     state.gym_lib=GYM_LIB_VERSION; save(state);
@@ -3152,7 +3220,7 @@
         down.addEventListener('click', function(){ reorderTemplateExercise(t.id, ex.id, 1); renderTemplateEditor(); });
         var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove exercise');
         rm.addEventListener('click', function(){ removeTemplateExercise(t.id, ex.id); renderTemplateEditor(); });
-        var how=document.createElement('select'); how.className='gym-input gymhow'; how.hidden=!!(ex.styles&&ex.styles.length); how.setAttribute('aria-label','How '+ex.name+' is done');
+        var how=document.createElement('select'); how.className='gym-input gymhow'; how.setAttribute('aria-label','How '+ex.name+' is done');
         [['double','Double','One card'],['either','Either','Choose double or single each time'],['single','Single','Always left & right']].forEach(function(o){
           var op=document.createElement('option'); op.value=o[0]; op.textContent=o[1]; op.title=o[2];
           if(exSides(ex)===o[0]) op.selected=true; how.appendChild(op);
