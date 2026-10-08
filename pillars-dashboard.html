@@ -422,6 +422,42 @@
 
   .gymcomplete{ display:block; width:100%; margin-top:16px; font-family:'Inter'; font-size:13.5px; font-weight:800; padding:13px 16px; border-radius:14px; border:1.4px solid var(--phue); background:var(--surface); color:var(--phue-strong); cursor:pointer; }
   .gymcomplete.done{ background:var(--phue); color:var(--phue-on); }
+  /* workout report overlay */
+  body.gymreport-open{ overflow:hidden; }
+  .gymreport{ position:fixed; inset:0; z-index:60; display:flex; align-items:flex-end; justify-content:center; background:rgba(24,18,12,.52); padding:16px; padding-bottom:0; animation:gymrFade .2s ease both; }
+  .gymreport-card{ width:100%; max-width:480px; max-height:92vh; overflow-y:auto; background:var(--surface); color:var(--ink); border-radius:24px 24px 0 0; box-shadow:0 -10px 40px rgba(0,0,0,.25); animation:gymrUp .32s cubic-bezier(.22,.85,.32,1) both; }
+  .gymreport-hero{ position:relative; overflow:hidden; padding:26px 22px 20px; background:var(--phue-soft); text-align:left; }
+  .gymreport-hero.win{ background:var(--phue); color:var(--phue-on); }
+  .gymreport-kicker{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.8; margin:0 0 6px; }
+  .gymreport-title{ font-size:26px; line-height:1.12; font-weight:800; margin:0; text-wrap:balance; }
+  .gymreport-sub{ font-size:13.5px; margin:8px 0 0; opacity:.92; }
+  .gymreport-body{ padding:18px 20px 24px; display:flex; flex-direction:column; gap:10px; }
+  .gymreport-body .section-label{ margin:10px 0 0; color:var(--phue-strong); }
+  .gymreport-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .gymreport-stat{ background:var(--phue-soft); border-radius:14px; padding:11px 10px; display:flex; flex-direction:column; gap:1px; min-width:0; }
+  .gymreport-stat .v{ font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .gymreport-stat .l{ font-size:10.5px; font-weight:700; text-transform:lowercase; color:var(--phue-strong); }
+  .gymreport-stat .s{ font-size:10.5px; color:var(--ink-soft); }
+  .gymreport-week{ font-size:12px; color:var(--ink-soft); margin:0; }
+  .gymreport-pr{ display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border-radius:16px; background:var(--phue); color:var(--phue-on); }
+  .gymreport-badge{ flex:0 0 auto; font-size:11px; font-weight:800; letter-spacing:.06em; padding:5px 9px; border-radius:999px; background:var(--phue-on); color:var(--phue-strong); }
+  .gymreport-prtext{ display:flex; flex-direction:column; gap:2px; min-width:0; font-size:12.5px; }
+  .gymreport-prtext strong{ font-size:14px; }
+  .gymreport-up{ display:flex; flex-direction:column; gap:1px; padding:10px 14px; border-radius:14px; background:var(--phue-soft); font-size:12.5px; }
+  .gymreport-ex{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; }
+  .gymreport-exl{ display:flex; flex-direction:column; gap:1px; min-width:0; font-size:12px; color:var(--ink-soft); }
+  .gymreport-exl strong{ font-size:13.5px; color:var(--ink); }
+  .gymreport-tag{ flex:0 0 auto; font-size:10.5px; font-weight:800; padding:4px 10px; border-radius:999px; background:var(--phue-soft); color:var(--phue-strong); }
+  .gymreport-tag.pr{ background:var(--phue); color:var(--phue-on); }
+  .gymreport-tag.up{ background:color-mix(in srgb, var(--phue) 35%, var(--surface)); }
+  .gymreport-close{ margin-top:10px; font-family:'Inter'; font-size:14px; font-weight:800; padding:13px 16px; border-radius:14px; border:none; background:var(--phue-strong); color:var(--surface); cursor:pointer; }
+  .gymreport-close:focus-visible, .gymreport-link:focus-visible{ outline:2px solid var(--phue); outline-offset:2px; }
+  .gymreport-link{ display:block; margin:10px auto 0; font-family:'Inter'; font-size:12.5px; font-weight:700; color:var(--phue-strong); background:none; border:none; text-decoration:underline; cursor:pointer; padding:6px; }
+  .gymconf{ position:absolute; top:-8px; width:7px; height:11px; border-radius:2px; opacity:0; animation:gymConf 1.9s ease-out both; pointer-events:none; }
+  @keyframes gymConf{ 0%{ opacity:1; transform:translate(0,0) rotate(0); } 100%{ opacity:0; transform:translate(var(--dx), 190px) rotate(var(--rot)); } }
+  @keyframes gymrFade{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes gymrUp{ from{ transform:translateY(40px); opacity:0; } to{ transform:none; opacity:1; } }
+  @media (min-width:600px){ .gymreport{ align-items:center; padding-bottom:16px; } .gymreport-card{ border-radius:24px; } }
   .gymcomplete-note{ font-size:11px; color:var(--ink-soft); text-align:center; margin-top:6px; }
 
   .bdblock{ margin-top:14px; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:16px 18px 10px; box-shadow:var(--shadow); }
@@ -2679,16 +2715,204 @@
     var doneBtn=document.createElement('button'); doneBtn.type='button';
     doneBtn.className='gymcomplete'+(session.completed?' done':'');
     doneBtn.textContent=session.completed ? '✓ Workout complete — tap to undo' : 'Mark workout complete';
+    var reportSessions=[session]; if(exSession) reportSessions.push(exSession);
     doneBtn.addEventListener('click', function(){
       var v=!session.completed; session.completed=v; if(exSession) exSession.completed=v;
       saveGymLog(); renderGymMain();
+      if(v) showWorkoutReport(reportSessions, dsStr, tmpl.name, activeId, document.querySelector('.gymcomplete'));
     });
     cardsEl.appendChild(doneBtn);
+    if(session.completed){
+      var viewBtn=document.createElement('button'); viewBtn.type='button'; viewBtn.className='gymreport-link'; viewBtn.textContent='View workout report';
+      viewBtn.addEventListener('click', function(){ showWorkoutReport(reportSessions, dsStr, tmpl.name, activeId, viewBtn); });
+      cardsEl.appendChild(viewBtn);
+    }
     if(dsStr===todayStr){
       var doneNote=document.createElement('p'); doneNote.className='gymcomplete-note';
       doneNote.textContent='Logging a workout ticks \u201cStrength training session\u201d on your Daily page.';
       cardsEl.appendChild(doneNote);
     }
+  }
+
+  // -- Workout report: shown when she taps "Mark workout complete" --
+  // Compares each exercise logged in the session with everything logged before it (same exercise
+  // name, so a different equipment keeps its own record) and calls out PRs: a heavier weight than
+  // ever before, more reps at a weight she's already lifted, or the biggest total volume yet.
+  function fmtKg(n){ return String(Math.round(n*100)/100).replace(/\.0+$/,''); }
+  function fmtNum(n){ return Math.round(n).toLocaleString('en-ZA').replace(/ /g,' '); }
+  function sessionSets(e){
+    return toPerSetGroups(e.weightGroups).map(function(g){
+      var w=parseFloat(String(g.weight).replace(',','.')), r=parseInt(g.reps && g.reps[0],10);
+      return { w:(!g.weight || isNaN(w)) ? 0 : w, r:isNaN(r) ? 0 : r };
+    }).filter(function(x){ return x.r>0; });   // a set counts once it has reps
+  }
+  function setsVolume(sets){
+    var weighted=sets.some(function(x){ return x.w>0; });
+    return sets.reduce(function(t,x){ return t+(weighted ? x.w*x.r : x.r); },0);
+  }
+  function analyseExercise(templateId, e, dateStr){
+    var sets=sessionSets(e);
+    if(!sets.length) return null;
+    var prev=getExerciseEntries(templateId, e.name).filter(function(p){ return p.date<dateStr; });
+    var curMax=sets.reduce(function(m,x){ return Math.max(m,x.w); },0);
+    var curVol=setsVolume(sets);
+    var top=sets.slice().sort(function(a,b){ return b.w-a.w || b.r-a.r; })[0];
+    var res={ name:e.name, sets:sets, top:top, vol:curVol, weighted:curMax>0, first:!prev.length,
+      prs:[], lastMax:null, lastVol:null, volPct:null, weightDelta:null };
+    if(res.first) return res;
+    var prevSets=[], prevMax=0, prevBestVol=0;
+    prev.forEach(function(p){
+      var ps=sessionSets(p.exercise); prevSets=prevSets.concat(ps);
+      prevMax=Math.max(prevMax, ps.reduce(function(m,x){ return Math.max(m,x.w); },0));
+      prevBestVol=Math.max(prevBestVol, setsVolume(ps));
+    });
+    var last=sessionSets(prev[prev.length-1].exercise);
+    res.lastMax=last.reduce(function(m,x){ return Math.max(m,x.w); },0);
+    res.lastVol=setsVolume(last);
+    if(res.lastVol>0) res.volPct=Math.round((curVol-res.lastVol)/res.lastVol*100);
+    if(res.weighted && res.lastMax>0) res.weightDelta=curMax-res.lastMax;
+    if(res.weighted && curMax>prevMax) res.prs.push({ kind:'weight', text:'Heaviest yet — '+fmtKg(curMax)+'kg'+(prevMax>0 ? ' (was '+fmtKg(prevMax)+'kg)' : '') });
+    else {
+      var best=null;
+      sets.forEach(function(x){
+        if(!x.r) return;
+        var prior=prevSets.filter(function(q){ return q.w>=x.w; });
+        if(!prior.length) return;
+        var pr=prior.reduce(function(m,q){ return Math.max(m,q.r); },0);
+        if(x.r>pr && (!best || x.w>best.w || (x.w===best.w && x.r>best.r))) best={ w:x.w, r:x.r, was:pr };
+      });
+      if(best) res.prs.push({ kind:'reps', text:best.r+' reps'+(best.w>0 ? ' at '+fmtKg(best.w)+'kg' : '')+' (was '+best.was+')' });
+    }
+    if(curVol>prevBestVol && prevBestVol>0) res.prs.push({ kind:'volume', text:'Most volume yet — '+fmtNum(curVol)+(res.weighted?'kg':' reps') });
+    return res;
+  }
+  function weekSessionCount(dateStr){
+    var wk='w:'+isoWeekKey(new Date(dateStr+'T00:00:00')), days={};
+    Object.keys(gymLog).forEach(function(key){
+      var sx=gymLog[key];
+      if('w:'+isoWeekKey(new Date(sx.date+'T00:00:00'))===wk && (sx.exercises||[]).some(function(x){ return countsAsLogged(sx,x); })) days[sx.date]=true;
+    });
+    return Object.keys(days).length;
+  }
+  function templateSessionVolume(sess){
+    return (sess.exercises||[]).filter(function(x){ return countsAsLogged(sess,x); })
+      .reduce(function(t,x){ return t+setsVolume(sessionSets(x)); },0);
+  }
+  function buildWorkoutReport(sessions, dateStr, mainTemplateId){
+    var rows=[];
+    sessions.forEach(function(sx){
+      (sx.exercises||[]).filter(function(x){ return countsAsLogged(sx,x); }).forEach(function(x){
+        var a=analyseExercise(sx.templateId, x, dateStr); if(a) rows.push(a);
+      });
+    });
+    var totalSets=rows.reduce(function(t,r){ return t+r.sets.length; },0);
+    var totalVol=rows.reduce(function(t,r){ return t+(r.weighted ? r.vol : 0); },0);
+    var prRows=rows.filter(function(r){ return r.prs.length; });
+    // volume vs the previous session of the same group
+    var prevVol=null, prevDate=null;
+    Object.keys(gymLog).forEach(function(key){
+      var sx=gymLog[key];
+      if(sx.templateId!==mainTemplateId || sx.date>=dateStr) return;
+      var v=templateSessionVolume(sx);
+      if(v>0 && (!prevDate || sx.date>prevDate)){ prevDate=sx.date; prevVol=v; }
+    });
+    var volPct = (prevVol && totalVol>0) ? Math.round((totalVol-prevVol)/prevVol*100) : null;
+    var improved=rows.filter(function(r){ return !r.prs.length && !r.first && ((r.weightDelta!=null && r.weightDelta>0) || (r.volPct!=null && r.volPct>=5)); });
+    return { rows:rows, totalSets:totalSets, totalVol:totalVol, prRows:prRows, improved:improved, volPct:volPct,
+      weekCount:weekSessionCount(dateStr), firsts:rows.filter(function(r){ return r.first; }) };
+  }
+
+  var gymReportOpener=null;
+  function closeWorkoutReport(){
+    var m=document.getElementById('gymReport'); if(m) m.remove();
+    document.body.classList.remove('gymreport-open');
+    document.removeEventListener('keydown', reportKeys);
+    if(gymReportOpener && document.body.contains(gymReportOpener)) gymReportOpener.focus();
+    gymReportOpener=null;
+  }
+  function reportKeys(e){ if(e.key==='Escape') closeWorkoutReport(); }
+  function showWorkoutReport(sessions, dateStr, tmplName, mainTemplateId, opener){
+    var rep=buildWorkoutReport(sessions, dateStr, mainTemplateId);
+    if(!rep.rows.length) return;
+    closeWorkoutReport();
+    gymReportOpener=opener||null;
+    var prCount=rep.prRows.reduce(function(t,r){ return t+r.prs.length; },0);
+    var el=function(tag, cls, text){ var n=document.createElement(tag); if(cls) n.className=cls; if(text!=null) n.textContent=text; return n; };
+
+    var ov=el('div','gymreport'); ov.id='gymReport'; ov.setAttribute('data-hue','gym');
+    ov.addEventListener('click', function(e){ if(e.target===ov) closeWorkoutReport(); });
+    var card=el('div','gymreport-card'); card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-labelledby','gymReportTitle');
+    ov.appendChild(card);
+
+    var hero=el('div','gymreport-hero'+(prCount?' win':''));
+    if(prCount){
+      var cols=['#902124','#8EB9FF','#C2858C','var(--phue)','#4D0011','var(--phue-strong)'];
+      for(var i=0;i<22;i++){
+        var c=el('span','gymconf'); c.setAttribute('aria-hidden','true');
+        c.style.left=(4+Math.random()*92)+'%'; c.style.background=cols[i%cols.length];
+        c.style.animationDelay=(Math.random()*0.5)+'s'; c.style.setProperty('--dx',(Math.random()*60-30)+'px');
+        c.style.setProperty('--rot',(Math.random()*540-270)+'deg');
+        hero.appendChild(c);
+      }
+    }
+    hero.appendChild(el('p','gymreport-kicker', tmplName+' · '+new Date(dateStr+'T00:00:00').toLocaleDateString('en-ZA',{ weekday:'long', day:'numeric', month:'long' })));
+    var title=el('h2','gymreport-title', prCount ? (prCount===1 ? 'New personal record' : prCount+' new personal records') : 'Workout complete');
+    title.id='gymReportTitle'; hero.appendChild(title);
+    hero.appendChild(el('p','gymreport-sub', prCount
+      ? 'That’s you getting stronger, gorgeous.'
+      : (rep.improved.length ? 'You moved up on last time — that counts.' : 'Logged and done. Showing up is the whole game.')));
+    card.appendChild(hero);
+
+    var body=el('div','gymreport-body'); card.appendChild(body);
+
+    var stats=el('div','gymreport-stats');
+    var stat=function(v,l,sub){ var d=el('div','gymreport-stat'); d.appendChild(el('span','v',v)); d.appendChild(el('span','l',l)); if(sub) d.appendChild(el('span','s',sub)); stats.appendChild(d); };
+    stat(String(rep.rows.length), rep.rows.length===1?'exercise':'exercises');
+    stat(String(rep.totalSets), rep.totalSets===1?'set':'sets');
+    stat(rep.totalVol>0 ? fmtNum(rep.totalVol)+'kg' : '—', 'volume',
+      rep.volPct!=null ? (rep.volPct>0?'+':'')+rep.volPct+'% vs last '+tmplName.toLowerCase() : null);
+    body.appendChild(stats);
+    body.appendChild(el('p','gymreport-week','Strength session '+Math.min(rep.weekCount,99)+' this week'+(rep.weekCount>=5 ? ' — ring closed' : ' · '+Math.max(0,5-rep.weekCount)+' to close the ring')));
+
+    if(rep.prRows.length){
+      body.appendChild(el('p','section-label','Personal records'));
+      rep.prRows.forEach(function(r){
+        var card2=el('div','gymreport-pr');
+        var badge=el('span','gymreport-badge','PR'); card2.appendChild(badge);
+        var tx=el('div','gymreport-prtext'); tx.appendChild(el('strong',null,r.name));
+        r.prs.forEach(function(pr){ tx.appendChild(el('span',null,pr.text)); });
+        card2.appendChild(tx); body.appendChild(card2);
+      });
+    }
+    if(rep.improved.length){
+      body.appendChild(el('p','section-label','Up on last time'));
+      rep.improved.forEach(function(r){
+        var bits=[];
+        if(r.weightDelta>0) bits.push('+'+fmtKg(r.weightDelta)+'kg on your top weight');
+        if(r.volPct!=null && r.volPct>=5) bits.push('volume +'+r.volPct+'%');
+        var row=el('div','gymreport-up'); row.appendChild(el('strong',null,r.name)); row.appendChild(el('span',null,bits.join(' · ')));
+        body.appendChild(row);
+      });
+    }
+    body.appendChild(el('p','section-label','Everything you did'));
+    rep.rows.forEach(function(r){
+      var row=el('div','gymreport-ex');
+      var l=el('div','gymreport-exl'); l.appendChild(el('strong',null,r.name));
+      l.appendChild(el('span',null, r.sets.length+(r.sets.length===1?' set':' sets')+' · '+r.sets.map(function(x){ return (x.w>0 ? fmtKg(x.w)+'kg × ' : '')+x.r; }).join(', ')));
+      row.appendChild(l);
+      var tag=r.prs.length ? ['PR','pr'] : r.first ? ['First time','first'] : (r.weightDelta>0 || (r.volPct!=null && r.volPct>=5)) ? ['Up','up'] : (r.volPct!=null && r.volPct<=-5) ? ['Lighter','down'] : ['Matched','same'];
+      row.appendChild(el('span','gymreport-tag '+tag[1], tag[0]));
+      body.appendChild(row);
+    });
+
+    var done=el('button','gymreport-close','Done'); done.type='button';
+    done.addEventListener('click', closeWorkoutReport);
+    body.appendChild(done);
+
+    document.body.appendChild(ov);
+    document.body.classList.add('gymreport-open');
+    document.addEventListener('keydown', reportKeys);
+    done.focus({ preventScroll:true });
   }
 
   // -- 8. Shared exercise-entry + metric helpers, and Progress sub-view --
