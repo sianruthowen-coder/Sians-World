@@ -28,6 +28,9 @@
   [data-hue="love"]{     --phue:#410016; --phue-strong:#93103D; --phue-soft:#F7E8ED; --phue-on:#F7EEF1; }
   [data-hue="thoughts"]{ --phue:#EDE3DD; --phue-strong:#664D3E; --phue-soft:#F2EFED; --phue-on:#2A221E; }
   [data-hue="gym"]{      --phue:#C1784F; --phue-strong:#7A4225; --phue-soft:#F3E7DE; --phue-on:#FBF2EA; }
+  [data-hue="daily"]{    --phue:#5B4B3A; --phue-strong:#3E3125; --phue-soft:#F1EBE4; --phue-on:#F8F3EC; }
+  [data-hue="weekly"]{   --phue:#5F7266; --phue-strong:#34443A; --phue-soft:#EBEFEC; --phue-on:#F2F5F3; }
+  [data-hue="pillars"]{  --phue:#8E8175; --phue-strong:#54483E; --phue-soft:#F1EEEB; --phue-on:#FAF7F4; }
 
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -44,6 +47,9 @@
     :root:not([data-theme="light"]) [data-hue="love"]{     --phue:#E87DA1; --phue-strong:#F0C2D1; --phue-soft:#4F172A; --phue-on:#37101D; }
     :root:not([data-theme="light"]) [data-hue="thoughts"]{ --phue:#C3AEA2; --phue-strong:#E0D7D2; --phue-soft:#3C312A; --phue-on:#2A221E; }
     :root:not([data-theme="light"]) [data-hue="gym"]{      --phue:#E3A374; --phue-strong:#F0C7A0; --phue-soft:#3F2A1C; --phue-on:#2E1B10; }
+    :root:not([data-theme="light"]) [data-hue="daily"]{    --phue:#B79F86; --phue-strong:#E6D8C8; --phue-soft:#3A2F25; --phue-on:#241B12; }
+    :root:not([data-theme="light"]) [data-hue="weekly"]{   --phue:#93A89A; --phue-strong:#CFDDD4; --phue-soft:#25312A; --phue-on:#16201A; }
+    :root:not([data-theme="light"]) [data-hue="pillars"]{  --phue:#B3A79D; --phue-strong:#E3DAD2; --phue-soft:#342E29; --phue-on:#211C17; }
   }
   :root[data-theme="dark"]{
     --bg:#211C15; --surface:#2B241B; --surface-2:#362D21;
@@ -59,6 +65,9 @@
   :root[data-theme="dark"] [data-hue="love"]{     --phue:#E87DA1; --phue-strong:#F0C2D1; --phue-soft:#4F172A; --phue-on:#37101D; }
   :root[data-theme="dark"] [data-hue="thoughts"]{ --phue:#C3AEA2; --phue-strong:#E0D7D2; --phue-soft:#3C312A; --phue-on:#2A221E; }
   :root[data-theme="dark"] [data-hue="gym"]{      --phue:#E3A374; --phue-strong:#F0C7A0; --phue-soft:#3F2A1C; --phue-on:#2E1B10; }
+  :root[data-theme="dark"] [data-hue="daily"]{    --phue:#B79F86; --phue-strong:#E6D8C8; --phue-soft:#3A2F25; --phue-on:#241B12; }
+  :root[data-theme="dark"] [data-hue="weekly"]{   --phue:#93A89A; --phue-strong:#CFDDD4; --phue-soft:#25312A; --phue-on:#16201A; }
+  :root[data-theme="dark"] [data-hue="pillars"]{  --phue:#B3A79D; --phue-strong:#E3DAD2; --phue-soft:#342E29; --phue-on:#211C17; }
 
   *{ box-sizing:border-box; }
   [hidden]{ display:none!important; }
@@ -99,7 +108,13 @@
   }
   .tile:hover{ filter:brightness(0.97); }
   .tile:focus-visible{ outline:2px solid var(--phue-on); outline-offset:2px; }
-  .tile--wide{ grid-column:1 / -1; flex-direction:row; align-items:center; justify-content:space-between; min-height:0; }
+  .tile--wide{ grid-column:1 / -1; flex-direction:row; align-items:center; justify-content:space-between; min-height:0; aspect-ratio:auto; padding:18px 22px; }
+  .tile--wide{ text-align:left; }
+  .tile--wide .tile-head{ flex-direction:row; align-items:center; gap:12px; text-align:left; }
+  .tile--wide .tile-head > span:last-child{ display:flex; flex-direction:column; align-items:flex-start; }
+  .tile--wide .tile-name{ text-align:left; }
+  .tile--wide .tile-sub{ display:block; font-size:11px; font-weight:600; opacity:.8; text-transform:none; letter-spacing:0; margin-top:2px; }
+  .tile--wide .ring{ width:42px; height:42px; }
   .tile-head{ display:flex; flex-direction:column; align-items:center; gap:10px; min-width:0; }
   .tile-head svg{ width:22px; height:22px; flex:0 0 auto; }
   .tile-name{ font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.02em; line-height:1.3; text-align:center; min-width:0; overflow-wrap:break-word; }
@@ -321,6 +336,41 @@
   .gymschedrow{ display:flex; align-items:center; gap:10px; margin-top:10px; }
   .gymschedrow .day{ width:34px; font-size:12px; font-weight:700; color:var(--phue-strong); flex:0 0 auto; }
 
+  /* Daily / Weekly aggregate pages — every checklist item from every pillar in one
+     list, each row tinted with its own pillar's hue (checkbox, chip) so the source is
+     obvious at a glance. Rows mirror the pillar pages' own checkboxes, never copy them. */
+  .pagebar{ display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+  .pagebar .backbtn{ margin-bottom:0; }
+  .agglegend{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:16px; }
+  .aggkey{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--ink-soft); }
+  .aggkey i{ width:9px; height:9px; border-radius:50%; background:var(--phue-strong); display:inline-block; }
+  .agglist{ list-style:none; margin:10px 0 0; padding:0; }
+  .agglist:empty{ display:none; }
+  .aggrow .box{ border-color:var(--phue-strong); }
+  .check-row.aggrow input:checked + .box{ background:var(--phue-strong); border-color:var(--phue-strong); }
+  .aggbody{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .aggrow .txt{ color:var(--ink); }
+  .aggrow input:checked ~ .aggbody .txt{ color:var(--ink-soft); text-decoration:line-through; text-decoration-color:var(--border); }
+  .aggnote{ font-size:10.5px; font-style:italic; color:var(--ink-soft); margin-top:1px; }
+  .aggchip{ flex:0 0 auto; font-size:10px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; padding:4px 9px; border-radius:999px; background:color-mix(in srgb, var(--phue) 30%, var(--surface)); color:var(--phue-strong); }
+  .aggctl{ display:none; align-items:center; gap:4px; flex:0 0 auto; }
+  .agg-editing .aggctl{ display:flex; }
+  .agg-editing .aggrow .txt{ background:var(--surface-2); border-radius:5px; padding:1px 4px; margin:-1px -4px; cursor:text; }
+  .aggmove{ font-size:10.5px; font-weight:700; color:var(--ink-soft); border:1.4px solid var(--border); background:transparent; border-radius:999px; padding:4px 8px; cursor:pointer; font-family:'Inter'; white-space:nowrap; }
+  .aggmove:hover{ border-color:var(--phue); color:var(--phue-strong); }
+  .aggeditbtn[aria-pressed="true"]{ background:var(--danger-soft); color:var(--danger); border-color:transparent; }
+  .agg-editing .aggchip{ display:none; }
+  .aggadd{ display:none; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .agg-editing .aggadd{ display:flex; }
+  .aggadd select{ flex:0 0 auto; }
+  .aggadd input{ flex:1; min-width:140px; }
+  .aggadd button{ flex:0 0 auto; width:auto; margin-top:0; }
+  .aggempty{ font-size:13px; color:var(--ink-soft); padding:14px 0; }
+
+  .gymcomplete{ display:block; width:100%; margin-top:16px; font-family:'Inter'; font-size:13.5px; font-weight:800; padding:13px 16px; border-radius:14px; border:1.4px solid var(--phue); background:var(--surface); color:var(--phue-strong); cursor:pointer; }
+  .gymcomplete.done{ background:var(--phue); color:var(--phue-on); }
+  .gymcomplete-note{ font-size:11px; color:var(--ink-soft); text-align:center; margin-top:6px; }
+
   .foot{ margin-top:24px; text-align:center; }
   .foot p{ font-size:12px; color:var(--ink-soft); margin:0; max-width:40ch; margin-inline:auto; }
 </style>
@@ -338,52 +388,20 @@
 
   <section id="home">
     <div class="tilegrid">
-      <button type="button" class="tile" data-hue="mind" data-target="mind">
+      <button type="button" class="tile tile--wide" data-hue="daily" data-target="daily">
         <span class="tile-head">
-          <svg viewBox="0 0 24 24"><path d="M14.5 3.2a9 9 0 1 0 0 17.6 7.3 7.3 0 0 1 0-17.6Z" fill="currentColor"></path></svg>
-          <span class="tile-name">Mind &amp; Spirit</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"></path></svg>
+          <span><span class="tile-name">Daily</span><span class="tile-sub">today's checklist, all pillars</span></span>
         </span>
-        <span class="ring" data-ring="mind"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/7</span></span>
+        <span class="ring" data-ring="daily"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/0</span></span>
       </button>
 
-      <button type="button" class="tile" data-hue="family" data-target="family">
+      <button type="button" class="tile tile--wide" data-hue="weekly" data-target="weekly">
         <span class="tile-head">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="12" y1="8" x2="7" y2="16.5"></line><line x1="12" y1="8" x2="17" y2="16.5"></line><circle cx="12" cy="6" r="2" fill="currentColor" stroke="none"></circle><circle cx="6" cy="18" r="2" fill="currentColor" stroke="none"></circle><circle cx="18" cy="18" r="2" fill="currentColor" stroke="none"></circle></svg>
-          <span class="tile-name">Friends &amp; Family</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>
+          <span><span class="tile-name">Weekly</span><span class="tile-sub">this week's checklist, all pillars</span></span>
         </span>
-        <span class="ring" data-ring="family"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/1</span></span>
-      </button>
-
-      <button type="button" class="tile" data-hue="wealth" data-target="wealth">
-        <span class="tile-head">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M12 7 L14.2 12 L12 17 L9.8 12 Z" fill="currentColor" stroke="none"></path></svg>
-          <span class="tile-name">Wealth &amp; Work</span>
-        </span>
-        <span class="ring" data-ring="wealth"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/3</span></span>
-      </button>
-
-      <button type="button" class="tile" data-hue="health" data-target="health">
-        <span class="tile-head">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,13 6,13 8,6 12,20 15,4 18,13 23,13"></polyline></svg>
-          <span class="tile-name">Health &amp; Wellness</span>
-        </span>
-        <span class="ring" data-ring="health"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/4</span></span>
-      </button>
-
-      <button type="button" class="tile" data-hue="love" data-target="love">
-        <span class="tile-head">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="12" r="6.2"></circle><circle cx="15" cy="12" r="6.2"></circle></svg>
-          <span class="tile-name">Love &amp; Relationships</span>
-        </span>
-        <span class="ring" data-ring="love"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/2</span></span>
-      </button>
-
-      <button type="button" class="tile" data-hue="thoughts" data-target="thoughts">
-        <span class="tile-head">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-          <span class="tile-name">Share your thoughts</span>
-        </span>
-        <span class="weeklytag" id="thoughtsCountTag">0 saved</span>
+        <span class="ring" data-ring="weekly"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/0</span></span>
       </button>
 
       <button type="button" class="tile" data-hue="gym" data-target="gym">
@@ -393,11 +411,106 @@
         </span>
         <span class="weeklytag" id="gymCountTag">0 sessions this wk</span>
       </button>
-    </div>
 
+      <button type="button" class="tile" data-hue="pillars" data-target="pillars">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"></rect><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"></rect><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"></rect><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"></rect></svg>
+          <span class="tile-name">The pillars</span>
+        </span>
+        <span class="weeklytag">6 areas of life</span>
+      </button>
+    </div>
   </section>
 
   <main class="pillars">
+
+    <section class="pillar" id="daily" data-hue="daily" hidden>
+      <div class="pagebar"><button type="button" class="backbtn">&larr; home</button><button type="button" class="backbtn aggeditbtn" data-agg="daily" aria-pressed="false">Edit list</button></div>
+      <div class="pillar-head">
+        <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"></path></svg></span>
+        <div class="pillar-title"><h2>Daily</h2><p class="sub">today · resets every morning</p></div>
+        <div class="ring" data-ring="daily"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/0</span></div>
+      </div>
+      <div class="agglegend" id="dailyLegend"></div>
+      <ul class="agglist" id="dailyList"></ul>
+      <p class="aggempty" id="dailyEmpty" hidden>Nothing here yet — tap Edit list to add items.</p>
+      <p class="section-label" id="dailySuppLabel">Supplements</p>
+      <ul class="agglist" id="dailySuppList"></ul>
+      <div class="aggadd" id="dailyAdd">
+        <select class="gym-input" id="dailyAddPillar" aria-label="Pillar"></select>
+        <input type="text" class="gym-input" id="dailyAddText" placeholder="New daily item…">
+        <button type="button" class="gymtmpl-addtmpl" id="dailyAddBtn">+ Add</button>
+      </div>
+    </section>
+
+    <section class="pillar" id="weekly" data-hue="weekly" hidden>
+      <div class="pagebar"><button type="button" class="backbtn">&larr; home</button><button type="button" class="backbtn aggeditbtn" data-agg="weekly" aria-pressed="false">Edit list</button></div>
+      <div class="pillar-head">
+        <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg></span>
+        <div class="pillar-title"><h2>Weekly</h2><p class="sub">this week · resets every Monday</p></div>
+        <div class="ring" data-ring="weekly"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/0</span></div>
+      </div>
+      <div class="agglegend" id="weeklyLegend"></div>
+      <ul class="agglist" id="weeklyList"></ul>
+      <p class="aggempty" id="weeklyEmpty" hidden>Nothing here yet — tap Edit list to add items.</p>
+      <div class="aggadd" id="weeklyAdd">
+        <select class="gym-input" id="weeklyAddPillar" aria-label="Pillar"></select>
+        <input type="text" class="gym-input" id="weeklyAddText" placeholder="New weekly item…">
+        <button type="button" class="gymtmpl-addtmpl" id="weeklyAddBtn">+ Add</button>
+      </div>
+    </section>
+
+    <section class="pillar" id="pillarsIndex" data-hue="pillars" hidden>
+      <div class="pagebar"><button type="button" class="backbtn">&larr; home</button></div>
+      <div class="pillar-head">
+        <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"></rect><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"></rect><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"></rect><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"></rect></svg></span>
+        <div class="pillar-title"><h2>The pillars</h2><p class="sub">the deeper dive into each area of life</p></div>
+      </div>
+      <div class="tilegrid">
+      <button type="button" class="tile" data-hue="mind" data-target="mind">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24"><path d="M14.5 3.2a9 9 0 1 0 0 17.6 7.3 7.3 0 0 1 0-17.6Z" fill="currentColor"></path></svg>
+          <span class="tile-name">Mind &amp; Spirit</span>
+        </span>
+        <span class="ring" data-ring="mind"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/7</span></span>
+      </button>
+      <button type="button" class="tile" data-hue="family" data-target="family">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="12" y1="8" x2="7" y2="16.5"></line><line x1="12" y1="8" x2="17" y2="16.5"></line><circle cx="12" cy="6" r="2" fill="currentColor" stroke="none"></circle><circle cx="6" cy="18" r="2" fill="currentColor" stroke="none"></circle><circle cx="18" cy="18" r="2" fill="currentColor" stroke="none"></circle></svg>
+          <span class="tile-name">Friends &amp; Family</span>
+        </span>
+        <span class="ring" data-ring="family"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/1</span></span>
+      </button>
+      <button type="button" class="tile" data-hue="wealth" data-target="wealth">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"></circle><path d="M12 7 L14.2 12 L12 17 L9.8 12 Z" fill="currentColor" stroke="none"></path></svg>
+          <span class="tile-name">Wealth &amp; Work</span>
+        </span>
+        <span class="ring" data-ring="wealth"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/3</span></span>
+      </button>
+      <button type="button" class="tile" data-hue="health" data-target="health">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,13 6,13 8,6 12,20 15,4 18,13 23,13"></polyline></svg>
+          <span class="tile-name">Health &amp; Wellness</span>
+        </span>
+        <span class="ring" data-ring="health"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/4</span></span>
+      </button>
+      <button type="button" class="tile" data-hue="love" data-target="love">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="12" r="6.2"></circle><circle cx="15" cy="12" r="6.2"></circle></svg>
+          <span class="tile-name">Love &amp; Relationships</span>
+        </span>
+        <span class="ring" data-ring="love"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/2</span></span>
+      </button>
+      <button type="button" class="tile" data-hue="thoughts" data-target="thoughts">
+        <span class="tile-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+          <span class="tile-name">Share your thoughts</span>
+        </span>
+        <span class="weeklytag" id="thoughtsCountTag">0 saved</span>
+      </button>
+      </div>
+    </section>
 
     <section class="pillar" id="mind" data-hue="mind" hidden>
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;"><button type="button" class="backbtn" style="margin-bottom:0;">&larr; all pillars</button><button type="button" class="backbtn editbtn-pillar" style="margin-bottom:0;" aria-pressed="false">Edit</button></div>
@@ -688,6 +801,8 @@
       </div>
 
       <p class="section-label">Today</p>
+      <ul class="checklist" data-pillar="family" data-scope="daily"></ul>
+      <button type="button" class="additem" data-pillar="family" data-scope="daily">+ Add item</button>
       <div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">Anything going on in a friendship or family relationship today? Talk it through here.</p>
@@ -757,6 +872,8 @@
       </div>
 
       <p class="section-label" style="margin-top:14px;">This week</p>
+      <ul class="checklist" data-pillar="love" data-scope="weekly"></ul>
+      <button type="button" class="additem" data-pillar="love" data-scope="weekly">+ Add item</button>
       <div class="voicecheckin">
         <div class="vhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="8" y1="21" x2="16" y2="21"></line></svg><span class="vlabel">Voice note</span></div>
         <p class="checkin-q">Tell me how you're currently feeling in your relationship. Reflect on your heart.</p>
@@ -799,7 +916,7 @@
     </section>
 
     <section class="pillar" id="gym" data-hue="gym" hidden>
-      <button type="button" class="backbtn">&larr; all pillars</button>
+      <button type="button" class="backbtn">&larr; home</button>
       <div class="pillar-head">
         <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h2M18 12h2M6 8v8M18 8v8M8 12h8"></path></svg></span>
         <div class="pillar-title"><h2>Gym</h2><p class="sub">strength training log</p></div>
@@ -977,16 +1094,24 @@
     if(DAILY_PILLARS.indexOf(pillar)!==-1) updateOverallRing();
   }
 
-  function updateOverallRing(){
-    var ring=document.querySelector('.ring[data-ring="overall"]');
-    if(!ring) return;
+  // The home ring and the Daily/Weekly rings count checklist ticks only — exactly what
+  // can be finished from the Daily/Weekly pages — rather than each pillar's reflection
+  // extras (mood scale, gratitude, journals), which still count in the pillar's own ring.
+  function checklistCounts(scope){
     var total=0, done=0;
     DAILY_PILLARS.forEach(function(pillar){
-      var p=pillarProgress(pillar);
-      total+=p.total; done+=p.done;
+      document.querySelectorAll('ul.checklist[data-pillar="'+pillar+'"][data-scope="'+scope+'"] input[type="checkbox"]').forEach(function(i){
+        total++; if(i.checked) done++;
+      });
     });
-    paintRing(ring, total, done);
+    return { total:total, done:done };
   }
+  function updateAggregateProgress(){
+    var d=checklistCounts('daily'), w=checklistCounts('weekly');
+    document.querySelectorAll('.ring[data-ring="daily"], .ring[data-ring="overall"]').forEach(function(r){ paintRing(r, d.total, d.done); });
+    document.querySelectorAll('.ring[data-ring="weekly"]').forEach(function(r){ paintRing(r, w.total, w.done); });
+  }
+  function updateOverallRing(){ updateAggregateProgress(); }
 
   // 'supplement' scope (and any scope other than weekly/monthly) stores per-day like 'daily',
   // but updateRing only matches data-scope="daily" — so supplement checkboxes don't inflate the ring.
@@ -1002,7 +1127,7 @@
     input.dataset.pillar=pillar; input.dataset.scope=scope;
     var key=scopeKey(scope)+':'+pillar+':'+id;
     input.checked = !!state[key];
-    input.addEventListener('change', function(){ state[key]=input.checked; save(state); updateRing(pillar); });
+    input.addEventListener('change', function(){ state[key]=input.checked; save(state); updateRing(pillar); syncAggregateChecks(); });
 
     var txt=li.querySelector('.txt');
     txt.setAttribute('contenteditable', editing ? 'true' : 'false');
@@ -1011,21 +1136,39 @@
     txt.addEventListener('blur', function(){ state[lkey]=txt.textContent.trim(); save(state); });
 
     var rm=li.querySelector('.removeitem');
-    rm.addEventListener('click', function(){
-      if(li.dataset.custom==='true'){
-        var ckey='custom:'+pillar+':'+scope;
-        var arr=state[ckey]||[];
-        state[ckey]=arr.filter(function(c){ return c.id!==id; });
-      } else {
-        var hkey='hidden:'+pillar+':'+scope;
-        var hid=state[hkey]||[];
-        if(hid.indexOf(id)===-1) hid.push(id);
-        state[hkey]=hid;
-      }
-      save(state);
-      li.remove();
-      updateRing(pillar);
-    });
+    rm.addEventListener('click', function(){ removeCheckItem(li, pillar, scope, id); renderAggregates(); });
+  }
+
+  function removeCheckItem(li, pillar, scope, id){
+    if(li.dataset.custom==='true'){
+      var ckey='custom:'+pillar+':'+scope;
+      var arr=state[ckey]||[];
+      state[ckey]=arr.filter(function(c){ return c.id!==id; });
+    } else {
+      var hkey='hidden:'+pillar+':'+scope;
+      var hid=state[hkey]||[];
+      if(hid.indexOf(id)===-1) hid.push(id);
+      state[hkey]=hid;
+    }
+    save(state);
+    li.remove();
+    updateRing(pillar);
+  }
+
+  // Adds a user item to a pillar's checklist (same storage the pillar pages' own
+  // "+ Add item" uses), returning the new row. Used by both the pillar pages and the
+  // Daily/Weekly pages so there's one way an item gets created.
+  function addCustomItem(pillar, scope, label){
+    var ul=document.querySelector('ul.checklist[data-pillar="'+pillar+'"][data-scope="'+scope+'"]');
+    if(!ul) return null;
+    var id='c'+Date.now()+Math.floor(Math.random()*1000);
+    var li=makeCheckRow(id, label, true);
+    ul.appendChild(li);
+    bindCheckRow(li, pillar, scope);
+    var ckey='custom:'+pillar+':'+scope;
+    var arr=state[ckey]||[]; arr.push({id:id, label:label}); state[ckey]=arr; save(state);
+    updateRing(pillar);
+    return li;
   }
 
   function makeCheckRow(id, label, custom){
@@ -1064,18 +1207,139 @@
   document.querySelectorAll('.additem[data-pillar]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var pillar=btn.dataset.pillar, scope=btn.dataset.scope;
-      var ul=btn.previousElementSibling;
-      var id='c'+Date.now();
-      var li=makeCheckRow(id, 'New item', true);
-      ul.appendChild(li);
-      bindCheckRow(li, pillar, scope);
-      var ckey='custom:'+pillar+':'+scope;
-      var arr=state[ckey]||[]; arr.push({id:id, label:'New item'}); state[ckey]=arr; save(state);
-      updateRing(pillar);
+      var li=addCustomItem(pillar, scope, 'New item');
+      if(!li) return;
+      renderAggregates();
       var txt=li.querySelector('.txt');
       var range=document.createRange(); range.selectNodeContents(txt);
       var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
       txt.focus();
+    });
+  });
+
+  // ---- Daily / Weekly aggregate pages ----
+  // Every checklist item from every pillar, in one list, tinted with its pillar's hue.
+  // The pillar pages' own checkboxes stay the single source of truth: an aggregate row
+  // just proxies its source checkbox (so state, rings and the pillar page all agree),
+  // and add / rename / remove / move all go through the same helpers the pillar pages use.
+  var PILLAR_SHORT={ mind:'Mind', health:'Health', wealth:'Wealth', family:'Family', love:'Love' };
+  var AGG_PAGES={
+    daily:  { other:'weekly', otherLabel:'Weekly' },
+    weekly: { other:'daily',  otherLabel:'Daily'  }
+  };
+  var aggEditing={ daily:false, weekly:false };
+
+  function sourceRows(pillar, scope){
+    return Array.prototype.slice.call(document.querySelectorAll('ul.checklist[data-pillar="'+pillar+'"][data-scope="'+scope+'"] > li.check-row'));
+  }
+
+  function syncAggregateChecks(){
+    document.querySelectorAll('.aggrow').forEach(function(li){
+      var cb=li.querySelector('input');
+      if(li._src && cb.checked!==li._src.checked) cb.checked=li._src.checked;
+    });
+    updateAggregateProgress();
+  }
+
+  function buildAggRow(page, pillar, scope, srcLi, canMove){
+    var srcInput=srcLi.querySelector('input[type="checkbox"]');
+    var srcTxt=srcLi.querySelector('.txt');
+    var id=srcInput.dataset.id;
+    var editing=aggEditing[page];
+
+    var li=document.createElement('li'); li.className='check-row aggrow'; li.dataset.hue=pillar; li._src=srcInput;
+    var lab=document.createElement('label');
+    var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=srcInput.checked;
+    cb.addEventListener('change', function(){ srcInput.checked=cb.checked; srcInput.dispatchEvent(new Event('change')); });
+    var box=document.createElement('span'); box.className='box';
+    var body=document.createElement('span'); body.className='aggbody';
+    var txt=document.createElement('span'); txt.className='txt'; txt.textContent=srcTxt.textContent;
+    txt.setAttribute('contenteditable', editing ? 'true' : 'false');
+    txt.addEventListener('click', function(e){ if(aggEditing[page]) e.preventDefault(); });
+    txt.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); txt.blur(); } });
+    txt.addEventListener('blur', function(){
+      var v=txt.textContent.trim();
+      if(!v){ txt.textContent=srcTxt.textContent; return; }
+      if(v===srcTxt.textContent.trim()) return;
+      srcTxt.textContent=v; state['label:'+pillar+':'+scope+':'+id]=v; save(state);
+    });
+    body.appendChild(txt);
+    if(pillar==='health' && scope==='daily' && id==='session'){
+      var note=document.createElement('span'); note.className='aggnote'; note.textContent='ticks automatically when you log a Gym workout';
+      body.appendChild(note);
+    }
+    lab.appendChild(cb); lab.appendChild(box); lab.appendChild(body);
+
+    var chip=document.createElement('span'); chip.className='aggchip'; chip.textContent=PILLAR_SHORT[pillar];
+
+    var ctl=document.createElement('span'); ctl.className='aggctl';
+    if(canMove){
+      var mv=document.createElement('button'); mv.type='button'; mv.className='aggmove'; mv.textContent='\u2192 '+AGG_PAGES[page].otherLabel;
+      mv.addEventListener('click', function(){
+        var label=txt.textContent.trim()||srcTxt.textContent.trim();
+        removeCheckItem(srcLi, pillar, scope, id);
+        addCustomItem(pillar, AGG_PAGES[page].other, label);
+        renderAggregates();
+      });
+      ctl.appendChild(mv);
+    }
+    var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove item');
+    rm.addEventListener('click', function(){ removeCheckItem(srcLi, pillar, scope, id); renderAggregates(); });
+    ctl.appendChild(rm);
+
+    li.appendChild(lab); li.appendChild(chip); li.appendChild(ctl);
+    return li;
+  }
+
+  function renderAggList(ul, page, scope, canMove){
+    ul.innerHTML='';
+    var n=0;
+    DAILY_PILLARS.forEach(function(pillar){
+      sourceRows(pillar, scope).forEach(function(srcLi){
+        ul.appendChild(buildAggRow(page, pillar, scope, srcLi, canMove)); n++;
+      });
+    });
+    return n;
+  }
+
+  function renderAggregates(){
+    var dailyN=renderAggList(document.getElementById('dailyList'), 'daily', 'daily', true);
+    var suppN=renderAggList(document.getElementById('dailySuppList'), 'daily', 'supplement', false);
+    document.getElementById('dailySuppLabel').hidden=!suppN;
+    document.getElementById('dailyEmpty').hidden=(dailyN+suppN)>0;
+    var weeklyN=renderAggList(document.getElementById('weeklyList'), 'weekly', 'weekly', true);
+    document.getElementById('weeklyEmpty').hidden=weeklyN>0;
+    updateAggregateProgress();
+  }
+
+  ['daily','weekly'].forEach(function(page){
+    var section=document.getElementById(page);
+    var legend=document.getElementById(page+'Legend');
+    var sel=document.getElementById(page+'AddPillar');
+    DAILY_PILLARS.forEach(function(pillar){
+      var key=document.createElement('span'); key.className='aggkey'; key.dataset.hue=pillar;
+      key.innerHTML='<i></i>'; key.appendChild(document.createTextNode(PILLAR_SHORT[pillar]));
+      legend.appendChild(key);
+      var opt=document.createElement('option'); opt.value=pillar; opt.textContent=PILLAR_SHORT[pillar]; sel.appendChild(opt);
+    });
+    var input=document.getElementById(page+'AddText');
+    function addFromForm(){
+      var label=input.value.trim();
+      if(!label) { input.focus(); return; }
+      addCustomItem(sel.value, page, label);
+      input.value='';
+      renderAggregates();
+    }
+    document.getElementById(page+'AddBtn').addEventListener('click', addFromForm);
+    input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); addFromForm(); } });
+
+    var btn=section.querySelector('.aggeditbtn');
+    btn.addEventListener('click', function(){
+      aggEditing[page]=!aggEditing[page];
+      section.classList.toggle('agg-editing', aggEditing[page]);
+      btn.textContent=aggEditing[page] ? 'Done' : 'Edit list';
+      btn.setAttribute('aria-pressed', aggEditing[page] ? 'true' : 'false');
+      renderAggregates();
     });
   });
 
@@ -1291,8 +1555,15 @@
   document.querySelectorAll('.tile').forEach(function(tile){
     tile.addEventListener('click', function(){ showPillar(tile.dataset.target); });
   });
-  document.querySelectorAll('.backbtn').forEach(function(btn){
-    btn.addEventListener('click', showHome);
+  // Pillar pages sit one level below the "The pillars" index; every other page
+  // (Daily, Weekly, Gym, the index itself) goes straight back home. The Daily/Weekly
+  // "Edit list" buttons share the .backbtn look but aren't navigation.
+  var PILLAR_PAGES=['mind','family','wealth','health','love','thoughts'];
+  document.querySelectorAll('.backbtn:not(.aggeditbtn):not(.editbtn-pillar)').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var sec=btn.closest('.pillar');
+      if(sec && PILLAR_PAGES.indexOf(sec.dataset.hue)!==-1) showPillar('pillars'); else showHome();
+    });
   });
 
   var THOUGHTS_KEY='thoughts_log';
@@ -1374,7 +1645,36 @@
   function saveGymTemplates(){ state[GYM_TEMPLATES_KEY]=gymTemplates; save(state); }
   function saveGymSchedule(){ state[GYM_SCHEDULE_KEY]=gymSchedule; save(state); }
   function saveGymOverrides(){ state[GYM_OVERRIDES_KEY]=gymOverrides; save(state); }
-  function saveGymLog(){ state[GYM_LOG_KEY]=gymLog; save(state); updateGymTile(); }
+  function saveGymLog(){ state[GYM_LOG_KEY]=gymLog; save(state); updateGymTile(); syncGymDailyTick(); }
+
+  // "Did she actually train today?" — an exercise counts only if she edited it herself
+  // (not an untouched "same as last time" or program-default prefill, which exist just
+  // from opening the day), or she tapped "Mark workout complete" for a session that
+  // repeats last time exactly.
+  function gymSessionLoggedOn(dateStr){
+    return Object.keys(gymLog).some(function(key){
+      var sess=gymLog[key];
+      if(sess.date!==dateStr) return false;
+      if(sess.completed) return true;
+      return (sess.exercises||[]).some(function(e){ return e.sameAsLast!==true && !e.fromProgram && hasLoggedData(e); });
+    });
+  }
+  // Ticks Health → "Strength training session complete" on today's daily list the first
+  // time a workout is logged today. One-shot per day (flagged in state), so if she
+  // unticks it by hand it stays unticked.
+  function syncGymDailyTick(){
+    var today=dateKey(now);
+    if(!gymSessionLoggedOn(today)) return;
+    var flag='gymautotick:'+today;
+    if(state[flag]) return;
+    var src=document.querySelector('ul.checklist[data-pillar="health"][data-scope="daily"] input[data-id="session"]');
+    if(!src) return;
+    state[flag]=true;
+    state[dKey+':health:session']=true; save(state);
+    src.checked=true;
+    updateRing('health');
+    syncAggregateChecks();
+  }
 
   // -- 1. Template CRUD --
   // Date.now() alone collides when several templates/exercises are created in the same
@@ -1727,6 +2027,17 @@
     });
     var cooldownEl=renderGymChecklistSection('Cool down', tmpl.cooldown, session, 'cooldownDone');
     if(cooldownEl) cardsEl.appendChild(cooldownEl);
+
+    var doneBtn=document.createElement('button'); doneBtn.type='button';
+    doneBtn.className='gymcomplete'+(session.completed?' done':'');
+    doneBtn.textContent=session.completed ? '\u2713 Workout complete \u2014 tap to undo' : 'Mark workout complete';
+    doneBtn.addEventListener('click', function(){ session.completed=!session.completed; saveGymLog(); renderGymMain(); });
+    cardsEl.appendChild(doneBtn);
+    if(dsStr===todayStr){
+      var doneNote=document.createElement('p'); doneNote.className='gymcomplete-note';
+      doneNote.textContent='Logging a workout ticks \u201cStrength training session\u201d on your Daily page.';
+      cardsEl.appendChild(doneNote);
+    }
   }
 
   // -- 8. Shared exercise-entry + metric helpers, and Progress sub-view --
@@ -2314,6 +2625,8 @@
   backfillStarterWarmupCooldown();
 
   document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
+  renderAggregates();
+  syncGymDailyTick();
 
   renderGymMain();
   updateGymTile();
