@@ -451,7 +451,9 @@
   .gymreport-tag.pr{ background:var(--phue); color:var(--phue-on); }
   .gymreport-tag.up{ background:color-mix(in srgb, var(--phue) 35%, var(--surface)); }
   .gymreport-close{ margin-top:10px; font-family:'Inter'; font-size:14px; font-weight:800; padding:13px 16px; border-radius:14px; border:none; background:var(--phue-strong); color:var(--surface); cursor:pointer; }
-  .gymreport-close:focus-visible, .gymreport-link:focus-visible{ outline:2px solid var(--phue); outline-offset:2px; }
+  .gymreport-edit{ font-family:'Inter'; font-size:13.5px; font-weight:800; padding:12px 16px; border-radius:14px; border:1.4px solid var(--phue); background:var(--surface); color:var(--phue-strong); cursor:pointer; }
+  .gymreport-editnote{ font-size:11px; color:var(--ink-soft); text-align:center; margin:0; }
+  .gymreport-edit:focus-visible, .gymreport-close:focus-visible, .gymreport-link:focus-visible{ outline:2px solid var(--phue); outline-offset:2px; }
   .gymreport-link{ display:block; margin:10px auto 0; font-family:'Inter'; font-size:12.5px; font-weight:700; color:var(--phue-strong); background:none; border:none; text-decoration:underline; cursor:pointer; padding:6px; }
   .gymconf{ position:absolute; top:-8px; width:7px; height:11px; border-radius:2px; opacity:0; animation:gymConf 1.9s ease-out both; pointer-events:none; }
   @keyframes gymConf{ 0%{ opacity:1; transform:translate(0,0) rotate(0); } 100%{ opacity:0; transform:translate(var(--dx), 190px) rotate(var(--rot)); } }
@@ -2812,7 +2814,7 @@
     doneBtn.addEventListener('click', function(){
       var v=!session.completed; session.completed=v; if(exSession) exSession.completed=v;
       saveGymLog(); renderGymMain();
-      if(v) showWorkoutReport(reportSessions, dsStr, tmpl.name, activeId, document.querySelector('.gymcomplete'));
+      if(v) showWorkoutReport(reportSessions, dsStr, tmpl.name, activeId, document.querySelector('.gymcomplete'), true);
     });
     cardsEl.appendChild(doneBtn);
     if(session.completed){
@@ -2915,25 +2917,32 @@
       weekCount:weekSessionCount(dateStr), firsts:rows.filter(function(r){ return r.first; }) };
   }
 
-  var gymReportOpener=null;
-  function closeWorkoutReport(){
+  var gymReportOpener=null, gymReportGoHome=false;
+  // Leaving the report without editing: after a fresh "Mark workout complete" that lands back on the
+  // landing page; a report reopened from the Gym page just closes.
+  function dismissWorkoutReport(){
+    var home=gymReportGoHome; gymReportGoHome=false;
+    closeWorkoutReport(home);
+    if(home) showHome();
+  }
+  function closeWorkoutReport(skipFocus){
     var m=document.getElementById('gymReport'); if(m) m.remove();
     document.body.classList.remove('gymreport-open');
     document.removeEventListener('keydown', reportKeys);
-    if(gymReportOpener && document.body.contains(gymReportOpener)) gymReportOpener.focus();
+    if(!skipFocus && gymReportOpener && document.body.contains(gymReportOpener)) gymReportOpener.focus();
     gymReportOpener=null;
   }
-  function reportKeys(e){ if(e.key==='Escape') closeWorkoutReport(); }
-  function showWorkoutReport(sessions, dateStr, tmplName, mainTemplateId, opener){
+  function reportKeys(e){ if(e.key==='Escape') dismissWorkoutReport(); }
+  function showWorkoutReport(sessions, dateStr, tmplName, mainTemplateId, opener, goHome){
     var rep=buildWorkoutReport(sessions, dateStr, mainTemplateId);
     if(!rep.rows.length) return;
-    closeWorkoutReport();
-    gymReportOpener=opener||null;
+    closeWorkoutReport(true);
+    gymReportOpener=opener||null; gymReportGoHome=!!goHome;
     var prCount=rep.prRows.reduce(function(t,r){ return t+r.prs.length; },0);
     var el=function(tag, cls, text){ var n=document.createElement(tag); if(cls) n.className=cls; if(text!=null) n.textContent=text; return n; };
 
     var ov=el('div','gymreport'); ov.id='gymReport'; ov.setAttribute('data-hue','gym');
-    ov.addEventListener('click', function(e){ if(e.target===ov) closeWorkoutReport(); });
+    ov.addEventListener('click', function(e){ if(e.target===ov) dismissWorkoutReport(); });
     var card=el('div','gymreport-card'); card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-labelledby','gymReportTitle');
     ov.appendChild(card);
 
@@ -2998,9 +3007,13 @@
       body.appendChild(row);
     });
 
-    var done=el('button','gymreport-close','Done'); done.type='button';
-    done.addEventListener('click', closeWorkoutReport);
+    var done=el('button','gymreport-close', goHome ? 'Done — back to home' : 'Done'); done.type='button';
+    done.addEventListener('click', dismissWorkoutReport);
     body.appendChild(done);
+    var edit=el('button','gymreport-edit','Edit workout'); edit.type='button';
+    edit.addEventListener('click', function(){ gymReportGoHome=false; closeWorkoutReport(); });
+    body.appendChild(edit);
+    body.appendChild(el('p','gymreport-editnote','Spotted a mistake? Fix your sets, then tap “View workout report” again. To get the celebration again, tap undo and mark the workout complete once more.'));
 
     document.body.appendChild(ov);
     document.body.classList.add('gymreport-open');
