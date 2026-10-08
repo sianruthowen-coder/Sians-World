@@ -262,25 +262,33 @@
   .gymcard-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
   .gymcard-name{ font-weight:800; font-size:14px; color:var(--phue-strong); }
   .gymlast{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; font-style:italic; line-height:1.4; }
+  .gymmax{ font-size:12.5px; color:var(--ink-soft); margin:2px 0 0; }
+  .gymmax b{ color:var(--phue-strong); font-weight:800; font-variant-numeric:tabular-nums; }
+
+  .gymsets{ margin-top:12px; }
+  .gymsets-head, .gymset{ display:grid; grid-template-columns:30px minmax(0,1fr) minmax(0,1fr) 26px; align-items:center; gap:8px; }
+  .gymsets-head{ font-size:10.5px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; color:var(--ink-soft); padding-bottom:4px; }
+  .gymsets-head span{ text-align:center; }
+  .gymset{ margin-top:8px; }
+  .gymset-num{ width:28px; height:28px; border-radius:50%; border:1.6px solid var(--phue-strong); color:var(--phue-strong); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .gymset-box{ width:100%; min-width:0; height:42px; border:1.4px solid var(--border); border-radius:12px; background:var(--surface); color:var(--ink); font-family:'Inter'; font-size:16px; font-weight:700; text-align:center; padding:0 8px; font-variant-numeric:tabular-nums; }
+  .gymset-box:focus-visible, .gymset-wbox:focus-within{ outline:none; border-color:var(--phue); }
+  .gymset-wbox{ display:flex; align-items:center; justify-content:center; gap:4px; cursor:text; }
+  .gymset-wbox input{ width:100%; min-width:0; border:none; background:transparent; color:var(--ink); font:inherit; text-align:right; padding:0; outline:none; }
+  .gymset-wbox span{ font-size:12px; font-weight:700; color:var(--ink-soft); flex:0 0 auto; }
+
   .gymvolume{ font-size:11px; color:var(--ink-soft); opacity:.8; margin-top:8px; line-height:1.4; }
   .gymhistlink{ font-size:11.5px; font-weight:700; color:var(--phue-strong); background:transparent; border:none; padding:0; margin-top:6px; cursor:pointer; text-decoration:underline; }
 
   .gymsamepill{ display:inline-flex; align-items:center; gap:5px; font-family:'Inter'; font-size:12px; font-weight:700; padding:7px 12px; border-radius:999px; border:1.4px solid var(--border); background:var(--surface); color:var(--ink-soft); cursor:pointer; margin-top:8px; }
   .gymsamepill.active{ background:var(--phue); border-color:var(--phue); color:var(--phue-on); }
 
-  .gymgroup{ margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
-  .gymgroup:first-of-type{ border-top:none; padding-top:0; }
-  .gymgroup-head{ display:flex; align-items:center; gap:8px; }
   .gym-input{ border:1.4px solid var(--border); border-radius:10px; background:var(--surface); color:var(--ink); font-family:'Inter'; font-size:15px; padding:8px 10px; font-variant-numeric:tabular-nums; }
   .gym-input:focus-visible{ outline:none; border-color:var(--phue); }
-  .gym-input.weightfield{ width:76px; }
-  .gymsetrow{ display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
-  .gymsetrow .setnum{ font-size:11px; font-weight:700; color:var(--phue-strong); width:16px; text-align:center; flex:0 0 auto; }
-  .gymsetrow .gym-input{ width:64px; flex:0 0 auto; }
   .gym-remove{ flex:0 0 auto; width:24px; height:24px; border-radius:50%; border:none; background:transparent; color:var(--ink-soft); font-size:17px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
   .gym-remove:hover{ color:var(--danger); background:var(--danger-soft); }
-  .gym-addset, .gym-addgroup{ display:inline-block; margin-top:8px; margin-right:8px; font-size:12px; font-weight:700; color:var(--ink-soft); background:transparent; border:1.4px dashed var(--border); border-radius:10px; padding:7px 12px; cursor:pointer; font-family:'Inter'; }
-  .gym-addset:hover, .gym-addgroup:hover{ border-color:var(--phue); color:var(--phue-strong); }
+  .gym-addset{ display:inline-block; margin-top:8px; margin-right:8px; font-size:12px; font-weight:700; color:var(--ink-soft); background:transparent; border:1.4px dashed var(--border); border-radius:10px; padding:7px 12px; cursor:pointer; font-family:'Inter'; }
+  .gym-addset:hover{ border-color:var(--phue); color:var(--phue-strong); }
 
   .gymchecklist{ margin-top:12px; }
   .gymchecklist-list{ list-style:none; margin:4px 0 0; padding:4px 14px; background:var(--phue-soft); border-radius:14px; }
@@ -2018,40 +2026,68 @@
     return best;
   }
 
-  // -- 5. Weight-group / set mutation + "Same as last time" prefill --
-  function emptyWeightGroup(){ return { weight:'', reps:[''] }; }
-  function cloneWeightGroups(groups){
-    return (groups||[]).map(function(g){ return { weight:g.weight, reps:(g.reps||[]).slice() }; });
+  // -- 5. Sets: one row per set, each with its own reps and weight --
+  // Stored as weightGroups where each group is exactly ONE set ({weight, reps:[oneRep]}),
+  // so every reader of that shape (max weight, volume, progress) keeps working. Older
+  // entries that stored several reps under one shared weight are flattened on load.
+  function emptySet(weight){ return { weight:(weight==null?'':weight), reps:[''] }; }
+  function toPerSetGroups(groups){
+    var out=[];
+    (groups||[]).forEach(function(g){
+      var reps=(g.reps&&g.reps.length) ? g.reps : [''];
+      reps.forEach(function(r){ out.push({ weight:(g.weight==null?'':g.weight), reps:[r] }); });
+    });
+    return out.length ? out : [emptySet()];
   }
-  function addWeightGroup(exEntry){ exEntry.weightGroups.push(emptyWeightGroup()); exEntry.sameAsLast=false; exEntry.fromProgram=false; }
-  function removeWeightGroup(exEntry, gIdx){ exEntry.weightGroups.splice(gIdx,1); exEntry.sameAsLast=false; exEntry.fromProgram=false; }
-  function addSet(exEntry, gIdx){ exEntry.weightGroups[gIdx].reps.push(''); exEntry.sameAsLast=false; exEntry.fromProgram=false; }
-  function removeSet(exEntry, gIdx, sIdx){
-    exEntry.weightGroups[gIdx].reps.splice(sIdx,1);
-    if(!exEntry.weightGroups[gIdx].reps.length) exEntry.weightGroups.splice(gIdx,1);
+  function cloneWeightGroups(groups){ return toPerSetGroups(groups); }
+  // Merges consecutive sets at the same weight for display ("60kg × 8, 8, 8") — the
+  // per-set storage would otherwise read "60kg × 8 | 60kg × 8 | 60kg × 8".
+  function mergeSets(groups){
+    var out=[];
+    toPerSetGroups(groups).forEach(function(g){
+      var prev=out[out.length-1];
+      if(prev && String(prev.weight)===String(g.weight)) prev.reps.push(g.reps[0]);
+      else out.push({ weight:g.weight, reps:[g.reps[0]] });
+    });
+    return out;
+  }
+  function describeSets(groups){
+    return mergeSets(groups).map(function(g){
+      var reps=g.reps.filter(function(r){ return r!=null && String(r).trim()!==''; }).join(', ');
+      var w=String(g.weight).trim();
+      return w ? w+'kg \u00d7 '+reps : reps;
+    }).join(' | ');
+  }
+  function addSet(exEntry){
+    var prev=exEntry.weightGroups[exEntry.weightGroups.length-1];
+    exEntry.weightGroups.push(emptySet(prev ? prev.weight : ''));
+    exEntry.sameAsLast=false; exEntry.fromProgram=false;
+  }
+  function removeSetAt(exEntry, i){
+    exEntry.weightGroups.splice(i,1);
+    if(!exEntry.weightGroups.length) exEntry.weightGroups.push(emptySet());
     exEntry.sameAsLast=false; exEntry.fromProgram=false;
   }
   // Called the first time an exercise's card is built for a session with no entry yet.
   // If prior data exists under this template, prefill + mark active + persist immediately;
-  // else if the template exercise carries a program-default rep scheme, prefill reps
-  // (weight left blank for her to fill in) and flag fromProgram — not persisted until she
-  // actually edits something, same as the plain-empty case below;
-  // otherwise start with one empty weight group (not persisted until actually edited).
+  // else if the template exercise carries a program-default rep scheme, prefill one row per
+  // prescribed set (weights left blank for her to fill in) and flag fromProgram — not
+  // persisted until she actually edits something; otherwise start with three blank sets.
   function initExerciseEntry(session, templateExercise, templateId, dateStr){
     var existing=session.exercises.filter(function(e){ return normGymName(e.name)===normGymName(templateExercise.name); })[0];
-    if(existing) return existing;
+    if(existing){ existing.weightGroups=toPerSetGroups(existing.weightGroups); return existing; }
     var last=findLastTemplateTime(templateId, templateExercise.name, dateStr);
     var entry;
     if(last){
-      entry={ name:templateExercise.name, sameAsLast:true, weightGroups:cloneWeightGroups(last.exercise.weightGroups) };
+      entry={ name:templateExercise.name, sameAsLast:true, weightGroups:toPerSetGroups(last.exercise.weightGroups) };
       session.exercises.push(entry);
       saveGymLog();
     } else if(templateExercise.defaultReps && templateExercise.defaultReps.length){
       entry={ name:templateExercise.name, sameAsLast:false, fromProgram:true,
-        weightGroups:[{ weight:'', reps:templateExercise.defaultReps.slice() }] };
+        weightGroups:templateExercise.defaultReps.map(function(r){ return { weight:'', reps:[r] }; }) };
       session.exercises.push(entry);
     } else {
-      entry={ name:templateExercise.name, sameAsLast:false, weightGroups:[emptyWeightGroup()] };
+      entry={ name:templateExercise.name, sameAsLast:false, weightGroups:[emptySet(), emptySet(), emptySet()] };
       session.exercises.push(entry);
     }
     return entry;
@@ -2059,7 +2095,7 @@
   function resetToLastTime(exEntry, templateId, exerciseName, dateStr){
     var last=findLastTemplateTime(templateId, exerciseName, dateStr);
     if(!last) return;
-    exEntry.weightGroups=cloneWeightGroups(last.exercise.weightGroups);
+    exEntry.weightGroups=toPerSetGroups(last.exercise.weightGroups);
     exEntry.sameAsLast=true; exEntry.fromProgram=false;
   }
 
@@ -2074,32 +2110,64 @@
     pill.textContent=(entry.sameAsLast?'✓ ':'')+'Same as last time';
   }
 
-  function renderWeightGroup(entry, group, gIdx, templateId, dateStr, pill, volEl){
-    var wrap=document.createElement('div'); wrap.className='gymgroup';
-    var head=document.createElement('div'); head.className='gymgroup-head';
-    var w=document.createElement('input'); w.type='text'; w.inputMode='decimal'; w.pattern='[0-9]*[.,]?[0-9]*';
-    w.className='gym-input weightfield'; w.placeholder='kg'; w.value=group.weight;
-    w.addEventListener('input', function(){ group.weight=w.value.replace(',','.'); entry.sameAsLast=false; entry.fromProgram=false; saveGymLog(); syncSamePill(pill, entry); syncVolumeLine(volEl, entry); });
-    var unit=document.createElement('span'); unit.className='weightunit'; unit.textContent='kg';
-    var rmGroup=document.createElement('button'); rmGroup.type='button'; rmGroup.className='gym-remove'; rmGroup.innerHTML='&times;'; rmGroup.setAttribute('aria-label','Remove weight');
-    rmGroup.addEventListener('click', function(){ removeWeightGroup(entry,gIdx); saveGymLog(); renderGymMain(); });
-    head.appendChild(w); head.appendChild(unit); head.appendChild(rmGroup);
+  // Best weight ever logged for this exercise under this template (live: includes what's
+  // being typed right now). Shown under the exercise name.
+  function syncMaxLine(maxEl, templateId, exerciseName){
+    if(!maxEl) return;
+    var best=null;
+    getExerciseEntries(templateId, exerciseName).forEach(function(e){
+      var m=exerciseMaxWeight(e.exercise); if(m!=null && (best===null || m>best)) best=m;
+    });
+    maxEl.querySelector('b').textContent = best!=null ? best+' kg' : '\u2014';
+  }
+
+  // One row per set: set number, a Reps box and a Weight box (both filled in by hand), and
+  // a remove button. Typing a weight into a set also fills any LATER set whose weight is
+  // still blank or was the same as before, so one weight doesn't need typing four times.
+  function renderSets(entry, pill, volEl, maxEl, templateId, exerciseName){
+    var wrap=document.createElement('div'); wrap.className='gymsets';
+    var head=document.createElement('div'); head.className='gymsets-head';
+    ['Set','Reps','Weight',''].forEach(function(t){ var c=document.createElement('span'); c.textContent=t; head.appendChild(c); });
     wrap.appendChild(head);
 
-    group.reps.forEach(function(_, sIdx){
-      var row=document.createElement('div'); row.className='gymsetrow';
-      var num=document.createElement('span'); num.className='setnum'; num.textContent=(sIdx+1)+'.';
-      var r=document.createElement('input'); r.type='text'; r.inputMode='numeric';
-      r.className='gym-input'; r.placeholder='reps'; r.value=group.reps[sIdx];
-      r.addEventListener('input', function(){ group.reps[sIdx]=r.value; entry.sameAsLast=false; entry.fromProgram=false; saveGymLog(); syncSamePill(pill, entry); syncVolumeLine(volEl, entry); });
-      var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove set');
-      rm.addEventListener('click', function(){ removeSet(entry,gIdx,sIdx); saveGymLog(); renderGymMain(); });
-      row.appendChild(num); row.appendChild(r); row.appendChild(rm);
+    function touched(){
+      entry.sameAsLast=false; entry.fromProgram=false;
+      saveGymLog(); syncSamePill(pill, entry); syncVolumeLine(volEl, entry); syncMaxLine(maxEl, templateId, exerciseName);
+    }
+    var weightInputs=[];
+    entry.weightGroups.forEach(function(group, i){
+      var row=document.createElement('div'); row.className='gymset';
+      var num=document.createElement('span'); num.className='gymset-num'; num.textContent=String(i+1);
+
+      var r=document.createElement('input'); r.type='text'; r.inputMode='numeric'; r.className='gymset-box';
+      r.placeholder='reps'; r.setAttribute('aria-label','Reps, set '+(i+1)); r.value=group.reps[0];
+      r.addEventListener('input', function(){ group.reps[0]=r.value; touched(); });
+
+      var wBox=document.createElement('label'); wBox.className='gymset-box gymset-wbox';
+      var w=document.createElement('input'); w.type='text'; w.inputMode='decimal'; w.pattern='[0-9]*[.,]?[0-9]*';
+      w.placeholder='0'; w.setAttribute('aria-label','Weight in kg, set '+(i+1)); w.value=group.weight;
+      var unit=document.createElement('span'); unit.textContent='kg';
+      w.addEventListener('input', function(){
+        var old=String(group.weight);
+        group.weight=w.value.replace(',','.');
+        for(var j=i+1;j<entry.weightGroups.length;j++){
+          var later=entry.weightGroups[j];
+          if(String(later.weight)==='' || String(later.weight)===old){ later.weight=group.weight; weightInputs[j].value=group.weight; }
+        }
+        touched();
+      });
+      weightInputs.push(w);
+      wBox.appendChild(w); wBox.appendChild(unit);
+
+      var rm=document.createElement('button'); rm.type='button'; rm.className='gym-remove'; rm.innerHTML='&times;'; rm.setAttribute('aria-label','Remove set '+(i+1));
+      rm.addEventListener('click', function(){ removeSetAt(entry,i); saveGymLog(); renderGymMain(); });
+
+      row.appendChild(num); row.appendChild(r); row.appendChild(wBox); row.appendChild(rm);
       wrap.appendChild(row);
     });
 
     var addSetBtn=document.createElement('button'); addSetBtn.type='button'; addSetBtn.className='gym-addset'; addSetBtn.textContent='+ Add set';
-    addSetBtn.addEventListener('click', function(){ addSet(entry,gIdx); saveGymLog(); renderGymMain(); });
+    addSetBtn.addEventListener('click', function(){ addSet(entry); saveGymLog(); renderGymMain(); });
     wrap.appendChild(addSetBtn);
     return wrap;
   }
@@ -2112,6 +2180,10 @@
     var name=document.createElement('span'); name.className='gymcard-name'; name.textContent=templateExercise.name;
     head.appendChild(name);
     card.appendChild(head);
+    var maxEl=document.createElement('p'); maxEl.className='gymmax';
+    maxEl.appendChild(document.createTextNode('Max weight: ')); maxEl.appendChild(document.createElement('b'));
+    syncMaxLine(maxEl, templateId, templateExercise.name);
+    card.appendChild(maxEl);
 
     var last=findLastTemplateTime(templateId, templateExercise.name, dateStr);
     var pill=null;
@@ -2119,7 +2191,7 @@
       var d=new Date(last.date+'T00:00:00');
       var tmpl=findTemplate(templateId);
       var line=(tmpl?tmpl.name:'')+' · '+d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'})+' · '+
-        last.exercise.weightGroups.map(function(g){ return g.weight+'kg × '+g.reps.join(', '); }).join(' | ');
+        describeSets(last.exercise.weightGroups);
       var lastEl=document.createElement('p'); lastEl.className='gymlast'; lastEl.textContent='Last '+line;
       card.appendChild(lastEl);
 
@@ -2134,17 +2206,13 @@
       card.appendChild(pill);
     } else if(entry.fromProgram){
       var progLine=document.createElement('p'); progLine.className='gymlast';
-      progLine.textContent='Program: '+entry.weightGroups.map(function(g){ return g.reps.join(', '); }).join(' | ')+' reps — add weight, or edit if you did something different.';
+      progLine.textContent='Program: '+mergeSets(entry.weightGroups).map(function(g){ return g.reps.join(', '); }).join(' | ')+' reps \u2014 add weight, or edit if you did something different.';
       card.appendChild(progLine);
     }
 
     var volEl=document.createElement('p'); volEl.className='gymvolume'; volEl.hidden=true;
 
-    entry.weightGroups.forEach(function(group, gIdx){ card.appendChild(renderWeightGroup(entry, group, gIdx, templateId, dateStr, pill, volEl)); });
-
-    var addGroupBtn=document.createElement('button'); addGroupBtn.type='button'; addGroupBtn.className='gym-addgroup'; addGroupBtn.textContent='+ Add weight';
-    addGroupBtn.addEventListener('click', function(){ addWeightGroup(entry); saveGymLog(); renderGymMain(); });
-    card.appendChild(addGroupBtn);
+    card.appendChild(renderSets(entry, pill, volEl, maxEl, templateId, templateExercise.name));
 
     syncVolumeLine(volEl, entry);
     card.appendChild(volEl);
@@ -2295,7 +2363,7 @@
   // real weight entered.
   function formatVolumeBreakdown(exercise){
     var parts=[];
-    (exercise.weightGroups||[]).forEach(function(g){
+    mergeSets(exercise.weightGroups).forEach(function(g){
       var w=parseFloat(String(g.weight).replace(',','.'));
       if(!g.weight || isNaN(w)) return;
       var reps=(g.reps||[]).filter(function(r){ return r!=null && String(r).trim()!==''; });
@@ -2756,7 +2824,7 @@
         if(entries.length){
           var lastEntry=entries[entries.length-1];
           var lastLine=document.createElement('p'); lastLine.className='gymtmpl-exlast';
-          lastLine.textContent='Last: '+lastEntry.exercise.weightGroups.map(function(g){ return g.weight+'kg × '+g.reps.join(', '); }).join(' | ');
+          lastLine.textContent='Last: '+describeSets(lastEntry.exercise.weightGroups);
           block.appendChild(lastLine);
         }
 
