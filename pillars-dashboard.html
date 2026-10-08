@@ -3032,8 +3032,8 @@
       exercises:[
         {name:'Lat Pulldown', sides:'either', limb:'arm', reps:['8','8','8'], singleReps:['8','10','10']},
         {name:'Seated Row', sides:'either', limb:'arm', doubleName:'Seated Row - High', reps:['8','6','6','10'], singleReps:['8','10','10']},
-        {name:'Face Pull - Rear Delt Focused', reps:['10','12','12']},
-        {name:'Bicep Curl - Seated Incline', reps:['8','8','8']},
+        {name:'Face Pull', reps:['10','12','12']},
+        {name:'Incline Bicep Curl', reps:['8','8','8']},
         {name:'Bicep Curl', reps:['8','8']},
         {name:'Pull-Up'},
         {name:'Assisted Pull-Up'},
@@ -3272,17 +3272,27 @@
   }
   // One-time (Oct 2026): ten more Pull exercises. Only adds names the group doesn't already have.
   function updatePullLibrary(){
-    if(state.gym_pull_lib===1) return;
+    if(state.gym_pull_lib>=2) return;
     var day=GYM_STARTER_SPLIT.filter(function(d){ return d.name==='Pull'; })[0];
     var pull=gymTemplates.filter(function(t){ return t.name==='Pull'; })[0];
     if(day && pull){
+      // Shorter names — logged history and picks follow the new name.
+      [['Face Pull - Rear Delt Focused','Face Pull'],['Bicep Curl - Seated Incline','Incline Bicep Curl']].forEach(function(r){
+        var i=pull.exercises.map(function(e){ return normGymName(e.name); }).indexOf(normGymName(r[0]));
+        var taken=pull.exercises.some(function(e){ return normGymName(e.name)===normGymName(r[1]); });
+        if(i!==-1 && !taken){
+          pull.exercises[i].name=r[1];
+          var map={}; map[normGymName(r[0])]=r[1]; renameLoggedNames(pull.id, map);
+          var pm={}; pm[normGymName(r[0])]={ base:r[1] }; renamePicks(pull.id, pm);
+        }
+      });
       day.exercises.forEach(function(sx){
         var has=pull.exercises.some(function(e){ return normGymName(e.name)===normGymName(sx.name); });
         if(!has) addExerciseToTemplate(pull.id, sx.name, sx.reps, sx);
       });
       saveGymTemplates();
     }
-    state.gym_pull_lib=1; save(state);
+    state.gym_pull_lib=2; save(state);
   }
   // One-time (Oct 2026): warm-up / cool-down lists simplified — no Left/Right splits, no timings.
   // Replaces the lists on the starter groups with the new ones; logged sets are untouched.
