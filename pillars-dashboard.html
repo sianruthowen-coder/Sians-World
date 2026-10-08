@@ -351,7 +351,6 @@
   .aggbody{ flex:1; min-width:0; display:flex; flex-direction:column; }
   .aggrow .txt{ color:var(--ink); }
   .aggrow input:checked ~ .aggbody .txt{ color:var(--ink-soft); text-decoration:line-through; text-decoration-color:var(--border); }
-  .aggnote{ font-size:10.5px; font-style:italic; color:var(--ink-soft); margin-top:1px; }
   .aggchip{ flex:0 0 auto; font-size:10px; font-weight:700; text-transform:lowercase; letter-spacing:.03em; padding:4px 9px; border-radius:999px; background:color-mix(in srgb, var(--phue) 30%, var(--surface)); color:var(--phue-strong); }
   .aggctl{ display:none; align-items:center; gap:4px; flex:0 0 auto; }
   .agg-editing .aggctl{ display:flex; }
@@ -451,8 +450,7 @@
       <div class="agglegend" id="dailyLegend"></div>
       <ul class="agglist" id="dailyList"></ul>
       <p class="aggempty" id="dailyEmpty" hidden>Nothing here yet — tap Edit list to add items.</p>
-      <p class="section-label" id="dailySuppLabel">Supplements</p>
-      <ul class="agglist" id="dailySuppList"></ul>
+
       <p class="section-label" id="dailyCkLabel">Check-ins</p>
       <div class="ckhost" id="dailyCheckins"></div>
       <div class="aggtray" id="dailyTray"></div>
@@ -558,8 +556,6 @@
       <p class="section-label">Today</p>
       <ul class="checklist" data-pillar="mind" data-scope="daily">
         <li class="check-row"><label><input type="checkbox" data-id="social"><span class="box"></span><span class="txt editable" contenteditable="false">A meaningful social connection</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
-        <li class="check-row"><label><input type="checkbox" data-id="visualization"><span class="box"></span><span class="txt editable" contenteditable="false">Five minute visualization</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
-        <li class="check-row"><label><input type="checkbox" data-id="affirmations"><span class="box"></span><span class="txt editable" contenteditable="false">Affirmations</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
         <li class="check-row"><label><input type="checkbox" data-id="phone"><span class="box"></span><span class="txt editable" contenteditable="false">No screen time after 9:30pm</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
       </ul>
       <button type="button" class="additem" data-pillar="mind" data-scope="daily">+ Add item</button>
@@ -682,6 +678,7 @@
         <li class="check-row"><label><input type="checkbox" data-id="sleep"><span class="box"></span><span class="txt editable" contenteditable="false">7+ hours of sleep</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
         <li class="check-row"><label><input type="checkbox" data-id="session"><span class="box"></span><span class="txt editable" contenteditable="false">Strength training session complete</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
         <li class="check-row"><label><input type="checkbox" data-id="protein"><span class="box"></span><span class="txt editable" contenteditable="false">Hit ~100g protein</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
+        <li class="check-row"><label><input type="checkbox" data-id="supplements"><span class="box"></span><span class="txt editable" contenteditable="false">Taken supplements</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
       </ul>
       <button type="button" class="additem" data-pillar="health" data-scope="daily">+ Add item</button>
 
@@ -710,15 +707,6 @@
         <button type="button" class="statbtn" id="logPeriod">Log today</button>
       </div>
 </div>
-
-      <p class="section-label">Supplements</p>
-      <ul class="checklist" data-pillar="health" data-scope="supplement">
-        <li class="check-row"><label><input type="checkbox" data-id="omega3-6"><span class="box"></span><span class="txt editable" contenteditable="false">Omega 3 &amp; 6</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
-        <li class="check-row"><label><input type="checkbox" data-id="guthealth"><span class="box"></span><span class="txt editable" contenteditable="false">Gut health</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
-        <li class="check-row"><label><input type="checkbox" data-id="vitamindk2"><span class="box"></span><span class="txt editable" contenteditable="false">Vitamin D &amp; K2</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
-        <li class="check-row"><label><input type="checkbox" data-id="minerva"><span class="box"></span><span class="txt editable" contenteditable="false">Minerva (birth control)</span></label><button type="button" class="removeitem" aria-label="Remove item">&times;</button></li>
-      </ul>
-      <button type="button" class="additem" data-pillar="health" data-scope="supplement">+ Add item</button>
 
       <div class="ckblock" data-ck="health-othermeds" data-hue="health" data-native="weekly" data-def="weekly">
 <div class="checkin">
@@ -1183,8 +1171,7 @@
   }
   function updateOverallRing(){ updateAggregateProgress(); }
 
-  // 'supplement' scope (and any scope other than weekly/monthly) stores per-day like 'daily',
-  // but updateRing only matches data-scope="daily" — so supplement checkboxes don't inflate the ring.
+  // Any scope other than weekly/monthly stores per-day, like 'daily'.
   function scopeKey(scope){
     if(scope==='weekly') return wKey;
     if(scope==='monthly') return mKey;
@@ -1334,10 +1321,6 @@
       srcTxt.textContent=v; state['label:'+pillar+':'+scope+':'+id]=v; save(state);
     });
     body.appendChild(txt);
-    if(pillar==='health' && scope==='daily' && id==='session'){
-      var note=document.createElement('span'); note.className='aggnote'; note.textContent='ticks automatically when you log a Gym workout';
-      body.appendChild(note);
-    }
     lab.appendChild(cb); lab.appendChild(box); lab.appendChild(body);
 
     var chip=document.createElement('span'); chip.className='aggchip'; chip.textContent=PILLAR_SHORT[pillar];
@@ -1374,9 +1357,7 @@
 
   function renderAggregates(){
     var dailyN=renderAggList(document.getElementById('dailyList'), 'daily', 'daily', true);
-    var suppN=renderAggList(document.getElementById('dailySuppList'), 'daily', 'supplement', false);
-    document.getElementById('dailySuppLabel').hidden=!suppN;
-    document.getElementById('dailyEmpty').hidden=(dailyN+suppN+ckCounts('daily').total)>0;
+    document.getElementById('dailyEmpty').hidden=(dailyN+ckCounts('daily').total)>0;
     var weeklyN=renderAggList(document.getElementById('weeklyList'), 'weekly', 'weekly', true);
     document.getElementById('weeklyEmpty').hidden=(weeklyN+ckCounts('weekly').total)>0;
     updateAggregateProgress();
