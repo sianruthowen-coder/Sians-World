@@ -2443,7 +2443,8 @@
     return {
       side: sd==='single' ? 'single' : sd==='double' ? 'double' : (o.side==='single' ? 'single' : 'double'),
       style: exHasStyles(ex) ? (ex.styles.some(function(st){ return st.key===o.style; }) ? o.style : ex.styles[0].key) : '',
-      equip: (exHasEquip(ex) && ex.equipment.indexOf(o.equip)!==-1) ? o.equip : ''
+      // an exercise with equipment options always has one selected — the first listed unless she picked another
+      equip: exHasEquip(ex) ? (ex.equipment.indexOf(o.equip)!==-1 ? o.equip : ex.equipment[0]) : ''
     };
   }
   // Every base way to log an exercise (before equipment): { name, side, style }.
@@ -2580,9 +2581,46 @@
     saveGymLog(); renderGymMain();
   }
   // Change one choice (dim = 'side' | 'style' | 'equip') for a picked exercise.
+  function findSessionEntry(session, name){
+    return (session.exercises||[]).filter(function(e){ return normGymName(e.name)===normGymName(name); })[0];
+  }
+  function realEntry(e){ return !!e && hasLoggedData(e) && e.sameAsLast!==true; }
+  // Switching equipment keeps what she's logged: the sets move to the new equipment's card
+  // (unless that card already has its own logged sets), so nothing is re-entered or duplicated.
+  function moveEntriesToEquip(session, ex, fromOpts, toOpts){
+    var from=exCards(ex, fromOpts), to=exCards(ex, toOpts);
+    from.forEach(function(c, i){
+      var src=findSessionEntry(session, c.name), dstName=to[i] && to[i].name;
+      if(!dstName || !realEntry(src)) return;
+      var dst=findSessionEntry(session, dstName);
+      if(realEntry(dst)) return;
+      if(dst) session.exercises.splice(session.exercises.indexOf(dst),1);
+      src.name=dstName;
+    });
+  }
+  // Logged under the plain name (before equipment was chosen, or before it defaulted to the first
+  // option)? Adopt those sets into the selected equipment's card instead of leaving a copy behind.
+  function adoptPlainEntries(session, tmpl){
+    var changed=false;
+    pickedExercises(session, tmpl).forEach(function(p){
+      if(!exHasEquip(p.ex) || !p.mode.equip) return;
+      var suffix=' ('+p.mode.equip+')';
+      exCards(p.ex, p.mode).forEach(function(c){
+        var plain=c.name.slice(0, c.name.length-suffix.length);
+        var old=findSessionEntry(session, plain), cur=findSessionEntry(session, c.name);
+        if(realEntry(old) && !realEntry(cur)){
+          if(cur) session.exercises.splice(session.exercises.indexOf(cur),1);
+          old.name=c.name; changed=true;
+        }
+      });
+    });
+    return changed;
+  }
   function setMode(session, tmpl, ex, dim, value){
-    var next=exOpts(ex, session.modes && session.modes[ex.name]);
+    var prev=exOpts(ex, session.modes && session.modes[ex.name]);
+    var next={ side:prev.side, style:prev.style, equip:prev.equip };
     next[dim]=value;
+    if(dim==='equip' && value!==prev.equip) moveEntriesToEquip(session, ex, prev, next);
     session.modes=session.modes||{}; session.modes[ex.name]=next;
     pruneEntries(session, tmpl);
     saveGymLog(); renderGymMain();
@@ -2687,7 +2725,7 @@
       if(sd==='single'){ var note=document.createElement('span'); note.className='gympicked-note'; note.textContent='left & right'; head.appendChild(note); }
       wrap.appendChild(head);
       var opts=document.createElement('div'); opts.className='gymopts';
-      if(exHasEquip(ex)) opts.appendChild(row(ex.equipLabel||'Equipment', ex.equipment.map(function(e){ return { key:e, label:e }; }), o.equip, 'equip', true));
+      if(exHasEquip(ex)) opts.appendChild(row(ex.equipLabel||'Equipment', ex.equipment.map(function(e){ return { key:e, label:e }; }), o.equip, 'equip', false));
       if(exHasStyles(ex)) opts.appendChild(row('Type', ex.styles.map(function(st){ return { key:st.key, label:st.label }; }), o.style, 'style', false));
       if(sd==='either') opts.appendChild(row('Sides', [ { key:'double', label:'Double '+limb }, { key:'single', label:'Single '+limb } ], o.side, 'side', false));
       if(opts.children.length) wrap.appendChild(opts);
@@ -2741,6 +2779,7 @@
     mantraEl.hidden=!tmpl.mantra;
     mantraEl.textContent=tmpl.mantra||'';
     var session=ensureSession(activeId, dsStr);
+    if(adoptPlainEntries(session, tmpl)) saveGymLog();
     var picked=pickedExercises(session, tmpl);
     detailEl.textContent = tmpl.exercises.length
       ? 'Choose the exercises you’re doing today, then log reps and weight for each.'
@@ -2756,6 +2795,7 @@
     var exSession=null;
     if(extras){
       exSession=ensureSession(extras.id, dsStr);
+      if(adoptPlainEntries(exSession, extras)) saveGymLog();
       var xp=pickedExercises(exSession, extras);
       cardsEl.appendChild(renderExercisePicker(exSession, extras, extras.id, dsStr, xp,
         { title:'Add extras (core or anything else)', collapsedWhenEmpty:true, allowAdd:true }));
@@ -3551,6 +3591,29 @@
     }
     state.gym_push_lib=1; save(state);
   }
+  // One-time (Oct 2026): (a) drop a plain-name copy of an exercise when an identical copy exists under
+  // a specific equipment (left behind by logging before picking equipment); (b) move sets logged
+  // under the plain name onto the default (first) equipment, so every session shows its sets there.
+  function migrateEquipDefaults(){
+    if(state.gym_equip_default===1) return;
+    var sig=function(e){ return JSON.stringify(toPerSetGroups(e.weightGroups).map(function(g){ return [String(g.weight), String(g.reps[0])]; })); };
+    Object.keys(gymLog).forEach(function(key){
+      var sess=gymLog[key], tmpl=findTemplate(sess.templateId);
+      if(!tmpl) return;
+      tmpl.exercises.forEach(function(ex){
+        if(!exHasEquip(ex)) return;
+        exAllNames(ex).forEach(function(n){
+          var plain=findSessionEntry(sess, n);
+          if(!realEntry(plain)) return;
+          var dup=ex.equipment.some(function(eq){ var o=findSessionEntry(sess, n+' ('+eq+')'); return realEntry(o) && sig(o)===sig(plain); });
+          if(dup) sess.exercises.splice(sess.exercises.indexOf(plain),1);
+        });
+      });
+      if(Array.isArray(sess.selected)) adoptPlainEntries(sess, tmpl);
+    });
+    saveGymLog();
+    state.gym_equip_default=1; save(state);
+  }
   // One-time (Oct 2026): single/double-arm and equipment choices on the Pull exercises.
   // Copies just those choices from the starter list onto the matching exercises; reps, names
   // and logged history are untouched (plain names keep their existing history).
@@ -3761,6 +3824,7 @@
   updatePullLibrary();
   orderPullLibrary();
   updatePullOptions();
+  migrateEquipDefaults();
   topUpStarterLibrary();
 
   document.getElementById('gymGreeting').textContent = pickStrongQuoteOfDay();
