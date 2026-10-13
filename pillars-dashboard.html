@@ -243,6 +243,10 @@
 
   .gymgreeting{ font-size:13px; font-style:italic; color:var(--phue-strong); margin:10px 0 0; }
   .gymtabs{ display:flex; gap:8px; margin-top:14px; }
+  .dailynav{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; }
+  .dailynav-label{ font-size:13px; font-weight:800; text-align:center; flex:1; color:var(--phue-strong); }
+  .dailynav .gymdaynav-arrow:disabled{ opacity:.3; cursor:default; }
+  .dailynav-today{ display:block; margin:6px auto 0; font-family:'Inter'; font-size:12px; font-weight:700; color:var(--phue-strong); background:none; border:none; text-decoration:underline; cursor:pointer; padding:4px; }
   .gymtab{ flex:1; text-align:center; padding:10px 8px; }
   .gymhist-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 14px; border-radius:16px; background:var(--phue-soft); margin-top:9px; }
   .gymhist-info{ display:flex; flex-direction:column; gap:2px; min-width:0; }
@@ -549,9 +553,15 @@
       <div class="pagebar"><button type="button" class="backbtn">&larr; home</button><button type="button" class="backbtn aggeditbtn" data-agg="daily" aria-pressed="false">Edit list</button></div>
       <div class="pillar-head">
         <span class="pillar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"></path></svg></span>
-        <div class="pillar-title"><h2>Daily</h2><p class="sub">today · resets every morning</p></div>
+        <div class="pillar-title"><h2>Daily</h2><p class="sub" id="dailySub">today · resets every morning</p></div>
         <div class="ring" data-ring="daily"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"></circle><circle class="progress" cx="22" cy="22" r="18"></circle></svg><span class="ring-label">0/0</span></div>
       </div>
+      <div class="dailynav" id="dailyNav">
+        <button type="button" class="gymdaynav-arrow" id="dailyPrev" aria-label="Previous day">&lsaquo;</button>
+        <span class="dailynav-label" id="dailyNavLabel">Today</span>
+        <button type="button" class="gymdaynav-arrow" id="dailyNext" aria-label="Next day" disabled>&rsaquo;</button>
+      </div>
+      <button type="button" class="dailynav-today" id="dailyJumpToday" hidden>Back to today</button>
       <p class="dailybirthday" id="dailyBirthday" data-hue="family" hidden></p>
       <div class="agglegend" id="dailyLegend"></div>
       <ul class="agglist" id="dailyList"></ul>
@@ -1351,9 +1361,9 @@
     var input=li.querySelector('input[type="checkbox"]');
     var id=input.dataset.id;
     input.dataset.pillar=pillar; input.dataset.scope=scope;
-    var key=scopeKey(scope)+':'+pillar+':'+id;
-    input.checked = !!state[key];
-    input.addEventListener('change', function(){ state[key]=input.checked; save(state); updateRing(pillar); syncAggregateChecks(); });
+    // the key is worked out when she ticks (not once here) because the Daily page can look at a past day
+    input.checked = !!state[scopeKey(scope)+':'+pillar+':'+id];
+    input.addEventListener('change', function(){ state[scopeKey(scope)+':'+pillar+':'+id]=input.checked; save(state); updateRing(pillar); syncAggregateChecks(); });
 
     var txt=li.querySelector('.txt');
     txt.setAttribute('contenteditable', editing ? 'true' : 'false');
@@ -1698,15 +1708,15 @@
 
   document.querySelectorAll('.dotscale').forEach(function(group){
     var pillar=group.dataset.pillar, id=group.dataset.id, scope=group.dataset.scope||'daily';
-    var key=scopeKey(scope)+':'+pillar+':'+id;
-    var saved=state[key]||0;
+    function dotKey(){ return scopeKey(scope)+':'+pillar+':'+id; }
     var dots=Array.prototype.slice.call(group.querySelectorAll('.dot'));
     function render(v){ dots.forEach(function(d,i){ var f=i<v; d.classList.toggle('filled', f); d.setAttribute('aria-pressed', f?'true':'false'); }); }
-    render(saved);
+    group._refresh=function(){ render(state[dotKey()]||0); };
+    group._refresh();
     dots.forEach(function(dot,i){
       dot.addEventListener('click', function(){
-        var v=i+1; if(state[key]===v){ v=0; }
-        render(v); state[key]=v; save(state);
+        var v=i+1; if(state[dotKey()]===v){ v=0; }
+        render(v); state[dotKey()]=v; save(state);
       });
     });
   });
@@ -1726,6 +1736,49 @@
     inp._refresh();
     inp.addEventListener('input', function(){ state[ckKey(inp)]=inp.value; save(state); updateRing(pillar); });
   });
+
+  // ---- Daily page: look back at (and fill in) a previous day ----
+  // Everything daily is keyed by date, so viewing another day just points dKey at it and re-reads
+  // every daily checkbox, scale, note and gratitude from storage. It always snaps back to today when
+  // she leaves the Daily page (or reloads), so the rest of the app only ever shows today.
+  var dailyDateStr=dateKey(now);
+  function reloadDailyState(){
+    document.querySelectorAll('ul.checklist').forEach(function(ul){
+      var scope=ul.dataset.scope; if(scope==='weekly' || scope==='monthly') return;
+      ul.querySelectorAll('.check-row input[type="checkbox"]').forEach(function(inp){
+        inp.checked=!!state[scopeKey(scope)+':'+ul.dataset.pillar+':'+inp.dataset.id];
+      });
+    });
+    document.querySelectorAll('.numscale, .chipselect, .dotscale, textarea.journal:not(#thoughtInput), .gratitude-input, .weight-input').forEach(function(el){ if(el._refresh) el._refresh(); });
+    ['wealth','health','mind','love','family'].forEach(updateRing);
+    syncAggregateChecks();
+  }
+  function dailyNavLabel(dateObj){
+    var diff=Math.round((new Date(now.getFullYear(),now.getMonth(),now.getDate())-new Date(dateObj.getFullYear(),dateObj.getMonth(),dateObj.getDate()))/86400000);
+    var long=dateObj.toLocaleDateString('en-ZA',{ weekday:'long', day:'numeric', month:'long' });
+    return diff===0 ? 'Today · '+long : diff===1 ? 'Yesterday · '+long : long;
+  }
+  function setDailyDate(dateStr){
+    if(dateStr>dateKey(now)) dateStr=dateKey(now);            // no looking ahead
+    dailyDateStr=dateStr;
+    dKey='d:'+dateStr;
+    var d=new Date(dateStr+'T00:00:00'), isToday=dateStr===dateKey(now);
+    document.getElementById('dailyNavLabel').textContent=dailyNavLabel(d);
+    document.getElementById('dailyNext').disabled=isToday;
+    document.getElementById('dailyJumpToday').hidden=isToday;
+    document.getElementById('dailySub').textContent = isToday ? 'today · resets every morning' : 'catching up — saved to this day';
+    renderDailyBirthday(d);
+    reloadDailyState();
+  }
+  function shiftDailyDate(delta){
+    var d=new Date(dailyDateStr+'T00:00:00'); d.setDate(d.getDate()+delta);
+    setDailyDate(dateKey(d));
+  }
+  document.getElementById('dailyPrev').addEventListener('click', function(){ shiftDailyDate(-1); });
+  document.getElementById('dailyNext').addEventListener('click', function(){ shiftDailyDate(1); });
+  document.getElementById('dailyJumpToday').addEventListener('click', function(){ setDailyDate(dateKey(now)); });
+  function resetDailyToToday(){ if(dailyDateStr!==dateKey(now)) setDailyDate(dateKey(now)); }
+  document.getElementById('dailyNavLabel').textContent=dailyNavLabel(now);
 
   // Pillar-ring "extras" only count while their check-in is on the DAILY list.
   function gratitudeDone(pillar){
@@ -1866,12 +1919,14 @@
   renderHomeBirthdays();
 
   // Daily page: a small line when someone's birthday is today.
-  function renderDailyBirthday(){
+  function renderDailyBirthday(dateObj){
     var el=document.getElementById('dailyBirthday');
     if(!el) return;
-    var names=BIRTHDAYS.filter(function(b){ return daysUntil(b.month,b.day,now)===0; }).map(function(b){ return b.name; });
+    dateObj=dateObj||now;
+    var names=BIRTHDAYS.filter(function(b){ return daysUntil(b.month,b.day,dateObj)===0; }).map(function(b){ return b.name; });
+    var isToday=dateKey(dateObj)===dateKey(now);
     el.hidden=!names.length;
-    el.textContent = names.length ? 'Birthday today: '+(names.length>1 ? names.slice(0,-1).join(', ')+' & '+names[names.length-1] : names[0]) : '';
+    el.textContent = names.length ? 'Birthday '+(isToday?'today':'on this day')+': '+(names.length>1 ? names.slice(0,-1).join(', ')+' & '+names[names.length-1] : names[0]) : '';
   }
   renderDailyBirthday();
 
@@ -1891,6 +1946,7 @@
     el.classList.add(animClass);
   }
   function showHome(){
+    resetDailyToToday();
     homeSection.hidden=false;
     heroEl.hidden=false;
     pillarEls.forEach(function(s){ s.hidden=true; });
@@ -1898,6 +1954,7 @@
     playEnter(homeSection, 'entering');
   }
   function showPillar(key){
+    if(key!=='daily') resetDailyToToday();
     homeSection.hidden=true;
     heroEl.hidden=true;
     var target=null;
@@ -2027,10 +2084,12 @@
     var src=document.querySelector('ul.checklist[data-pillar="health"][data-scope="daily"] input[data-id="session"]');
     if(!src) return;
     state[flag]=true;
-    state[dKey+':health:session']=true; save(state);
-    src.checked=true;
-    updateRing('health');
-    syncAggregateChecks();
+    state['d:'+today+':health:session']=true; save(state);
+    if(dKey==='d:'+today){      // only touch the screen if it's showing today
+      src.checked=true;
+      updateRing('health');
+      syncAggregateChecks();
+    }
   }
 
   // -- 1. Template CRUD --
