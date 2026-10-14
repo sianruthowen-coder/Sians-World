@@ -1867,12 +1867,12 @@
   // ---- Upcoming birthdays & events ----
   // Birthdays (above) plus other dates worth a message or a thought. Each extra event is one entry:
   //   anniversary   – repeats every year on month/day (e.g. a wedding anniversary)
-  //   remembrance   – a loss: reminds her every `everyMonths` months from the date it happened
-  //                   (6, 12, 18, 24 … months) so she can reach out to whoever is grieving
+  //   remembrance   – a loss: reminds her every `everyMonths` months from the date it happened,
+  //                   `count` times in all (then it stops), so she can reach out to whoever is grieving
   // To add one, append an entry here (Claude does this when she mentions a new date).
   var EVENTS_EXTRA=[
     {type:'anniversary', name:'Mum & Dad — wedding anniversary', month:11, day:9},
-    {type:'remembrance', name:'Claire Millwood', who:'her dad', origin:{y:2026, m:10, d:5}, everyMonths:6}
+    {type:'remembrance', name:'Claire Millwood', who:'her dad', origin:{y:2026, m:10, d:5}, everyMonths:1, count:12}
   ];
   function allEvents(){
     return BIRTHDAYS.map(function(b){ return { type:'birthday', name:b.name, month:b.month, day:b.day }; }).concat(EVENTS_EXTRA);
@@ -1886,7 +1886,7 @@
   function nextOccurrence(ev, from){
     var today=new Date(from.getFullYear(), from.getMonth(), from.getDate());
     if(ev.origin){
-      for(var k=1; k<400; k++){
+      for(var k=1; k<=(ev.count||400); k++){
         var dt=addMonthsClamped(ev.origin.y, ev.origin.m, ev.origin.d, ev.everyMonths*k);
         if(dt>=today) return { date:dt, days:Math.round((dt-today)/86400000), months:ev.everyMonths*k };
       }
@@ -1900,7 +1900,7 @@
     var when=occ.date.getDate()+' '+MONTH_NAMES[occ.date.getMonth()];
     if(ev.type==='remembrance'){
       var m=occ.months;
-      var span = m%12===0 ? (m/12===1 ? '1 year' : (m/12)+' years') : m+' months';
+      var span = m%12===0 ? (m/12===1 ? '1 year' : (m/12)+' years') : (m===1 ? '1 month' : m+' months');
       return when+' · '+span+' since '+ev.who+' passed';
     }
     if(ev.type==='anniversary') return when;
