@@ -539,7 +539,7 @@
       </button>
     </div>
     <div class="bdblock" data-hue="family">
-      <p class="section-label">Upcoming birthdays — next month</p>
+      <p class="section-label">Upcoming birthdays &amp; events — next month</p>
       <div id="homeBirthdayList"></div>
     </div>
     <div class="herofoot">
@@ -979,9 +979,9 @@
       </ul>
       <button type="button" class="additem" data-pillar="family" data-scope="weekly">+ Add item</button>
 
-      <p class="section-label">Upcoming birthdays — next month</p>
+      <p class="section-label">Upcoming birthdays &amp; events — next month</p>
       <div id="birthdayList"></div>
-      <button type="button" class="addbirthday" id="addBirthdayBtn">+ Add another birthday</button>
+      <button type="button" class="addbirthday" id="addBirthdayBtn">+ Add another date</button>
     </section>
 
     <section class="pillar" id="love" data-hue="love" hidden>
@@ -1863,13 +1863,58 @@
     if(next<today) next=new Date(today.getFullYear()+1, month-1, day);
     return Math.round((next-today)/86400000);
   }
+
+  // ---- Upcoming birthdays & events ----
+  // Birthdays (above) plus other dates worth a message or a thought. Each extra event is one entry:
+  //   anniversary   – repeats every year on month/day (e.g. a wedding anniversary)
+  //   remembrance   – a loss: reminds her every `everyMonths` months from the date it happened
+  //                   (6, 12, 18, 24 … months) so she can reach out to whoever is grieving
+  // To add one, append an entry here (Claude does this when she mentions a new date).
+  var EVENTS_EXTRA=[
+    {type:'anniversary', name:'Mum & Dad — wedding anniversary', month:11, day:9},
+    {type:'remembrance', name:'Claire Millwood', who:'her dad', origin:{y:2026, m:10, d:5}, everyMonths:6}
+  ];
+  function allEvents(){
+    return BIRTHDAYS.map(function(b){ return { type:'birthday', name:b.name, month:b.month, day:b.day }; }).concat(EVENTS_EXTRA);
+  }
+  function addMonthsClamped(y, m, d, add){
+    var first=new Date(y, m-1+add, 1);
+    var last=new Date(first.getFullYear(), first.getMonth()+1, 0).getDate();
+    return new Date(first.getFullYear(), first.getMonth(), Math.min(d, last));
+  }
+  // The next time this event falls on or after `from`: { date, days, months? }
+  function nextOccurrence(ev, from){
+    var today=new Date(from.getFullYear(), from.getMonth(), from.getDate());
+    if(ev.origin){
+      for(var k=1; k<400; k++){
+        var dt=addMonthsClamped(ev.origin.y, ev.origin.m, ev.origin.d, ev.everyMonths*k);
+        if(dt>=today) return { date:dt, days:Math.round((dt-today)/86400000), months:ev.everyMonths*k };
+      }
+      return null;
+    }
+    var days=daysUntil(ev.month, ev.day, from);
+    return { date:new Date(today.getFullYear(), today.getMonth(), today.getDate()+days), days:days };
+  }
+  function eventTitle(ev){ return ev.type==='remembrance' ? ev.name+' — thinking of you' : ev.name; }
+  function eventDetail(ev, occ){
+    var when=occ.date.getDate()+' '+MONTH_NAMES[occ.date.getMonth()];
+    if(ev.type==='remembrance'){
+      var m=occ.months;
+      var span = m%12===0 ? (m/12===1 ? '1 year' : (m/12)+' years') : m+' months';
+      return when+' · '+span+' since '+ev.who+' passed';
+    }
+    if(ev.type==='anniversary') return when;
+    return when;
+  }
+  function upcomingEvents(from, windowDays){
+    return allEvents().map(function(ev){ var occ=nextOccurrence(ev, from); return occ ? { ev:ev, occ:occ } : null; })
+      .filter(function(x){ return x && x.occ.days<=windowDays; })
+      .sort(function(a,b){ return a.occ.days-b.occ.days; });
+  }
   function renderBirthdays(){
     var container=document.getElementById('birthdayList');
     if(!container) return;
-    var upcoming=BIRTHDAYS.map(function(b){
-      return { name:b.name, month:b.month, day:b.day, days:daysUntil(b.month,b.day,now) };
-    }).filter(function(b){ return b.days<=BIRTHDAY_WINDOW_DAYS; })
-      .sort(function(a,b){ return a.days-b.days; });
+    var upcoming=upcomingEvents(now, BIRTHDAY_WINDOW_DAYS);
     container.innerHTML='';
     if(!upcoming.length){
       var p=document.createElement('p');
@@ -1878,12 +1923,12 @@
       container.appendChild(p);
       return;
     }
-    upcoming.forEach(function(b){
+    upcoming.forEach(function(x){
       var row=document.createElement('div'); row.className='birthday';
       var name=document.createElement('span'); name.className='name';
-      name.textContent=b.name+' — '+b.day+' '+MONTH_NAMES[b.month-1];
+      name.textContent=eventTitle(x.ev)+' — '+eventDetail(x.ev, x.occ);
       var days=document.createElement('span'); days.className='days';
-      days.textContent = b.days===0 ? 'today' : (b.days+' days');
+      days.textContent = x.occ.days===0 ? 'today' : (x.occ.days+' days');
       row.appendChild(name); row.appendChild(days);
       container.appendChild(row);
     });
@@ -1894,45 +1939,54 @@
   function renderHomeBirthdays(){
     var box=document.getElementById('homeBirthdayList');
     if(!box) return;
-    var upcoming=BIRTHDAYS.map(function(b){
-      return { name:b.name, month:b.month, day:b.day, days:daysUntil(b.month,b.day,now) };
-    }).filter(function(b){ return b.days<=BIRTHDAY_WINDOW_DAYS; })
-      .sort(function(a,b){ return a.days-b.days; });
+    var upcoming=upcomingEvents(now, BIRTHDAY_WINDOW_DAYS);
     box.innerHTML='';
     if(!upcoming.length){
       var p=document.createElement('p'); p.className='bdempty';
       p.textContent='Nothing in the next '+BIRTHDAY_WINDOW_DAYS+' days.';
       box.appendChild(p); return;
     }
-    upcoming.forEach(function(b){
+    upcoming.forEach(function(x){
       var row=document.createElement('div'); row.className='bdrow';
       var left=document.createElement('span');
-      var nm=document.createElement('span'); nm.className='nm'; nm.textContent=b.name;
-      var dt=document.createElement('span'); dt.className='dt'; dt.textContent=b.day+' '+MONTH_NAMES[b.month-1];
+      var nm=document.createElement('span'); nm.className='nm'; nm.textContent=eventTitle(x.ev);
+      var dt=document.createElement('span'); dt.className='dt'; dt.textContent=eventDetail(x.ev, x.occ);
       left.appendChild(nm); left.appendChild(dt);
-      var until=document.createElement('span'); until.className='until'+(b.days===0?' today':'');
-      until.textContent = b.days===0 ? 'today' : b.days===1 ? 'tomorrow' : 'in '+b.days+' days';
+      var until=document.createElement('span'); until.className='until'+(x.occ.days===0?' today':'');
+      until.textContent = x.occ.days===0 ? 'today' : x.occ.days===1 ? 'tomorrow' : 'in '+x.occ.days+' days';
       row.appendChild(left); row.appendChild(until);
       box.appendChild(row);
     });
   }
   renderHomeBirthdays();
 
-  // Daily page: a small line when someone's birthday is today.
+  // Daily page: a small line when something is happening on the day being viewed.
   function renderDailyBirthday(dateObj){
     var el=document.getElementById('dailyBirthday');
     if(!el) return;
     dateObj=dateObj||now;
-    var names=BIRTHDAYS.filter(function(b){ return daysUntil(b.month,b.day,dateObj)===0; }).map(function(b){ return b.name; });
     var isToday=dateKey(dateObj)===dateKey(now);
-    el.hidden=!names.length;
-    el.textContent = names.length ? 'Birthday '+(isToday?'today':'on this day')+': '+(names.length>1 ? names.slice(0,-1).join(', ')+' & '+names[names.length-1] : names[0]) : '';
+    var parts=[];
+    var bdays=[];
+    allEvents().forEach(function(ev){
+      var occ=nextOccurrence(ev, dateObj); if(!occ || occ.days!==0) return;
+      if(ev.type==='birthday') bdays.push(ev.name);
+      else {
+        var extra=eventDetail(ev, occ).split(' · ').slice(1).join(' · ');
+        parts.push(eventTitle(ev)+(extra ? ' ('+extra+')' : ''));
+      }
+    });
+    var lines=[];
+    if(bdays.length) lines.push('Birthday '+(isToday?'today':'on this day')+': '+(bdays.length>1 ? bdays.slice(0,-1).join(', ')+' & '+bdays[bdays.length-1] : bdays[0]));
+    parts.forEach(function(t){ lines.push((isToday?'Today':'On this day')+': '+t); });
+    el.hidden=!lines.length;
+    el.textContent=lines.join(' · ');
   }
   renderDailyBirthday();
 
   var addBd=document.getElementById('addBirthdayBtn');
   addBd.addEventListener('click', function(){
-    addBd.textContent='Birthdays will sync from friends-and-family.md once this is wired up';
+    addBd.textContent='Tell Claude about a date and it will be added here';
     addBd.disabled=true;
     addBd.style.cursor='default';
   });
