@@ -3520,8 +3520,8 @@
         {name:'Curtsy Lunge', sides:'single', limb:'leg', equipment:['Barbell','Smith machine','Dumbbells']},
         {name:'Step Up', sides:'single', limb:'leg', equipment:['Cable','Dumbbells','Smith machine'], reps:['8','8','8']},
         {name:'Glute Kickback', sides:'single', limb:'leg', equipment:['Machine','Cable'], reps:['10','12','12']},
-        {name:'Abductor'},
-        {name:'Adductor'},
+        {name:'Abductor (Glutes)', equipLabel:'Position', equipment:['Seated','Standing']},
+        {name:'Adductor (Inner Thighs)'},
         {name:'Hamstring Curl', sides:'either', limb:'leg', styles:[
           { key:'seated', label:'Seated', name:'Seated Hamstring Curl', reps:['8','10','10'] },
           { key:'lying',  label:'Lying',  name:'Lying Hamstring Curl' } ]},
@@ -3648,7 +3648,7 @@
   //      becomes Hyper Extension
   //   3: equipment choices on the lower-body exercises, and single/double on Hamstring Curl,
   //      Leg Extension and Calf Raise
-  var GYM_LIB_VERSION=4;
+  var GYM_LIB_VERSION=5;
   function renameLoggedNames(templateId, map){
     Object.keys(gymLog).forEach(function(key){
       var sess=gymLog[key];
@@ -3728,7 +3728,20 @@
       }
       if(have<4){
         // Oct 2026: hip abductor (glutes) and adductor (inner thigh) machines
-        ['Abductor','Adductor'].forEach(addStarter);
+        ['Abductor (Glutes)','Adductor (Inner Thighs)'].forEach(addStarter);
+      }
+      if(have<5){
+        // clearer names (she mixes them up), and a Seated / Standing choice on the abductor
+        [['Abductor','Abductor (Glutes)'],['Adductor','Adductor (Inner Thighs)']].forEach(function(r){
+          var i=idx(r[0]);
+          if(i!==-1 && !has(r[1])){
+            lower.exercises[i].name=r[1];
+            var map={}; map[normGymName(r[0])]=r[1]; renameLoggedNames(lower.id, map);
+            var pm={}; pm[normGymName(r[0])]={ base:r[1] }; renamePicks(lower.id, pm);
+          }
+        });
+        var ab=lower.exercises.filter(function(e){ return normGymName(e.name)==='abductor (glutes)'; })[0];
+        if(ab){ ab.equipment=['Seated','Standing']; ab.equipLabel='Position'; }
       }
       if(have<3){
         day.exercises.forEach(function(sx){
