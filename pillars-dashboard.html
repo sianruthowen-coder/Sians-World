@@ -2490,19 +2490,6 @@
       var lastEl=document.createElement('p'); lastEl.className='gymlast'; lastEl.textContent='Last '+line;
       card.appendChild(lastEl);
 
-      pill=document.createElement('button'); pill.type='button'; pill.className='gymsamepill';
-      syncSamePill(pill, entry);
-      // One tap: accept last time's numbers for every set and mark them all done.
-      pill.addEventListener('click', function(){
-        var gh=ghostSets(entry, templateExercise, templateId, dateStr);
-        entry.weightGroups.forEach(function(g, i){
-          if(String(g.reps[0]).trim()==='' && gh[i].reps) g.reps[0]=gh[i].reps;
-          if(String(g.weight).trim()==='' && gh[i].weight) g.weight=gh[i].weight;
-          if(String(g.reps[0]).trim()!=='' || String(g.weight).trim()!=='') g.done=true;
-        });
-        saveGymLog(); renderGymMain();
-      });
-      card.appendChild(pill);
     }
 
     var volEl=document.createElement('p'); volEl.className='gymvolume'; volEl.hidden=true;
