@@ -1872,7 +1872,8 @@
   // To add one, append an entry here (Claude does this when she mentions a new date).
   var EVENTS_EXTRA=[
     {type:'anniversary', name:'Mum & Dad — wedding anniversary', month:11, day:9},
-    {type:'remembrance', name:'Claire Millwood', who:'her dad', origin:{y:2026, m:10, d:5}, everyMonths:1, count:12}
+    {type:'remembrance', name:'Claire Millwood', who:'her dad', origin:{y:2026, m:10, d:5}, everyMonths:1, count:12},
+    {type:'remembrance', name:'Stephanie Larken', who:'her dad', origin:{y:2026, m:9, d:28}, everyMonths:1, count:12}
   ];
   function allEvents(){
     return BIRTHDAYS.map(function(b){ return { type:'birthday', name:b.name, month:b.month, day:b.day }; }).concat(EVENTS_EXTRA);
